@@ -11,8 +11,8 @@
 #
 #   Included Constants:
 #   - 'A' Operator for Symmetrical Components: a_op
-#   - 
-#   
+#   -
+#
 #   Included Functions
 #   - Complex Display Function:		vi_cprint
 #   - Impedance Conversion:			z_mk
@@ -37,25 +37,35 @@ ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
 
 ###################################################################
 #   Define per unit base creator function
-#   
+#
 #   Calculate per unit base given voltage (V) and power (VA)
-#   Inputs: v, s, z
-#   
+#   Inputs: v, s, phase, z
+#   When calculating 3-phase per unit bases, use 3-phase-S-base
+#   and line-to-line-voltage for s and v respectively.
+#
 #   Returns per unit base of z if z=True, pu base of i if z=False
+#   Returns as value for 3-phase by default, can also provide
+#   1-phase values.
 ###################################################################
-def pu(v,s,z=True):
+def pu(v,s,phase=3,z=True):
 	if z:
 		return(v**2/s)
+	elif (phase==3) and not z:
+		return(s/(np.sqrt(3)*v))
 	else:
 		return(v/s)
 
 ###################################################################
 #   Define per unit converter function
-#   
-#   
-#   
+#
+#   Converts a [quantity] to a new per-unit base (puB_new) given an
+#   old per-unit base (puB_old).
+#
+#   Returns per-unit value in new base.
 ###################################################################
-def pu_conv(
+def pu_conv(quantity, puB_old, puB_new):
+	pu_new = quantity*puB_old/puB_new
+	return(pu_new)
 
 ###################################################################
 #   Define display function
@@ -151,7 +161,7 @@ def i_convert(Iline=False,Iphase=False):
 		print("ERROR: No value given"+
 				"or innapropriate value"+
 				"given.")
-	
+
 ###################################################################
 #   Define Power Triangle Function
 #
@@ -187,7 +197,7 @@ def P_triangle(P=False,Q=False,S=False,PF=False,color="red",
 		print("ERROR: Invalid Parameters or too few"+
 			 " parameters given to calculate.")
 		return(0)
-	
+
 	#Generate Lines
 	Plnx = [0,P]
 	Plny = [0,0]
@@ -195,7 +205,7 @@ def P_triangle(P=False,Q=False,S=False,PF=False,color="red",
 	Qlny = [0,Q]
 	Slnx = [0,P]
 	Slny = [0,Q]
-	
+
 	#Plot
 	if plot:
 		plt.figure(figure)
@@ -232,7 +242,7 @@ def P_triangle(P=False,Q=False,S=False,PF=False,color="red",
 		if printval:
 			 plt.text(x/20,y*4/5,text,color=color)
 		plt.show()
-	
+
 	# Return when requested
 	if ret:
 		return(P,Q,S,PF)
