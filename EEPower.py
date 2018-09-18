@@ -360,12 +360,16 @@ def C_VafterT(t,vo,cap,P):
 #   cap: Capacitance (in Farads)
 #   P: Load Power being consumed (in Watts)
 #   dt: Time step-size (in seconds) (typically 1/1000 - ms)
+#   RMS: if true converts RMS Vin to peak
 #   Eremain: if true: also returns the energy remaining in cap
 #
 ###################################################################
-def C_discharge(Vinit,Vmin,cap,P,dt,Eremain=False):
+def C_discharge(Vinit,Vmin,cap,P,dt,RMS=True,Eremain=False):
     t = 0 # start at time t=0
-    vo = Vin*np.sqrt(2) # convert RMS to peak
+    if RMS:
+        vo = Vin*np.sqrt(2) # convert RMS to peak
+	else:
+        vo = Vin
     vc = vo # set voltage of capacitor to init. voltage
     while(vc>Vmin):
         vc = C_discharge(t,vo,cap,P)
