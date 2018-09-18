@@ -8,6 +8,9 @@
 #   August 31, 2018
 #
 #   Written by Joe Stanley
+#   Special Thanks To and Code Support From:
+#   Steven Weeks
+#   Dr. Dennis Sullivan
 #
 #   This library was compiled by Joe Stanley, special thanks to stackOverflow
 #   user: gg349 whose work is well documented and used here.
@@ -17,6 +20,14 @@
 #   - FFT Plotting Function:			fft_plot
 #   - RMS Calculator:					rms_calc
 #   - State Space Simulator:			st_space
+#   - Step Function						u
+#
+#   Private Functions ( Those not Intended for Use Outside of Library )
+#   - Tupple to Matrix Converter:		tuple_to_matrix
+#   - Numpy Array to Matrix Converter:	nparr_to_matrix
+#
+#   Private Classes ( Those not Intended for Use Outside of Library )
+#   - Function Concatinator:			c_func_concat
 #################################################################################
 
 # Import necessary libraries
@@ -24,100 +35,353 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad as integrate
 
-def st_space(A,B,x,fn=0,solution=2,nsteps=6000,axis=[0,10,-1,2],gtitle=""):
-    """ Plots the state-space simulation of an arbitrary set of matricies.
-	
-	Parameters:
-	-----------
-	A :			Matrix A
-	B :			Matrix B
-	x :			Matrix x
-	fn :		Forcing Function
+# Define Function Concatinator Class
+class c_func_concat:
+	def __init__(self,funcs): # Initialize class with tupple of functions
+		self.nfuncs = len(funcs) # Determine how many functions are in tuple
+		self.func_reg = {} # Create empty keyed list of function handles
+		for key in range(self.nfuncs): # Iterate adding to key
+			self.func_reg[key] = funcs[key] # Fill keyed list with functions
+
+	def func_c(self,x): # Concatenated Function
+		rets = np.array([]) # Create blank numpy array to store function outputs
+		for i in range(self.nfuncs):
+			y = self.func_reg[i](x) # Calculate each function at value x
+			rets = np.append(rets, y) # Add value to return array
+		rets = np.asmatrix(rets).T # Convert array to matrix, then transpose
+		return(rets)
+
+# Define u(t) - Step function
+def u(t):
+	if (t>0):
+		return(1)
+	else:
+		return(0)
+
+# Tuple to Matrix Converter
+def tuple_to_matrix(x,yx):
+	n = yx(x) # Evaluate function at specified point
+	n = np.asmatrix(n) # Convert tuple output to matrix
+	n = n.T # Transpose matrix
+	return(n)
+
+# Numpy Array to Matrix Converter
+def nparr_to_matrix(x,yx):
+	n = yx(x) # Evaluate function at specified point
+	n = np.asmatrix(n) # Convert np.arr output to matrix
+	if n.shape[1] != 1: # If there is more than 1 column
+		n = np.matrix.reshape(n,(n.size,1)) # Reshape
+	return(n)
+
+def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
+		dt=0.01,axis=False,gtitle="",ret=False,plot=True,pltfn=False,sv=False):
+	""" Plots the state-space simulation of an arbitrary set of matricies.
+
+	Required Parameters:
+	--------------------
+	A :			Matrix A; if not type=numpy.matrix, converts to numpy.matrix
+	B :			Matrix B; if not type=numpy.matrix, converts to numpy.matrix
+
+	Optional Parameters:
+	--------------------
+	x :			Matrix x; if not type=numpy.matrix, converts to numpy.matrix
+	fn :		Forcing Function; must be provided as callable function that
+				will return any/all forcing function parameters needed as
+				numpy matrix (preferred), numpy array, or tuple.
+				Forcing function(s) can be provided as tuple of function
+				handles, system will automatically concatenate their output
+				to a matrix that can be handled.
 	solution:	Determines What Type of Solution Simulation is Required;
 				Default of solution is 2
-				0=zero-input
-				1=zero-state
-				2=total
-	nsteps: 	Changes the range of simulation; defualt=6000
+				0=zero-input	( No Forcing Function )
+				1=zero-state	( No Initial Conditions )
+				2=total			( Both Initial Conditions and Forcing Function )
+				3=total, output ( Both ICs and FFs, also plot combined output )
+	nsteps: 	Changes the range of simulation; defualt=9999
+	NN:			Number of descrete points; default=10,000
+	dt:			Delta-t, step-size; default=0.01
 	axis:		Defines Plot Axes; [ x-min, x-max, y-min, y-max ]
-				default=[0,10,-1,2]
 	gtitle:		Additional String for Plot Title
-	
+	ret:		If true: returns state space terms
+	plot:		If true: Plots individual state space terms
+	pltfn:		If true: Plots original Forcing Functions
+
 	Returns:
 	--------
-	Generates and displays a plot of state-space simulation
-	
-	"""
-    
-    # Test for matrix inputs
-    matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
-    mA = str(type(A))
-    mB = str(type(B))
-    mx = str(type(x))
-    if (mA!=matrix) or (mB!=matrix) or (mx!=matrix):
-        raise ValueError("ERROR: All Arguments must be Numpy Matrix of type: "+
-                        matrix+"\nOne or more arguments do not match criteria."+
-                        "\n\nArguments:\nA: "+mA+"\nB: "+mB+"\nx: "+mx)
-	# Test for inputs
-	if (fn==0) and (solution!=0):
-		raise ValueError("ERROR: Arguments indicate no forcing function specified"+
-						"yet solution has been requested in a form where forcing function"+
-						"is required. Please check arguments.")
-    
-    # Start by defining Constants
-    NN = 10000
-    #change nsteps this to change the range of simulation
-    dt = 0.01
-    T = 0
-    TT = np.arange(0,(dt*(NN)),dt)
-    
-    # Create a keyed list of state-space variables
-    xtim = {}
-    xtim_len = x.shape[0]
-    for n in range(xtim_len):
-        key = n #Each key should be the iterative variable
-        xtim_init = np.zeros(NN) #Define the initial array
-        xtim[key] = xtim_init #Create each xtim
-    
-    # When asked to find zero-state, set all ICs to zero
-    if solution == 1:
-        for n in range(xtim_len):
-            x[n] = 0 #Set each value to zero
-    
-    # Finite-Difference Simulation
-    for i in range(0,nsteps):
-        for n in range(xtim_len):
-            xtim[n][i] = x[n] #xtim[state-space][domain] = x[state-space]
+	If plot=True:	Generates and displays a plot of state-space simulation
+	If ret=True:	Returns X-Axis variable and each state space term
+					ex: ( x_axis, ( x1, x2, ... , xn ) )
+					State-Space Variables return as tuple.
 
-        if solution == 0: #Zero-input, no added function input
-            x = x + dt*A*x
-        else: #Zero-state or Total, add function input
-            x = x + dt*A*x + dt*B*fn(T)
-        
-        T = T+dt #Add discrete increment to T
-        
-    # Plot each state-variable over time
-    for x in range(xtim_len):
-        plt.plot(TT,xtim[x],label="x"+str(x+1))
-    plt.axis(axis)
-    plt.title("Simulated Output"+gtitle)
-    plt.xlabel("Time (seconds)")
-    plt.legend(title="State Space")
-    plt.show()
+	"""
+
+	# Define types to be tested against
+	matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
+	tuple = "<class 'tuple'>"
+	ndarr = "<class 'numpy.ndarray'>"
+	tint = "<class 'int'>"
+	tfloat = "<class 'float'>"
+	tfun = "<class 'function'>"
+
+	# Test for NN and nsteps
+	if (nsteps >= NN):
+		print("WARNING: NN must be greater than nsteps; NN="+str(NN)+"nsteps="+str(nsteps))
+		print("Autocorrecting nsteps to be NN-1.")
+		nsteps = NN-1
+
+	# Test for C and D matricies
+	mC = str(type(C))
+	mD = str(type(D))
+	if (((mC==matrix) or (mC==ndarr) or (mC==tuple)) and
+		((mD==matrix) or (mD==ndarr) or (mD==tuple))):
+		if (solution!=3):
+			print("WARNING: C and D matricies provided, but solution requested "+
+					"does not include combined output.")
+	elif (((mC==matrix) or (mC==ndarr) or (mC==tuple)) and
+		(mD!=matrix) and (mD!=ndarr) and (mD!=tuple)):
+		if (D==False):
+			print("WARNING: D matrix not provided; D now assumed to be 0.")
+			D = np.matrix('0')
+	else:
+		C = np.matrix('0')
+		D = np.matrix('0')
+		if (solution==3):
+			print("WARNING: Combined output requested, but no matricies C and D given.")
+			print("         Solution being set to: 2 - Complete Simulation")
+			solution = 2
+
+
+	# Create values for input testing
+	mA = str(type(A))
+	mB = str(type(B))
+	mx = str(type(x))
+	mC = str(type(C))
+	mD = str(type(D))
+	if (str(type(f)) == tfun): # if f is a function, test as one
+		mF = str(type(f(1))) # f should return: int, float, tuple, np.arr, np.matrix
+	elif (str(type(f)) == tuple): # if f is tupple of arguments
+		if (str(type(f[0])) == tfun): #if first argument is a function
+			c_funcs = c_func_concat(f) # concatinate functions into one
+			mF = "MultiFunctions" # label as multiple concatenated functions
+		else:
+			mF = "NA" # Can't handle function type
+	else:
+		mF = "NA" # Can't handle function type
+
+	# Test for x input
+	if (mx!=matrix) and (mx!=ndarr) and (mx!=tuple):
+		if x==0: # No specified initial conditions
+			if (mA==matrix): # Use A matrix as reference
+				rA = A.shape[0]
+				x = np.asmatrix(np.zeros(rA)).T
+				mx = str(type(x))
+				print("WARNING: No input x (Initial Condition) given.")
+				if (solution!=1) and (solution!=3):
+					solution = 1
+					print("\n         Solution type changed to 1: Zero-State.")
+			elif (mB==matrix): # Use B matrix as reference
+				rB = B.shape[0]
+				x = np.asmatrix(np.zeros(rB)).T
+				mx = str(type(x))
+				print("WARNING: No input x (Initial Condition) given.")
+				if (solution!=1) and (solution!=3):
+					solution = 1
+					print("\n         Solution type changed to 1: Zero-State.")
+			else:
+				raise ValueError("ERROR: No x matrix (Initial Conditions) given,"+
+								"\nNot enough additional information to infer x matrix.")
+
+	# Test for matrix inputs
+	if (mA!=matrix) or (mB!=matrix) or (mx!=matrix) or (mC!=matrix) or (mD!=matrix):
+		# One or more arguments are not of type numpy.matrix
+		# Convert to type matrix
+		print("WARNING: Converting one or more input matricies to type: numpy matrix")
+		A = np.asmatrix(A)
+		B = np.asmatrix(B)
+		x = np.asmatrix(x)
+
+	# Gather dimensions of inputs
+	rA, cA = A.shape
+	rB, cB = B.shape
+	rx, cx = x.shape
+	rC, cC = C.shape
+	rD, cD = D.shape
+	rF, cF = 1, 1 # Defualt for a function returning one value
+
+	if (mF==tuple): # If function returns tuple
+		print("WARNING: Converting Forcing Function from type: tuple")
+		fn = lambda x: tuple_to_matrix(x, f) # Use conversion function
+		rF, cF = fn(1).shape # Prepare for further testing
+	elif (mF==ndarr): # If function returns numpy array
+		print("WARNING: Converting Forcing Function from type: numpy array")
+		fn = lambda x: nparr_to_matrix(x, f) # Use conversion function
+		rF, cF = fn(1).shape # Prepare for further testing
+	elif (mF==tint) or (mF==tfloat): # If function returns int or float
+		fn = f # Pass function handle
+	elif (mF==matrix): # If function returns matrix
+		fn = f # Pass function handle
+		rF, cF = fn(1).shape # Prepare for further testing
+	elif (mF=="MultiFunctions"): # There are multiple functions in one argument
+		print("WARNING: Casting multiple forcing functions to output type: numpy matrix")
+		fn = c_funcs.func_c # Gather function handle from function concatenation class
+		rF, cF = fn(1).shape # Prepare for further testing
+	elif (mF=="NA"): # Function doesn't meet requirements
+		raise ValueError("ERROR: Forcing function does not meet requirements."+
+						"\nFunction doesn't return data type: int, float, numpy.ndarray"+
+						"\n or numpy.matrixlib.defmatrix.matrix. Nor does function "+
+						"\ncontain tuple of function handles. Please review function.")
+
+	# Test for size correlation between matricies
+	if (cA != rA): # A isn't nxn matrix
+		raise ValueError("ERROR: Matrix 'A' is not NxN matrix.")
+	elif (rA != rB): # A and B matricies don't have same number of rows
+		if (B.size % rA) == 0: # Elements in B divisible by rows in A
+			print("WARNING: Reshaping 'B' matrix to match 'A' matrix.")
+			B = np.matrix.reshape(B,(rA,int(B.size/rA))) # Reshape Matrix
+		else:
+			raise ValueError("ERROR: 'A' matrix dimensions don't match 'B' matrix dimensions.")
+	elif (rA != rx): # A and x matricies don't have same number of rows
+		if (x.size % rA) == 0: # Elements in x divisible by rows in A
+			print("WARNING: Reshaping 'x' matrix to match 'A' matrix.")
+			x = np.matrix.reshape(x,(rA,1)) # Reshape Matrix
+		else:
+			raise ValueError("ERROR: 'A' matrix dimensions don't match 'B' matrix dimensions.")
+	elif (cB != rF) or (cF != 1): # Forcing Function matrix doesn't match B matrix
+		raise ValueError("ERROR: 'B' matrix dimensions don't match forcing function dimensions.")
+	elif (solution==3) and (cC != cA) or (rC != 1): # Number of elements in C don't meet requirements
+		raise ValueError("ERROR: 'C' matrix dimensions don't match state-space variable dimensions.")
+	elif (solution==3) and ((cD != rF) or (rD != 1)): # Number of elements in D don't meet requirements
+		if (cD == rD) and (cD == 1) and (D[0] == 0): # D matrix is set to [0]
+			D = np.asmatrix(np.zeros(rF)) # Re-create D to meet requirements
+			print("WARNING: Autogenerating 'D' matrix of zeros to match forcing functions.")
+		else:
+			raise ValueError("ERROR: 'D' matrix dimensions don't match forcing function dimensions.")
+
+	# Test for forcing function
+	if (f==0) and (solution!=0):
+		print("WARNING: No forcing function provided.\n         "+
+				"Solution type changed to 0: Zero-Input")
+		solution = 0 # Change to Zero-Input calculation
+
+	# Start by defining Constants
+	T = 0
+	TT = np.arange(0,(dt*(NN)),dt)
+	yout = 0
+
+	# Define list of strings for plot output
+	soltype = ["(Zero-Input)","(Zero-State)","(Complete Simulation)","(Complete Sim., Combined Output)"]
+
+	# Create a keyed list of state-space variables
+	xtim = {}
+	xtim_len = rA # Number of Rows in A matrix
+	for n in range(xtim_len):
+		key = n #Each key should be the iterative variable
+		xtim_init = np.zeros(NN) #Define the initial array
+		xtim[key] = xtim_init #Create each xtim
+
+	# Create a keyed list of function outputs
+	if (mF!=tint) and (mF!=tfloat):
+		fn_arr = {}
+		for n in range(rF):
+			key = n #Each key should be the iterative variable
+			fn_init = np.zeros(NN) #Define the initial array
+			fn_arr[key] = fn_init #Create each fn_arr
+			fnc = rF
+	else:
+		fn_arr = np.zeros(NN) #Create the fn_arr
+		fnc = 1
+
+	# When asked to find zero-state, set all ICs to zero
+	if solution == 1:
+		for n in range(xtim_len):
+			x[n] = 0 #Set each value to zero
+
+	# Finite-Difference Simulation
+	for i in range(0,nsteps):
+		for n in range(xtim_len):
+			xtim[n][i] = x[n] #xtim[state-variable][domain] = x[state-variable]
+		# Create Forcing Function output
+
+		if fnc > 1: # More than one forcing function
+			for n in range(fnc):
+				fn_arr[n][i] = np.asarray(fn(T))[n][0]
+		else: # only one forcing function
+			fn_arr[i] = fn(T)
+
+		if solution == 0: #Zero-input, no added function input
+			x = x + dt*A*x
+		else: #Zero-state or Total, add function input
+			x = x + dt*A*x + dt*B*fn(T)
+			if solution==3:
+				yout = yout + dt*D*fn(T)
+
+		T = T+dt #Add discrete increment to T
+
+	# Plot Forcing Functions
+	if (pltfn):
+		#print(fn_arr)
+		if fnc > 1:
+			for x in range(fnc):
+				plt.plot(TT,fn_arr[x],label="f"+str(x+1))
+		else:
+			plt.plot(TT,fn_arr,label="f1")
+		if axis!=False:
+			plt.axis(axis)
+		plt.title("Forcing Functions "+gtitle)
+		plt.xlabel("Time (seconds)")
+		plt.legend(title="Forcing Functions")
+		if sv:
+			plt.savefig('Simulation Forcing Functions.png')
+		if plot:
+			plt.show()
+
+	# Plot each state-variable over time
+	for x in range(xtim_len):
+		plt.plot(TT,xtim[x],label="x"+str(x+1))
+	if axis!=False:
+		plt.axis(axis)
+	plt.title("Simulated Output Terms "+soltype[solution]+gtitle)
+	plt.xlabel("Time (seconds)")
+	plt.legend(title="State Variable")
+	if sv:
+		plt.savefig('Simulation Terms.png')
+	if plot:
+		plt.show()
+
+	# Plot combined output
+	if (solution==3):
+		C = np.asarray(C) # convert back to array for operation
+		for i in range(cC):
+			yout = yout + xtim[i]*C[0][i] # Sum all st-space var mult. by their coeff
+		yout = np.asarray(yout) # convert output to array for plotting purposes
+		plt.plot(TT,yout[0])
+		if axis!=False:
+			plt.axis(axis)
+		plt.title("Combined Output "+gtitle)
+		plt.xlabel("Time (seconds)")
+		if sv:
+			plt.savefig('Simulation Combined Output.png')
+		if plot:
+			plt.show()
+
+	# Return Variables if asked to
+	if ret:
+		return(TT, xtim)
+
 
 # RMS Calculating Function
 def rms_calc(f, T):
 	""" Calculates the RMS value of the provided function.
-	
+
 	Parameters
-    ----------
-    f : the periodic function, a callable like f(t)
-    T : the period of the function f, so that f(0)==f(T)
-	
+	----------
+	f : the periodic function, a callable like f(t)
+	T : the period of the function f, so that f(0)==f(T)
+
 	Returns
-    -------
+	-------
 	RMS : the RMS value of the function (f) over the interval ( 0, T )
-	
+
 	"""
 	fn = lambda x: f(x)**2
 	integral = integrate(fn,0,T)
@@ -126,91 +390,91 @@ def rms_calc(f, T):
 
 # FFT Coefficient Calculator Function
 def fft_coef(f, T, N, return_complex=False):
-    """Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
+	"""Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
 
-    Given a periodic, function f(t) with period T, this function returns the
-    coefficients a0, {a1,a2,...},{b1,b2,...} such that:
+	Given a periodic, function f(t) with period T, this function returns the
+	coefficients a0, {a1,a2,...},{b1,b2,...} such that:
 
-    f(t) ~= a0/2+ sum_{k=1}^{N} ( a_k*cos(2*pi*k*t/T) + b_k*sin(2*pi*k*t/T) )
+	f(t) ~= a0/2+ sum_{k=1}^{N} ( a_k*cos(2*pi*k*t/T) + b_k*sin(2*pi*k*t/T) )
 
-    If return_complex is set to True, it returns instead the coefficients
-    {c0,c1,c2,...}
-    such that:
+	If return_complex is set to True, it returns instead the coefficients
+	{c0,c1,c2,...}
+	such that:
 
-    f(t) ~= sum_{k=-N}^{N} c_k * exp(i*2*pi*k*t/T)
+	f(t) ~= sum_{k=-N}^{N} c_k * exp(i*2*pi*k*t/T)
 
-    where we define c_{-n} = complex_conjugate(c_{n})
+	where we define c_{-n} = complex_conjugate(c_{n})
 
-    Refer to wikipedia for the relation between the real-valued and complex
-    valued coeffs at http://en.wikipedia.org/wiki/Fourier_series.
+	Refer to wikipedia for the relation between the real-valued and complex
+	valued coeffs at http://en.wikipedia.org/wiki/Fourier_series.
 
-    Parameters
-    ----------
-    f : the periodic function, a callable like f(t)
-    T : the period of the function f, so that f(0)==f(T)
-    N_max : the function will return the first N_max + 1 Fourier coeff.
-
-    Returns
-    -------
-    if return_complex == False, the function returns:
-
-    a0 : float
-    a,b : numpy float arrays describing respectively the cosine and sine coeff.
-
-    if return_complex == True, the function returns:
-
-    c : numpy 1-dimensional complex-valued array of size N+1
-
-    """
-    # From Shanon theoreom we must use a sampling freq. larger than the maximum
-    # frequency you want to catch in the signal.
-    f_sample = 2 * N
-    # we also need to use an integer sampling frequency, or the
-    # points will not be equispaced between 0 and 1. We then add +2 to f_sample
-    t, dt = np.linspace(0, T, f_sample + 2, endpoint=False, retstep=True)
-
-    y = np.fft.rfft(f(t)) / t.size
-
-    if return_complex:
-        return y
-    else:
-        y *= 2
-        return y[0].real, y[1:-1].real, -y[1:-1].imag
-
-		
-# FFT Plotting Function
-def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=False):
-	""" Plots the FFT of the provided function as a stem plot.
-	
 	Parameters
 	----------
 	f : the periodic function, a callable like f(t)
-    T : the period of the function f, so that f(0)==f(T)
-    N_max : the function will return the first N_max + 1 Fourier coeff.
+	T : the period of the function f, so that f(0)==f(T)
+	N_max : the function will return the first N_max + 1 Fourier coeff.
+
+	Returns
+	-------
+	if return_complex == False, the function returns:
+
+	a0 : float
+	a,b : numpy float arrays describing respectively the cosine and sine coeff.
+
+	if return_complex == True, the function returns:
+
+	c : numpy 1-dimensional complex-valued array of size N+1
+
+	"""
+	# From Shanon theoreom we must use a sampling freq. larger than the maximum
+	# frequency you want to catch in the signal.
+	f_sample = 2 * N
+	# we also need to use an integer sampling frequency, or the
+	# points will not be equispaced between 0 and 1. We then add +2 to f_sample
+	t, dt = np.linspace(0, T, f_sample + 2, endpoint=False, retstep=True)
+
+	y = np.fft.rfft(f(t)) / t.size
+
+	if return_complex:
+	   return y
+	else:
+	   y *= 2
+	   return y[0].real, y[1:-1].real, -y[1:-1].imag
+
+
+# FFT Plotting Function
+def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=False):
+	""" Plots the FFT of the provided function as a stem plot.
+
+	Parameters
+	----------
+	f : the periodic function, a callable like f(t)
+	T : the period of the function f, so that f(0)==f(T)
+	N_max : the function will return the first N_max + 1 Fourier coeff.
 	mn : the minimum of the original signal
 	mx : the maximum of the original signal
-	
+
 	Returns
 	-------
 	if fftplot=True, the function returns:
 	Plot of FFT output of function
-	
+
 	if genSignal=True, the function returns:
 	Approximation of original signal from FFT results
-	
+
 	if absolute=True, the function will:
 	Return absolute values of the coefficients
-	
+
 	"""
-	
+
 	# Calculate FFT and find coefficients
 	a0, a, b = fft_coef(f, T, N)
-	
+
 	# If provided a title, add it to the title string
 	tStr = ""
 	if title!=False:
 		tStr = title
-	
+
 	# Plot FFT results with respect to their sign
 	if fftplot and not absolute:
 		# Set up parameters
@@ -218,7 +482,7 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		xtic = range(0,len(a)+1,1)
 		a0x = [0,0]
 		a0y = [0,a0/2]
-		
+
 		# Plot
 		plt.title("Fourier Coefficients"+tStr)
 		plt.plot(a0x,a0y,'g')
@@ -226,7 +490,7 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		plt.stem(rng,b,'b','bo')
 		plt.xticks(xtic)
 		plt.show()
-	
+
 	# Plot absolute value of FFT results
 	if fftplot and absolute:
 		# Set up parameters
@@ -234,7 +498,7 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		xtic = range(0,len(a)+1,1)
 		a0x = [0,0]
 		a0y = [0,abs(a0)/2]
-		
+
 		# Plot
 		plt.title("Fourier Coefficients"+tStr)
 		plt.plot(a0x,a0y,'g')
@@ -242,7 +506,7 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		plt.stem(rng,np.abs(b),'b','bo')
 		plt.xticks(xtic)
 		plt.show()
-		
+
 	# Plot original function as described by FFT results
 	if mx!=False:
 		# Create domain variable
@@ -255,5 +519,3 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 			plt.plot(x,yout)
 		plt.title("Fourier Series Summation"+tStr)
 		plt.show()
-
-	
