@@ -9,6 +9,9 @@
 #
 #   Written by Joe Stanley
 #
+#   Special Thanks To:
+#   Paul Ortmann - Idaho Power
+#
 #   Included Constants:
 #   - 'A' Operator for Symmetrical Components: a_op
 #   -
@@ -335,7 +338,7 @@ def phasor_plot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
 #   (in Farads) and voltage (in Volts).
 ###################################################################
 def C_energy(cap,v):
-	energy = 1/2 * C * V**2
+	energy = 1/2 * cap * v**2
 	return(energy)
 
 ###################################################################
@@ -346,7 +349,7 @@ def C_energy(cap,v):
 #   (cap - Farads), and load (P - Watts).
 ###################################################################
 def C_VafterT(t,vo,cap,P):
-	Vt = np.sqrt(vo**2 - 2*P*t/C)
+	Vt = np.sqrt(vo**2 - 2*P*t/cap)
 	return(Vt)
 	
 ###################################################################
@@ -359,23 +362,26 @@ def C_VafterT(t,vo,cap,P):
 #   Vmin: Final Voltage (the minimum allowable voltage) (in volts)
 #   cap: Capacitance (in Farads)
 #   P: Load Power being consumed (in Watts)
-#   dt: Time step-size (in seconds) (typically 1/1000 - ms)
+#   dt: Time step-size (in seconds) (defaults to 1e-3 | 1ms)
 #   RMS: if true converts RMS Vin to peak
 #   Eremain: if true: also returns the energy remaining in cap
 #
+#   Returns time to discharge from Vinit to Vmin in seconds.
+#   May also return remaining energy in capacitor if Eremain=True
 ###################################################################
-def C_discharge(Vinit,Vmin,cap,P,dt,RMS=True,Eremain=False):
+def C_discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
     t = 0 # start at time t=0
     if RMS:
-        vo = Vin*np.sqrt(2) # convert RMS to peak
-	else:
-        vo = Vin
-    vc = vo # set voltage of capacitor to init. voltage
-    while(vc>Vmin):
-        vc = C_discharge(t,vo,cap,P)
-        t = t+dt
+        vo = Vinit*np.sqrt(2) # convert RMS to peak
+    else:
+        vo = Vinit
+    vc = C_VafterT(t,vo,cap,P) # set initial cap voltage
+    while(vc >= Vmin):
+        t = t+dt # increment the time
+		vcp = vc # save previous voltage
+        vc = C_VafterT(t,vo,cap,P) # calc. new voltage
     if(Eremain):
-        E = C_energy(cap,vc)
+        E = C_energy(cap,vcp) # calc. energy
         return(t-dt,E)
     else:
         return(t-dt)
