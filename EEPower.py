@@ -25,6 +25,7 @@
 #   - Per Unit Base Converter:		pu_conv
 #   - Phasor Plot Generator:		phasor_plot
 #   - Capacitor Stored Energy:		C_energy
+#   - Cap. Voltage after Time:		C_VafterT
 #   - Cap. Voltage Discharge:		C_discharge
 ###################################################################
 
@@ -344,6 +345,33 @@ def C_energy(cap,v):
 #   seconds) given initial voltage (vo - volts), capacitor size
 #   (cap - Farads), and load (P - Watts).
 ###################################################################
-def C_discharge(t,vo,cap,P):
+def C_VafterT(t,vo,cap,P):
 	Vt = np.sqrt(vo**2 - 2*P*t/C)
 	return(Vt)
+	
+###################################################################
+#   Define Capacitor Discharge Function
+#
+#   Returns the time to discharge a capacitor to a specified
+#   voltage given set of inputs:
+#
+#   Vinit: Initial Voltage (in volts)
+#   Vmin: Final Voltage (the minimum allowable voltage) (in volts)
+#   cap: Capacitance (in Farads)
+#   P: Load Power being consumed (in Watts)
+#   dt: Time step-size (in seconds) (typically 1/1000 - ms)
+#   Eremain: if true: also returns the energy remaining in cap
+#
+###################################################################
+def C_discharge(Vinit,Vmin,cap,P,dt,Eremain=False):
+    t = 0 # start at time t=0
+    vo = Vin*np.sqrt(2) # convert RMS to peak
+    vc = vo # set voltage of capacitor to init. voltage
+    while(vc>Vmin):
+        vc = C_discharge(t,vo,cap,P)
+        t = t+dt
+    if(Eremain):
+        E = C_energy(cap,vc)
+        return(t-dt,E)
+    else:
+        return(t-dt)
