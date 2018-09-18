@@ -2,9 +2,10 @@
 Python Libraries with functions and constants related to electrical engineering.
 
 ### Special thanks to:
-- Steven Weeks
-- Dr. Dennis Sullivan
+- Steven Weeks | Student - University of Idaho
+- Dr. Dennis Sullivan | Proffessor - University of Idaho
 - StackOverflow user gg349
+- Paul Ortman | Power Quality Engineer - Idaho Power | Instructor - University of Idaho
 
 
 In this library, there are:
