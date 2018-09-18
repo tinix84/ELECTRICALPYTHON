@@ -24,6 +24,8 @@
 #   - Per Unit Base Creator:		pu
 #   - Per Unit Base Converter:		pu_conv
 #   - Phasor Plot Generator:		phasor_plot
+#   - Capacitor Stored Energy:		C_energy
+#   - Cap. Voltage Discharge:		C_discharge
 ###################################################################
 
 # Import libraries as needed:
@@ -292,8 +294,14 @@ def trans_scoc(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
 		print("An Error Was Encountered.\n"+
 				"Not enough arguments were provided.")
 
-				
-# Define Phasor Plot Generator
+###################################################################
+#   Define Phasor Plot Generator
+#
+#   Plots a phasor-diagram with angles in degrees for a number of
+#   Phasors. Phasors must be passed as a set of complex numbers.
+#   (e.g. [ m+ja, m+ja, m+ja, ... , m+ja ] ) No more than 12
+#   Phasors are allowed to be plotted at one time.
+###################################################################
 def phasor_plot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
 	numphs = len(phasor)
 	
@@ -318,4 +326,24 @@ def phasor_plot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
 		mag, ang_r = c.polar(phasor[i])
 		plt.arrow(0,0,ang_r,mag,color=colors[i])
 	plt.show()
-		
+	
+###################################################################
+#   Define Capacitor Energy Calculation
+#
+#   Returns energy (in Joules) of a capacitor given capacitor size
+#   (in Farads) and voltage (in Volts).
+###################################################################
+def C_energy(cap,v):
+	energy = 1/2 * C * V**2
+	return(energy)
+
+###################################################################
+#   Define Capacitor Voltage Discharge Function
+#
+#   Returns the voltage of a discharging capacitor after time (t - 
+#   seconds) given initial voltage (vo - volts), capacitor size
+#   (cap - Farads), and load (P - Watts).
+###################################################################
+def C_discharge(t,vo,cap,P):
+	Vt = np.sqrt(vo**2 - 2*P*t/C)
+	return(Vt)
