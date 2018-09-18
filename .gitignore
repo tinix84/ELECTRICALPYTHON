@@ -1,0 +1,13 @@
+# Gitignore File for EEPython Files
+
+# Ignore Jupyter Notebook Files
+*.ipynb
+
+# Ignore PDF Files
+*.pdf
+
+# Ignore Subdirectories
+*/
+
+# Ignore Text Files
+*.txt

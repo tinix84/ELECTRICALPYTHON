@@ -23,10 +23,12 @@
 #   - Transformer SC OC Tests:		trans_scoc
 #   - Per Unit Base Creator:		pu
 #   - Per Unit Base Converter:		pu_conv
+#   - Phasor Plot Generator:		phasor_plot
 ###################################################################
 
 # Import libraries as needed:
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import cmath as c
 
@@ -289,3 +291,31 @@ def trans_scoc(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
 	else:
 		print("An Error Was Encountered.\n"+
 				"Not enough arguments were provided.")
+
+				
+# Define Phasor Plot Generator
+def phasor_plot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
+	numphs = len(phasor)
+	
+	colors = ["#FF0000","#800000","#FFFF00","#808000","#00ff00","#008000",
+			"#00ffff","#008080","#0000ff","#000080","#ff00ff","#800080"]
+	
+	if numphs > 12:
+		raise ValueError("ERROR: No more than 12 phasors allowed.")
+	
+	# Force square figure and square axes looks better for polar, IMO
+	width, height = matplotlib.rcParams['figure.figsize']
+	size = min(width, height)
+	# Make a square figure
+	fig = plt.figure(figsize=(size, size))
+	ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True, facecolor=bg)
+	ax.set_rmax(radius)
+	plt.grid(True)
+	
+	# Plot the diagram
+	plt.title(title+"\n")
+	for i in range(numphs):
+		mag, ang_r = c.polar(phasor[i])
+		plt.arrow(0,0,ang_r,mag,color=colors[i])
+	plt.show()
+		
