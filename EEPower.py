@@ -378,7 +378,7 @@ def C_discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
     vc = C_VafterT(t,vo,cap,P) # set initial cap voltage
     while(vc >= Vmin):
         t = t+dt # increment the time
-		vcp = vc # save previous voltage
+        vcp = vc # save previous voltage
         vc = C_VafterT(t,vo,cap,P) # calc. new voltage
     if(Eremain):
         E = C_energy(cap,vcp) # calc. energy
