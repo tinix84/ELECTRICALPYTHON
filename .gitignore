@@ -11,3 +11,9 @@
 
 # Ignore Text Files
 *.txt
+
+# Ignore Image Files
+*.png
+
+# Ignore DB Files
+*.db
