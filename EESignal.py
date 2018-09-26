@@ -22,6 +22,7 @@
 #   - State Space Simulator:			st_space
 #   - Step Function						u
 #   - Phase Margin:						pm
+#   - Gain Margin:						gm
 #   - System Response Plotter:			sys_response
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
@@ -30,6 +31,9 @@
 #
 #   Private Classes ( Those not Intended for Use Outside of Library )
 #   - Function Concatinator:			c_func_concat
+#
+#   Constants
+#   - NaN (Not A Number):				NAN
 #################################################################################
 
 # Import necessary libraries
@@ -38,11 +42,30 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad as integrate
 from scipy import signal as sig
 
+# Define constants
+NAN = float('nan')
+
 # Define System Response Plotter function
-def sys_response(system,nsteps=1000,dt=0.01,stepResponse=True,
-				rampResponse=False,parabolicResponse=False):
+def sys_response(system,nsteps=1000,dt=0.01,combine=True,
+				stepResponse=True,rampResponse=False,parabolicResponse=False):
 	# Define Time Axis
 	TT = np.arange(0,nsteps*dt,dt)
+	
+	# Condition system input to ensure proper execution
+	if ( len(system) == 2 ):
+		num = np.asarray(system[0]) # Numerator is first argument
+		den = np.asarray(system[1]) # Denominator is second argument
+		if combine: # If asked to add the numerator to the denominator
+			ld = len(den) # Length of denominator
+			ln = len(num) # Length of numerator
+			num = np.append(np.zeros(ld-ln),num) # Pad beginning with zeros
+			den = den + num # Add numerator and denominator
+		for i in range( len( num ) ):
+			if (num[i] != 0):
+				num = num[i:]		# Slice zeros off the front of the numerator
+				break 				# Break out of for loop
+		system = (num,den)  # Repack system
+			
 	
 	# Allocate space for all outputs
 	step = np.zeros(nsteps)
@@ -77,11 +100,14 @@ def sys_response(system,nsteps=1000,dt=0.01,stepResponse=True,
 		plt.title("Step Response")
 		plt.plot(TT,y1,'k--', label="Step Response")
 		plt.plot(TT,step,'k', label="Step Function")
+		plt.grid()
+		plt.legend()
 		plt.subplot(122)
 		plt.title("Step Response Error")
 		plt.plot(TT,errS,'k', label="Error")
 		plt.grid()
 		plt.legend()
+		plt.subplots_adjust(wspace=0.3)
 		plt.show()
 	if (rampResponse):
 		plt.figure()
@@ -89,11 +115,14 @@ def sys_response(system,nsteps=1000,dt=0.01,stepResponse=True,
 		plt.title("Ramp Response")
 		plt.plot(TT,y2,'k--', label="Ramp Response")
 		plt.plot(TT,ramp,'k', label="Ramp Function")
+		plt.grid()
+		plt.legend()
 		plt.subplot(122)
 		plt.title("Ramp Response Error")
 		plt.plot(TT,errR,'k', label="Error")
 		plt.grid()
 		plt.legend()
+		plt.subplots_adjust(wspace=0.3)
 		plt.show()
 	if (parabolicResponse):
 		plt.figure()
@@ -101,12 +130,50 @@ def sys_response(system,nsteps=1000,dt=0.01,stepResponse=True,
 		plt.title("Parabolic Response")
 		plt.plot(TT,y3,'k--', label="Parabolic Response")
 		plt.plot(TT,parabola,'k', label="Parabolic Function")
+		plt.grid()
+		plt.legend()
 		plt.subplot(122)
 		plt.title("Parabolic Response Error")
 		plt.plot(TT,errP,'k', label="Error")
 		plt.grid()
 		plt.legend()
+		plt.subplots_adjust(wspace=0.3)
 		plt.show()
+
+# Define Gain Margin Calculator Function
+def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
+	""" Gain Margin Calculator
+	
+	Given a transfer function, calculates the gain margin (gm) and the
+	frequency at which the gain margin occurs (wg).
+	
+	Required Arguments:
+	-------------------
+	tf:		The Transfer Function; can be provided as the following:
+			- 1 (instance of lti)
+			- 2 (num, den)
+			- 3 (zeros, poles, gain)
+			- 4 (A, B, C, D)
+	
+	Optional Arguments:
+	-------------------
+	mn:		The minimum frequency (as an exponent to 10, e.g. 10^mn)
+			to be calculated for. Default is -2.
+	mx:		The maximum frequency (as an exponent to 10, e.g. 10^mx)
+			to be calculated for. Default is 3.
+	numpts: The number of points over which to calculate the system.
+			Default is 100.
+	err:	The maximum allowable error for an aproximation of zero
+			(i.e. the difference between found value and zero).
+			Default is 1e-12.
+	
+	Returns:
+	--------
+	wg:		First returned argument; the frequency at which gain margin
+			occurs (in radians per second e.g. rad/s).
+	gm:		Second and final returned argument; Gain Margin (in dB).
+	
+	"""
 
 # Define Phase Margin Calculator Function
 def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
@@ -153,7 +220,7 @@ def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 		# Re-Initialize variables
 		isP = False
 		isN = False
-		pm = 0
+		pm = 
 		wp = 0
 		
 		# Perform iterative loop recursively set
@@ -491,6 +558,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 		plt.title("Forcing Functions "+gtitle)
 		plt.xlabel("Time (seconds)")
 		plt.legend(title="Forcing Functions")
+		plt.grid()
 		if sv:
 			plt.savefig('Simulation Forcing Functions.png')
 		if plot:
@@ -504,6 +572,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 	plt.title("Simulated Output Terms "+soltype[solution]+gtitle)
 	plt.xlabel("Time (seconds)")
 	plt.legend(title="State Variable")
+	plt.grid()
 	if sv:
 		plt.savefig('Simulation Terms.png')
 	if plot:
@@ -520,6 +589,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 			plt.axis(axis)
 		plt.title("Combined Output "+gtitle)
 		plt.xlabel("Time (seconds)")
+		plt.grid()
 		if sv:
 			plt.savefig('Simulation Combined Output.png')
 		if plot:
