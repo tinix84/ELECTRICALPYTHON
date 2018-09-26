@@ -22,6 +22,7 @@
 #   - State Space Simulator:			st_space
 #   - Step Function						u
 #   - Phase Margin:						pm
+#   - System Response Plotter:			sys_response
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - Tupple to Matrix Converter:		tuple_to_matrix
@@ -36,6 +37,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad as integrate
 from scipy import signal as sig
+
+# Define System Response Plotter function
+
 
 # Define Phase Margin Calculator Function
 def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
