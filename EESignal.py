@@ -21,6 +21,7 @@
 #   - RMS Calculator:					rms_calc
 #   - State Space Simulator:			st_space
 #   - Step Function						u
+#   - Phase Margin:						pm
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - Tupple to Matrix Converter:		tuple_to_matrix
@@ -34,6 +35,95 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad as integrate
+from scipy import signal as sig
+
+# Define Phase Margin Calculator Function
+def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
+	""" Phase Margin Calculator
+	
+	Given a transfer function, calculates the phase margin (pm) and the
+	frequency at which the phase margin occurs (wp).
+	
+	Required Arguments:
+	-------------------
+	tf:		The Transfer Function; can be provided as the following:
+			- 1 (instance of lti)
+			- 2 (num, den)
+			- 3 (zeros, poles, gain)
+			- 4 (A, B, C, D)
+	
+	Optional Arguments:
+	-------------------
+	mn:		The minimum frequency (as an exponent to 10, e.g. 10^mn)
+			to be calculated for. Default is -2.
+	mx:		The maximum frequency (as an exponent to 10, e.g. 10^mx)
+			to be calculated for. Default is 3.
+	numpts: The number of points over which to calculate the system.
+			Default is 100.
+	err:	The maximum allowable error for an aproximation of zero
+			(i.e. the difference between found value and zero).
+			Default is 1e-12.
+	
+	Returns:
+	--------
+	wp:		First returned argument; the frequency at which phase margin
+			occurs (in radians per second e.g. rad/s).
+	pm:		Second and final returned argument; Phase Margin (in degrees).
+	
+	"""
+	# Initialize while loop control
+	valid = True
+
+	# Initialize values given numerator and denominator
+	wover = np.logspace(mn,mx,numpts)
+	w, mag, ang = sig.bode((tf),wover)
+
+	while(valid):
+		# Re-Initialize variables
+		isP = False
+		isN = False
+		pm = 0
+		wp = 0
+		
+		# Perform iterative loop recursively set
+		# smaller and smaller boundaries
+		for i in range(len(mag)-1):
+			if (mag[i] > 0):
+				isP = True             # Positive value found
+				Pi = w[i]              # Store frequency for positive value
+				if abs(mag[i]) < err:  # if less than error, stop
+					valid = False      # stop while loop
+					wp = Pi            # store Phase Margin angle
+					pm = ang[i]        # store Phase Margin
+					break              # break out of for loop
+			elif (mag[i] < 0):
+				isN = True             # Negative value found
+				Ni = w[i]              # Store frequency for negative value
+				if abs(mag[i]) < err:  # if less than error, stop
+					valid = False      # stop while loop
+					wp = Ni            # store Phase Margin angle
+					pm = ang[i]        # store Phase Margin
+					break              # break out of for loop
+
+			if (isP and isN): # If both positive and negative values found
+				if(Pi < Ni):          # Positive comes before negative
+					x1 = np.log10(Pi) # Convert into value for logspace
+					x2 = np.log10(Ni) # Convert into value for logspace
+				elif (Ni < Pi):       # Negative comes before positive
+					x1 = np.log10(Ni) # Convert into value for logspace
+					x2 = np.log10(Pi) # Convert into value for logspace
+				valid = True                            # Reset valid value
+				wzoom = np.logspace(x1,x2,numpts)       # Generate zoomed logspace
+				w, mag, ang = sig.bode((tf),wzoom) # Generate Bode values
+				break                                   # Break out of for loop
+			else: # Not both positive and negative values were found
+				valid = False # stop while loop
+				
+	pm -= 180     # subtract 180 degrees to find true phase margin
+	if (pm < 0):  # If phase margin is less than zero, shift by 360 degrees
+		pm += 360
+	
+	return(wp, pm) # Return both the phase margin frequency (where it occurs) and the phase margin.
 
 # Define Function Concatinator Class
 class c_func_concat:
