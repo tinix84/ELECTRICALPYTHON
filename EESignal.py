@@ -39,7 +39,74 @@ from scipy.integrate import quad as integrate
 from scipy import signal as sig
 
 # Define System Response Plotter function
-
+def sys_response(system,nsteps=1000,dt=0.01,stepResponse=True,
+				rampResponse=False,parabolicResponse=False):
+	# Define Time Axis
+	TT = np.arange(0,nsteps*dt,dt)
+	
+	# Allocate space for all outputs
+	step = np.zeros(nsteps)
+	ramp = np.zeros(nsteps)
+	parabola = np.zeros(nsteps)
+	errS = np.zeros(nsteps)
+	errR = np.zeros(nsteps)
+	errP = np.zeros(nsteps)
+	
+	# Generate Inputs
+	for i in range(nsteps):
+		step[i] = 1.0
+		ramp[i] = (dt*i)
+		parabola[i] = (dt*i)**(2)
+	
+	# Simulate Response for each input (step, ramp, parabola)
+	# All 'x' values are variables that are considered don't-care
+	x, y1, x = sig.lsim((system),step,TT)
+	x, y2, x = sig.lsim((system),ramp,TT)
+	x, y3, x = sig.lsim((system),parabola,TT)
+	
+	# Calculate error over all points
+	for k in range(nsteps):
+		errS[k] = step[k] - y1[k]
+		errR[k] = ramp[k] - y2[k]
+		errP[k] = parabola[k] - y3[k]
+	
+	# Plot responses if allowed
+	if (stepResponse):
+		plt.figure()
+		plt.subplot(121)
+		plt.title("Step Response")
+		plt.plot(TT,y1,'k--', label="Step Response")
+		plt.plot(TT,step,'k', label="Step Function")
+		plt.subplot(122)
+		plt.title("Step Response Error")
+		plt.plot(TT,errS,'k', label="Error")
+		plt.grid()
+		plt.legend()
+		plt.show()
+	if (rampResponse):
+		plt.figure()
+		plt.subplot(121)
+		plt.title("Ramp Response")
+		plt.plot(TT,y2,'k--', label="Ramp Response")
+		plt.plot(TT,ramp,'k', label="Ramp Function")
+		plt.subplot(122)
+		plt.title("Ramp Response Error")
+		plt.plot(TT,errR,'k', label="Error")
+		plt.grid()
+		plt.legend()
+		plt.show()
+	if (parabolicResponse):
+		plt.figure()
+		plt.subplot(121)
+		plt.title("Parabolic Response")
+		plt.plot(TT,y3,'k--', label="Parabolic Response")
+		plt.plot(TT,parabola,'k', label="Parabolic Function")
+		plt.subplot(122)
+		plt.title("Parabolic Response Error")
+		plt.plot(TT,errP,'k', label="Error")
+		plt.grid()
+		plt.legend()
+		plt.show()
 
 # Define Phase Margin Calculator Function
 def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
