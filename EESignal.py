@@ -27,6 +27,7 @@
 #   - System Response Plotter:			sys_response
 #   - Multi-Argument Convolution:		convolve
 #   - System Bode Plot:					bode
+#   - Phase Lead System:				phase_lead
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:			sys_condition
@@ -302,7 +303,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",
 		plt.show()
 
 # Define Gain Margin Calculator Function
-def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
+def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True,find=-180):
 	""" Gain Margin Calculator
 	
 	Given a transfer function, calculates the gain margin (gm) and the
@@ -331,6 +332,8 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 				Default is False.
 	ret:		If set to true, will return the gain margin and frequency.
 				Default is True.
+	find:		The value to be searched for. For gain margin, the default
+				is -180 (degrees).
 	
 	Returns:
 	--------
@@ -359,22 +362,22 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 		# Perform iterative loop recursively set
 		# smaller and smaller boundaries
 		for i in range(len(mag)-1):
-			if (ang[i] > -180):
-				isP = True             		# Positive value found
-				Pi = w[i]              		# Store frequency for positive value
-				if abs(ang[i]+180) < err:	# if less than error, stop
-					valid = False      		# stop while loop
-					wg = Pi            		# store Phase Margin angle
-					gm = mag[i]        		# store Phase Margin
-					break              		# break out of for loop
-			elif (ang[i] < -180):
-				isN = True            		# Negative value found
-				Ni = w[i]              		# Store frequency for negative value
-				if abs(ang[i]+180) < err:   # if less than error, stop
-					valid = False      		# stop while loop
-					wg = Ni            		# store gain Margin angle
-					gm = mag[i]        		# store gain Margin
-					break              		# break out of for loop
+			if (ang[i] >= find):
+				isP = True             			# Positive value found
+				Pi = w[i]              			# Store frequency for positive value
+				if abs(ang[i]-find) < err:		# if less than error, stop
+					valid = False      			# stop while loop
+					wg = Pi            			# store Phase Margin angle
+					gm = mag[i]        			# store Phase Margin
+					break              			# break out of for loop
+			elif (ang[i] < find):
+				isN = True            			# Negative value found
+				Ni = w[i]              			# Store frequency for negative value
+				if abs(ang[i]-find) < err:		# if less than error, stop
+					valid = False      			# stop while loop
+					wg = Ni            			# store gain Margin angle
+					gm = mag[i]        			# store gain Margin
+					break              			# break out of for loop
 
 			if (isP and isN): # If both positive and negative values found
 				if(Pi < Ni):          # Positive comes before negative
@@ -397,7 +400,7 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 		return(wg, gm) # Return both the gain margin frequency (where it occurs) and the gain margin.
 
 # Define Phase Margin Calculator Function
-def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
+def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True,find=0):
 	""" Phase Margin Calculator
 	
 	Given a transfer function, calculates the phase margin (pm) and the
@@ -426,6 +429,8 @@ def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 				Default is False.
 	ret:		If set to true, will return the phase margin and frequency.
 				Default is True.
+	find:		The value to be searched for. Default for phase margin is
+				0 (dB).
 	
 	Returns:
 	--------
@@ -454,22 +459,22 @@ def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 		# Perform iterative loop recursively set
 		# smaller and smaller boundaries
 		for i in range(len(mag)-1):
-			if (mag[i] > 0):
-				isP = True             # Positive value found
-				Pi = w[i]              # Store frequency for positive value
-				if abs(mag[i]) < err:  # if less than error, stop
-					valid = False      # stop while loop
-					wp = Pi            # store Phase Margin angle
-					pm = ang[i]        # store Phase Margin
-					break              # break out of for loop
-			elif (mag[i] < 0):
-				isN = True             # Negative value found
-				Ni = w[i]              # Store frequency for negative value
-				if abs(mag[i]) < err:  # if less than error, stop
-					valid = False      # stop while loop
-					wp = Ni            # store Phase Margin angle
-					pm = ang[i]        # store Phase Margin
-					break              # break out of for loop
+			if (mag[i] >= find):
+				isP = True             			# Positive value found
+				Pi = w[i]              			# Store frequency for positive value
+				if abs(mag[i]-find) < err:		# if less than error, stop
+					valid = False      			# stop while loop
+					wp = Pi            			# store Phase Margin angle
+					pm = ang[i]        			# store Phase Margin
+					break              			# break out of for loop
+			elif (mag[i] < find):
+				isN = True             			# Negative value found
+				Ni = w[i]              			# Store frequency for negative value
+				if abs(mag[i]-find) < err:		# if less than error, stop
+					valid = False      			# stop while loop
+					wp = Ni            			# store Phase Margin angle
+					pm = ang[i]        			# store Phase Margin
+					break              			# break out of for loop
 
 			if (isP and isN): # If both positive and negative values found
 				if(Pi < Ni):          # Positive comes before negative
@@ -494,6 +499,56 @@ def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 	
 	if ret:
 		return(wp, pm) # Return both the phase margin frequency (where it occurs) and the phase margin.
+
+# Define Phase Lead Compensation Calculator
+def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
+	""" Phase Lead Compensation Calculator
+	
+	Given a transfer-function system, and a desired phase-margin,
+	calculate the wp and wz to be used in a feedback system of type I
+	(defined above or in EESignal.py help) necessary to achieve the
+	desired phase-margin.
+	
+	"""
+	# Find original phase-margin
+	wp, pm = ees.pm(sys)
+
+	# From original phase margin, find phi-m
+	phim = desired-pm+tolerance
+
+	# Calculate alpha:
+	alpha = (1+np.sin(np.radians(phim)))/(1-np.sin(np.radians(phim)))
+
+	# Calculate wm
+	wmp = -10*np.log10(alpha)
+	wm,x = ees.pm(sys,find=wmp)
+
+	# Calculate wp and wz
+	wp = np.sqrt(alpha)*wm
+	wz = wm/np.sqrt(alpha)
+	
+	# Add feedback control to system
+	num = num*wz
+	den = den*wp
+	sys = (num,den)
+
+	if printout:
+		print("Original Phase Margin:")
+		print("Phase Margin:",pm,"degrees at",wp,"rad/sec")
+		if plot:
+			ees.bode(sys)
+		print("Phi-M:",phim)
+		print("Alpha:",alpha)
+		print("Magnitude where Wm appears:",wmp,"dB")
+		print("Wm:",wm,"rad/sec")
+		print("Wp:",wp)
+		print("Wz:",wz)
+		if plot:
+			ees.bode(sys)
+		ees.pm(sys,printout=True,ret=False)
+	
+	if ret:
+		return(wp,wz)
 
 # Define Function Concatinator Class
 class c_func_concat:
