@@ -88,11 +88,12 @@ def convolve(tuple):
 # Define System Conditioning Function
 def sys_condition(system,feedback):
 	if ( len(system) == 2 ):		# System found to be num and den
-		num = np.asarray(system[0]) # Numerator is first argument
-		den = np.asarray(system[1]) # Denominator is second argument
-		if (type(num) == tuple):
+		num = system[0]
+		den = system[1]
+		# Convolve numerator or denominator as needed
+		if (str(type(num)) == tuple):
 			num = convolve(num)		# Convolve terms in numerator
-		if (type(den) == tuple):
+		if (str(type(den)) == tuple):
 			den = convolve(den)		# Convolve terms in denominator
 		if feedback: # If asked to add the numerator to the denominator
 			ld = len(den) # Length of denominator
@@ -184,7 +185,7 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 	
 
 # Define System Response Plotter function
-def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle=""
+def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",
 				stepResponse=True,rampResponse=False,parabolicResponse=False):
 	""" System Response Plotter Function
 	
@@ -301,7 +302,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle=""
 		plt.show()
 
 # Define Gain Margin Calculator Function
-def gm(tf,mn=-2,mx=3,npts=100,err=1e-12):
+def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 	""" Gain Margin Calculator
 	
 	Given a transfer function, calculates the gain margin (gm) and the
@@ -309,36 +310,40 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 	
 	Required Arguments:
 	-------------------
-	tf:		The Transfer Function; can be provided as the following:
-			- 1 (instance of lti)
-			- 2 (num, den)
-			- 3 (zeros, poles, gain)
-			- 4 (A, B, C, D)
+	tf:			The Transfer Function; can be provided as the following:
+				- 1 (instance of lti)
+				- 2 (num, den)
+				- 3 (zeros, poles, gain)
+				- 4 (A, B, C, D)
 	
 	Optional Arguments:
 	-------------------
-	mn:		The minimum frequency (as an exponent to 10, e.g. 10^mn)
-			to be calculated for. Default is -2.
-	mx:		The maximum frequency (as an exponent to 10, e.g. 10^mx)
-			to be calculated for. Default is 3.
-	npts: The number of points over which to calculate the system.
-			Default is 100.
-	err:	The maximum allowable error for an aproximation of zero
-			(i.e. the difference between found value and zero).
-			Default is 1e-12.
+	mn:			The minimum frequency (as an exponent to 10, e.g. 10^mn)
+				to be calculated for. Default is -2.
+	mx:			The maximum frequency (as an exponent to 10, e.g. 10^mx)
+				to be calculated for. Default is 3.
+	npts: 		The number of points over which to calculate the system.
+				Default is 100.
+	err:		The maximum allowable error for an aproximation of zero
+				(i.e. the difference between found value and zero).
+				Default is 1e-12.
+	printout:	If set to true, will automatically print the values.
+				Default is False.
+	ret:		If set to true, will return the gain margin and frequency.
+				Default is True.
 	
 	Returns:
 	--------
-	wg:		First returned argument; the frequency at which gain margin
-			occurs (in radians per second e.g. rad/s).
-	gm:		Second and final returned argument; Gain Margin (in dB).
+	wg:			First returned argument; the frequency at which gain margin
+				occurs (in radians per second e.g. rad/s).
+	gm:			Second and final returned argument; Gain Margin (in dB).
 	
 	"""
 	# Initialize while loop control
 	valid = True
 	
 	# Condition system input to ensure proper execution
-	system = sys_condition(system,False)
+	tf = sys_condition(tf,False)
 
 	# Initialize values given numerator and denominator
 	wover = np.logspace(mn,mx,npts)
@@ -367,8 +372,8 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 				Ni = w[i]              		# Store frequency for negative value
 				if abs(ang[i]+180) < err:   # if less than error, stop
 					valid = False      		# stop while loop
-					wg = Ni            		# store Phase Margin angle
-					gm = mag[i]        		# store Phase Margin
+					wg = Ni            		# store gain Margin angle
+					gm = mag[i]        		# store gain Margin
 					break              		# break out of for loop
 
 			if (isP and isN): # If both positive and negative values found
@@ -385,10 +390,14 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 			else: # Not both positive and negative values were found
 				valid = False # stop while loop
 	
-	return(wg, gm) # Return both the phase margin frequency (where it occurs) and the phase margin.
+	if printout:
+		print("Gain Margin:",gm,"dB at",wg,"rad/sec")
+	
+	if ret:
+		return(wg, gm) # Return both the gain margin frequency (where it occurs) and the gain margin.
 
 # Define Phase Margin Calculator Function
-def pm(tf,mn=-2,mx=3,npts=100,err=1e-12):
+def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True):
 	""" Phase Margin Calculator
 	
 	Given a transfer function, calculates the phase margin (pm) and the
@@ -396,36 +405,40 @@ def pm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 	
 	Required Arguments:
 	-------------------
-	tf:		The Transfer Function; can be provided as the following:
-			- 1 (instance of lti)
-			- 2 (num, den)
-			- 3 (zeros, poles, gain)
-			- 4 (A, B, C, D)
+	tf:			The Transfer Function; can be provided as the following:
+				- 1 (instance of lti)
+				- 2 (num, den)
+				- 3 (zeros, poles, gain)
+				- 4 (A, B, C, D)
 	
 	Optional Arguments:
 	-------------------
-	mn:		The minimum frequency (as an exponent to 10, e.g. 10^mn)
-			to be calculated for. Default is -2.
-	mx:		The maximum frequency (as an exponent to 10, e.g. 10^mx)
-			to be calculated for. Default is 3.
-	npts: The number of points over which to calculate the system.
-			Default is 100.
-	err:	The maximum allowable error for an aproximation of zero
-			(i.e. the difference between found value and zero).
-			Default is 1e-12.
+	mn:			The minimum frequency (as an exponent to 10, e.g. 10^mn)
+				to be calculated for. Default is -2.
+	mx:			The maximum frequency (as an exponent to 10, e.g. 10^mx)
+				to be calculated for. Default is 3.
+	npts: 		The number of points over which to calculate the system.
+				Default is 100.
+	err:		The maximum allowable error for an aproximation of zero
+				(i.e. the difference between found value and zero).
+				Default is 1e-12.
+	printout:	If set to true, will automatically print the values.
+				Default is False.
+	ret:		If set to true, will return the phase margin and frequency.
+				Default is True.
 	
 	Returns:
 	--------
-	wp:		First returned argument; the frequency at which phase margin
-			occurs (in radians per second e.g. rad/s).
-	pm:		Second and final returned argument; Phase Margin (in degrees).
+	wp:			First returned argument; the frequency at which phase margin
+				occurs (in radians per second e.g. rad/s).
+	pm:			Second and final returned argument; Phase Margin (in degrees).
 	
 	"""
 	# Initialize while loop control
 	valid = True
 	
 	# Condition system input to ensure proper execution
-	system = sys_condition(system,False)
+	tf = sys_condition(tf,False)
 
 	# Initialize values given numerator and denominator
 	wover = np.logspace(mn,mx,npts)
@@ -476,7 +489,11 @@ def pm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 	if (pm < 0):  # If phase margin is less than zero, shift by 360 degrees
 		pm += 360
 	
-	return(wp, pm) # Return both the phase margin frequency (where it occurs) and the phase margin.
+	if printout:
+		print("Phase Margin:",pm,"degrees at",wp,"rad/sec")
+	
+	if ret:
+		return(wp, pm) # Return both the phase margin frequency (where it occurs) and the phase margin.
 
 # Define Function Concatinator Class
 class c_func_concat:
