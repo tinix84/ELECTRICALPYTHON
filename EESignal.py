@@ -25,7 +25,7 @@
 #   - Phase Margin:						pm
 #   - Gain Margin:						gm
 #   - System Response Plotter:			sys_response
-#   - Multi-argument Convolution:		convolve
+#   - Multi-Argument Convolution:		convolve
 #   - System Bode Plot:					bode
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
