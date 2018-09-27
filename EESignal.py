@@ -174,6 +174,55 @@ def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 	gm:		Second and final returned argument; Gain Margin (in dB).
 	
 	"""
+	# Initialize while loop control
+	valid = True
+
+	# Initialize values given numerator and denominator
+	wover = np.logspace(mn,mx,numpts)
+	w, mag, ang = sig.bode((tf),wover)
+
+	while(valid):
+		# Re-Initialize variables
+		isP = False
+		isN = False
+		gm = NAN
+		wg = NAN
+		
+		# Perform iterative loop recursively set
+		# smaller and smaller boundaries
+		for i in range(len(mag)-1):
+			if (ang[i] > -180):
+				isP = True             		# Positive value found
+				Pi = w[i]              		# Store frequency for positive value
+				if abs(ang[i]+180) < err:	# if less than error, stop
+					valid = False      		# stop while loop
+					wg = Pi            		# store Phase Margin angle
+					gm = mag[i]        		# store Phase Margin
+					break              		# break out of for loop
+			elif (ang[i] < -180):
+				isN = True            		# Negative value found
+				Ni = w[i]              		# Store frequency for negative value
+				if abs(ang[i]+180) < err:   # if less than error, stop
+					valid = False      		# stop while loop
+					wg = Ni            		# store Phase Margin angle
+					gm = mag[i]        		# store Phase Margin
+					break              		# break out of for loop
+
+			if (isP and isN): # If both positive and negative values found
+				if(Pi < Ni):          # Positive comes before negative
+					x1 = np.log10(Pi) # Convert into value for logspace
+					x2 = np.log10(Ni) # Convert into value for logspace
+				elif (Ni < Pi):       # Negative comes before positive
+					x1 = np.log10(Ni) # Convert into value for logspace
+					x2 = np.log10(Pi) # Convert into value for logspace
+				valid = True                            # Reset valid value
+				wzoom = np.logspace(x1,x2,numpts)       # Generate zoomed logspace
+				w, mag, ang = sig.bode((tf),wzoom) # Generate Bode values
+				break                                   # Break out of for loop
+			else: # Not both positive and negative values were found
+				valid = False # stop while loop
+	
+	return(wg, gm) # Return both the phase margin frequency (where it occurs) and the phase margin.
 
 # Define Phase Margin Calculator Function
 def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
@@ -220,8 +269,8 @@ def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 		# Re-Initialize variables
 		isP = False
 		isN = False
-		pm = 
-		wp = 0
+		pm = NAN
+		wp = NAN
 		
 		# Perform iterative loop recursively set
 		# smaller and smaller boundaries
