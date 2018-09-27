@@ -218,7 +218,8 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle=""
 	
 	Returns
 	-------
-	NONE.
+	NONE:		Generates the plot of the desired responses,
+				does not return numerical values.
 	"""
 	# Define Time Axis
 	TT = np.arange(0,npts*dt,dt)
