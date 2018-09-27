@@ -26,6 +26,7 @@
 #   - System Response Plotter:			sys_response
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
+#   - Multi-argument Convolution:		convolve
 #   - Tupple to Matrix Converter:		tuple_to_matrix
 #   - Numpy Array to Matrix Converter:	nparr_to_matrix
 #
@@ -44,6 +45,10 @@ from scipy import signal as sig
 
 # Define constants
 NAN = float('nan')
+
+# Define convolution function
+def convolve(tuple):
+	
 
 # Define System Response Plotter function
 def sys_response(system,nsteps=1000,dt=0.01,combine=True,
