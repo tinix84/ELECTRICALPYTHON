@@ -13,7 +13,8 @@
 #   Dr. Dennis Sullivan
 #
 #   This library was compiled by Joe Stanley, special thanks to stackOverflow
-#   user: gg349 whose work is well documented and used here.
+#   user: gg349 whose work is well documented and used for the FFT calculations
+#   used throughout this library.
 #
 #   Included Functions
 #   - FFT Coefficient Calculator:		fft_coef
@@ -24,9 +25,10 @@
 #   - Phase Margin:						pm
 #   - Gain Margin:						gm
 #   - System Response Plotter:			sys_response
+#   - Multi-argument Convolution:		convolve
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
-#   - Multi-argument Convolution:		convolve
+#   - TF System Conditioning:			sys_condition
 #   - Tupple to Matrix Converter:		tuple_to_matrix
 #   - Numpy Array to Matrix Converter:	nparr_to_matrix
 #
@@ -35,6 +37,12 @@
 #
 #   Constants
 #   - NaN (Not A Number):				NAN
+#   - Type: Numpy Matrix:				matrix
+#   - Type: Tuple:						tuple
+#   - Type: Numpy Array:				ndarr
+#   - Type: Integer:					tint
+#   - Type: Float:						tfloat
+#   - Type: Function Handle:			tfun
 #################################################################################
 
 # Import necessary libraries
@@ -45,10 +53,61 @@ from scipy import signal as sig
 
 # Define constants
 NAN = float('nan')
+matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
+tuple = "<class 'tuple'>"
+ndarr = "<class 'numpy.ndarray'>"
+tint = "<class 'int'>"
+tfloat = "<class 'float'>"
+tfun = "<class 'function'>"
 
 # Define convolution function
 def convolve(tuple):
+	""" Multi-Argument Convolution Function
 	
+	Given a tuple of terms, convolves all terms in tuple to
+	return one tuple as a numpy array.
+	
+	Arguments
+	---------
+	tuple:		Tuple of terms to be convolved.
+				i.e. ( [1, 2], [3, 4], ..., [n-1, n] )
+	
+	Returns
+	-------
+	c:			The convolved set of the individual terms.
+				i.e. np.array([ x1, x2, x3, ..., xn ])
+	"""
+	c = sig.convolve(tuple[0],tuple[1])
+	if (len(tuple) > 2):
+		# Iterate starting with second element and continuing
+		for i in range(2,len(tuple)):
+			c = sig.convolve(c,tuple[i])
+	return(c)
+	
+# Define System Conditioning Function
+def sys_condition(system,combine):
+	if ( len(system) == 2 ):		# System found to be num and den
+		num = np.asarray(system[0]) # Numerator is first argument
+		den = np.asarray(system[1]) # Denominator is second argument
+		if (type(num) == tuple):
+			num = convolve(num)		# Convolve terms in numerator
+		if (type(den) == tuple):
+			den = convolve(den)		# Convolve terms in denominator
+		if combine: # If asked to add the numerator to the denominator
+			ld = len(den) # Length of denominator
+			ln = len(num) # Length of numerator
+			num = np.append(np.zeros(ld-ln),num) # Pad beginning with zeros
+			den = den + num # Add numerator and denominator
+		for i in range( len( num ) ):
+			if (num[i] != 0):
+				num = num[i:]		# Slice zeros off the front of the numerator
+				break 				# Break out of for loop
+		for i in range( len( den ) ):
+			if (den[i] != 0):
+				den = den[i:]		# Slice zeros off the front of the denominator
+				break 				# Break out of for loop
+		system = (num,den)  # Repack system
+	return(system) # Return the conditioned system
 
 # Define System Response Plotter function
 def sys_response(system,nsteps=1000,dt=0.01,combine=True,
@@ -89,19 +148,7 @@ def sys_response(system,nsteps=1000,dt=0.01,combine=True,
 	TT = np.arange(0,nsteps*dt,dt)
 	
 	# Condition system input to ensure proper execution
-	if ( len(system) == 2 ):
-		num = np.asarray(system[0]) # Numerator is first argument
-		den = np.asarray(system[1]) # Denominator is second argument
-		if combine: # If asked to add the numerator to the denominator
-			ld = len(den) # Length of denominator
-			ln = len(num) # Length of numerator
-			num = np.append(np.zeros(ld-ln),num) # Pad beginning with zeros
-			den = den + num # Add numerator and denominator
-		for i in range( len( num ) ):
-			if (num[i] != 0):
-				num = num[i:]		# Slice zeros off the front of the numerator
-				break 				# Break out of for loop
-		system = (num,den)  # Repack system
+	system = sys_condition(system,combine)
 			
 	
 	# Allocate space for all outputs
@@ -213,6 +260,9 @@ def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 	"""
 	# Initialize while loop control
 	valid = True
+	
+	# Condition system input to ensure proper execution
+	system = sys_condition(system,False)
 
 	# Initialize values given numerator and denominator
 	wover = np.logspace(mn,mx,numpts)
@@ -297,6 +347,9 @@ def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 	"""
 	# Initialize while loop control
 	valid = True
+	
+	# Condition system input to ensure proper execution
+	system = sys_condition(system,False)
 
 	# Initialize values given numerator and denominator
 	wover = np.logspace(mn,mx,numpts)
@@ -428,14 +481,6 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 					State-Space Variables return as tuple.
 
 	"""
-
-	# Define types to be tested against
-	matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
-	tuple = "<class 'tuple'>"
-	ndarr = "<class 'numpy.ndarray'>"
-	tint = "<class 'int'>"
-	tfloat = "<class 'float'>"
-	tfun = "<class 'function'>"
 
 	# Test for NN and nsteps
 	if (nsteps >= NN):
