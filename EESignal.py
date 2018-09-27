@@ -48,6 +48,38 @@ NAN = float('nan')
 # Define System Response Plotter function
 def sys_response(system,nsteps=1000,dt=0.01,combine=True,
 				stepResponse=True,rampResponse=False,parabolicResponse=False):
+	""" System Response Plotter Function
+	
+	Given a transfer function, plots the response against step, ramp, and
+	parabolic inputs and plots the error for each of these functions.
+	
+	Required Arguments
+	------------------
+	system:		The Transfer Function; can be provided as the following:
+				- 1 (instance of lti)
+				- 2 (num, den)
+				- 3 (zeros, poles, gain)
+				- 4 (A, B, C, D)
+	
+	Optional Arguments
+	------------------
+	nsteps:				Number of steps to calculate over; default is 1000.
+	dt:					Difference between each data point, default is 0.01.
+	combine:			If combination of numerator and denominator is needed.
+						This value should be set to "True" if the parts should be
+						combined to show the complete system with feedback.
+						Default is True.
+	stepResponse:		Plot the step-response and corresponding error;
+						default is True.
+	rampResponse:		Plot the ramp-response and corresponding error;
+						default is False.
+	parabolicResponse:	Plot the parabolic-response and corresponding error;
+						default is False.
+	
+	Returns
+	-------
+	NONE.
+	"""
 	# Define Time Axis
 	TT = np.arange(0,nsteps*dt,dt)
 	
