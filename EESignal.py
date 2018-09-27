@@ -26,6 +26,7 @@
 #   - Gain Margin:						gm
 #   - System Response Plotter:			sys_response
 #   - Multi-argument Convolution:		convolve
+#   - System Bode Plot:					bode
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:			sys_condition
@@ -85,7 +86,7 @@ def convolve(tuple):
 	return(c)
 	
 # Define System Conditioning Function
-def sys_condition(system,combine):
+def sys_condition(system,feedback):
 	if ( len(system) == 2 ):		# System found to be num and den
 		num = np.asarray(system[0]) # Numerator is first argument
 		den = np.asarray(system[1]) # Denominator is second argument
@@ -93,10 +94,13 @@ def sys_condition(system,combine):
 			num = convolve(num)		# Convolve terms in numerator
 		if (type(den) == tuple):
 			den = convolve(den)		# Convolve terms in denominator
-		if combine: # If asked to add the numerator to the denominator
+		if feedback: # If asked to add the numerator to the denominator
 			ld = len(den) # Length of denominator
 			ln = len(num) # Length of numerator
-			num = np.append(np.zeros(ld-ln),num) # Pad beginning with zeros
+			if(ld > ln):
+				num = np.append(np.zeros(ld-ln),num) # Pad beginning with zeros
+			if(ld < ln):
+				den = np.append(np.zeros(ln-ld),den) # Pad beginning with zeros
 			den = den + num # Add numerator and denominator
 		for i in range( len( num ) ):
 			if (num[i] != 0):
@@ -109,8 +113,78 @@ def sys_condition(system,combine):
 		system = (num,den)  # Repack system
 	return(system) # Return the conditioned system
 
+# Define System Bode Plotting Function
+def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
+	""" System Bode Plotting Function
+	
+	A simple function to generate the Bode Plot for magnitude
+	and frequency given a transfer function system.
+	
+	Required Arguments
+	------------------
+	system:		The Transfer Function; can be provided as the following:
+				- 1 (instance of lti)
+				- 2 (num, den)
+				- 3 (zeros, poles, gain)
+				- 4 (A, B, C, D)
+				
+	Optional Arguments
+	------------------
+	mn:			The minimum frequency (as an exponent to 10, e.g. 10^mn)
+				to be calculated for. Default is -2.
+	mx:			The maximum frequency (as an exponent to 10, e.g. 10^mx)
+				to be calculated for. Default is 3.
+	npts:		The number of points over which to calculate the system.
+				Default is 100.
+	gtitle:		Additional string to be added to plot titles;
+				default is "".
+	xlim:		Limit in x-axis for graph plot.
+	ylim:		Limit in y-axis for graph plot.
+	
+	Returns
+	-------
+	NONE:	Generates plot of magnitude and phase, does not return
+			any numerical values.
+	"""
+	# Condition system input to ensure proper execution
+	system = sys_condition(system,False)
+	
+	# Generate the frequency range to calculate over
+	wover = np.logspace(mn,mx,npts)
+	
+	# Calculate the bode system
+	w, mag, ang = sig.bode(system, wover)
+	
+	# Plot Magnitude
+	plt.title("Magnitude "+gtitle)
+	plt.plot(w, mag)
+	plt.xscale("log")
+	plt.grid(which="both")
+	plt.ylabel("Magnitude (dB)")
+	plt.xlabel("Frequency (rad/sec)")
+	if xlim!=False:
+		plt.xlim(xlim)
+	if ylim!=False:
+		plt.ylim(ylim)
+	plt.show()
+
+	# Plot Angle
+	plt.title("Angle "+gtitle)
+	plt.plot(w, ang)
+	plt.xscale("log")
+	plt.grid(which="both")
+	plt.ylabel("Angle (degrees)")
+	plt.xlabel("Frequency (rad/sec)")
+	if xlim!=False:
+		plt.xlim(xlim)
+	if ylim!=False:
+		plt.ylim(ylim)
+	plt.show()
+	
+	
+
 # Define System Response Plotter function
-def sys_response(system,nsteps=1000,dt=0.01,combine=True,
+def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle=""
 				stepResponse=True,rampResponse=False,parabolicResponse=False):
 	""" System Response Plotter Function
 	
@@ -127,12 +201,14 @@ def sys_response(system,nsteps=1000,dt=0.01,combine=True,
 	
 	Optional Arguments
 	------------------
-	nsteps:				Number of steps to calculate over; default is 1000.
+	npts:				Number of steps to calculate over; default is 1000.
 	dt:					Difference between each data point, default is 0.01.
 	combine:			If combination of numerator and denominator is needed.
 						This value should be set to "True" if the parts should be
 						combined to show the complete system with feedback.
 						Default is True.
+	gtitle:				Additional string to be added to plot titles;
+						default is "".
 	stepResponse:		Plot the step-response and corresponding error;
 						default is True.
 	rampResponse:		Plot the ramp-response and corresponding error;
@@ -145,22 +221,21 @@ def sys_response(system,nsteps=1000,dt=0.01,combine=True,
 	NONE.
 	"""
 	# Define Time Axis
-	TT = np.arange(0,nsteps*dt,dt)
+	TT = np.arange(0,npts*dt,dt)
 	
 	# Condition system input to ensure proper execution
-	system = sys_condition(system,combine)
-			
+	system = sys_condition(system,combine)	
 	
 	# Allocate space for all outputs
-	step = np.zeros(nsteps)
-	ramp = np.zeros(nsteps)
-	parabola = np.zeros(nsteps)
-	errS = np.zeros(nsteps)
-	errR = np.zeros(nsteps)
-	errP = np.zeros(nsteps)
+	step = np.zeros(npts)
+	ramp = np.zeros(npts)
+	parabola = np.zeros(npts)
+	errS = np.zeros(npts)
+	errR = np.zeros(npts)
+	errP = np.zeros(npts)
 	
 	# Generate Inputs
-	for i in range(nsteps):
+	for i in range(npts):
 		step[i] = 1.0
 		ramp[i] = (dt*i)
 		parabola[i] = (dt*i)**(2)
@@ -172,7 +247,7 @@ def sys_response(system,nsteps=1000,dt=0.01,combine=True,
 	x, y3, x = sig.lsim((system),parabola,TT)
 	
 	# Calculate error over all points
-	for k in range(nsteps):
+	for k in range(npts):
 		errS[k] = step[k] - y1[k]
 		errR[k] = ramp[k] - y2[k]
 		errP[k] = parabola[k] - y3[k]
@@ -225,7 +300,7 @@ def sys_response(system,nsteps=1000,dt=0.01,combine=True,
 		plt.show()
 
 # Define Gain Margin Calculator Function
-def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
+def gm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 	""" Gain Margin Calculator
 	
 	Given a transfer function, calculates the gain margin (gm) and the
@@ -245,7 +320,7 @@ def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 			to be calculated for. Default is -2.
 	mx:		The maximum frequency (as an exponent to 10, e.g. 10^mx)
 			to be calculated for. Default is 3.
-	numpts: The number of points over which to calculate the system.
+	npts: The number of points over which to calculate the system.
 			Default is 100.
 	err:	The maximum allowable error for an aproximation of zero
 			(i.e. the difference between found value and zero).
@@ -265,7 +340,7 @@ def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 	system = sys_condition(system,False)
 
 	# Initialize values given numerator and denominator
-	wover = np.logspace(mn,mx,numpts)
+	wover = np.logspace(mn,mx,npts)
 	w, mag, ang = sig.bode((tf),wover)
 
 	while(valid):
@@ -303,7 +378,7 @@ def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 					x1 = np.log10(Ni) # Convert into value for logspace
 					x2 = np.log10(Pi) # Convert into value for logspace
 				valid = True                            # Reset valid value
-				wzoom = np.logspace(x1,x2,numpts)       # Generate zoomed logspace
+				wzoom = np.logspace(x1,x2,npts)       # Generate zoomed logspace
 				w, mag, ang = sig.bode((tf),wzoom) # Generate Bode values
 				break                                   # Break out of for loop
 			else: # Not both positive and negative values were found
@@ -312,7 +387,7 @@ def gm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 	return(wg, gm) # Return both the phase margin frequency (where it occurs) and the phase margin.
 
 # Define Phase Margin Calculator Function
-def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
+def pm(tf,mn=-2,mx=3,npts=100,err=1e-12):
 	""" Phase Margin Calculator
 	
 	Given a transfer function, calculates the phase margin (pm) and the
@@ -332,7 +407,7 @@ def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 			to be calculated for. Default is -2.
 	mx:		The maximum frequency (as an exponent to 10, e.g. 10^mx)
 			to be calculated for. Default is 3.
-	numpts: The number of points over which to calculate the system.
+	npts: The number of points over which to calculate the system.
 			Default is 100.
 	err:	The maximum allowable error for an aproximation of zero
 			(i.e. the difference between found value and zero).
@@ -352,7 +427,7 @@ def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 	system = sys_condition(system,False)
 
 	# Initialize values given numerator and denominator
-	wover = np.logspace(mn,mx,numpts)
+	wover = np.logspace(mn,mx,npts)
 	w, mag, ang = sig.bode((tf),wover)
 
 	while(valid):
@@ -390,7 +465,7 @@ def pm(tf,mn=-2,mx=3,numpts=100,err=1e-12):
 					x1 = np.log10(Ni) # Convert into value for logspace
 					x2 = np.log10(Pi) # Convert into value for logspace
 				valid = True                            # Reset valid value
-				wzoom = np.logspace(x1,x2,numpts)       # Generate zoomed logspace
+				wzoom = np.logspace(x1,x2,npts)       # Generate zoomed logspace
 				w, mag, ang = sig.bode((tf),wzoom) # Generate Bode values
 				break                                   # Break out of for loop
 			else: # Not both positive and negative values were found
@@ -440,20 +515,20 @@ def nparr_to_matrix(x,yx):
 		n = np.matrix.reshape(n,(n.size,1)) # Reshape
 	return(n)
 
-def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
-		dt=0.01,axis=False,gtitle="",ret=False,plot=True,pltfn=False,sv=False):
+def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
+		xlim=False,ylim=False,gtitle="",ret=False,plot=True,pltfn=False,sv=False):
 	""" Plots the state-space simulation of an arbitrary set of matricies.
 
-	Required Parameters:
+	Required Arguments:
 	--------------------
 	A :			Matrix A; if not type=numpy.matrix, converts to numpy.matrix
 	B :			Matrix B; if not type=numpy.matrix, converts to numpy.matrix
 
-	Optional Parameters:
+	Optional Arguments:
 	--------------------
 	x :			Matrix x; if not type=numpy.matrix, converts to numpy.matrix
 	fn :		Forcing Function; must be provided as callable function that
-				will return any/all forcing function parameters needed as
+				will return any/all forcing function Arguments needed as
 				numpy matrix (preferred), numpy array, or tuple.
 				Forcing function(s) can be provided as tuple of function
 				handles, system will automatically concatenate their output
@@ -464,10 +539,11 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 				1=zero-state	( No Initial Conditions )
 				2=total			( Both Initial Conditions and Forcing Function )
 				3=total, output ( Both ICs and FFs, also plot combined output )
-	nsteps: 	Changes the range of simulation; defualt=9999
+	npts: 		Changes the range of simulation; defualt=9999
 	NN:			Number of descrete points; default=10,000
 	dt:			Delta-t, step-size; default=0.01
-	axis:		Defines Plot Axes; [ x-min, x-max, y-min, y-max ]
+	xlim:		Limit in x-axis for graph plot.
+	ylim:		Limit in y-axis for graph plot.
 	gtitle:		Additional String for Plot Title
 	ret:		If true: returns state space terms
 	plot:		If true: Plots individual state space terms
@@ -482,11 +558,11 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 
 	"""
 
-	# Test for NN and nsteps
-	if (nsteps >= NN):
-		print("WARNING: NN must be greater than nsteps; NN="+str(NN)+"nsteps="+str(nsteps))
-		print("Autocorrecting nsteps to be NN-1.")
-		nsteps = NN-1
+	# Test for NN and npts
+	if (npts >= NN):
+		print("WARNING: NN must be greater than npts; NN="+str(NN)+"npts="+str(npts))
+		print("Autocorrecting npts to be NN-1.")
+		npts = NN-1
 
 	# Test for C and D matricies
 	mC = str(type(C))
@@ -656,7 +732,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 			x[n] = 0 #Set each value to zero
 
 	# Finite-Difference Simulation
-	for i in range(0,nsteps):
+	for i in range(0,npts):
 		for n in range(xtim_len):
 			xtim[n][i] = x[n] #xtim[state-variable][domain] = x[state-variable]
 		# Create Forcing Function output
@@ -684,8 +760,10 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 				plt.plot(TT,fn_arr[x],label="f"+str(x+1))
 		else:
 			plt.plot(TT,fn_arr,label="f1")
-		if axis!=False:
-			plt.axis(axis)
+		if xlim!=False:
+			plt.xlim(xlim)
+		if ylim!=False:
+			plt.ylim(ylim)
 		plt.title("Forcing Functions "+gtitle)
 		plt.xlabel("Time (seconds)")
 		plt.legend(title="Forcing Functions")
@@ -698,8 +776,10 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 	# Plot each state-variable over time
 	for x in range(xtim_len):
 		plt.plot(TT,xtim[x],label="x"+str(x+1))
-	if axis!=False:
-		plt.axis(axis)
+	if xlim!=False:
+			plt.xlim(xlim)
+	if ylim!=False:
+		plt.ylim(ylim)
 	plt.title("Simulated Output Terms "+soltype[solution]+gtitle)
 	plt.xlabel("Time (seconds)")
 	plt.legend(title="State Variable")
@@ -716,8 +796,10 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 			yout = yout + xtim[i]*C[0][i] # Sum all st-space var mult. by their coeff
 		yout = np.asarray(yout) # convert output to array for plotting purposes
 		plt.plot(TT,yout[0])
-		if axis!=False:
-			plt.axis(axis)
+		if xlim!=False:
+			plt.xlim(xlim)
+		if ylim!=False:
+			plt.ylim(ylim)
 		plt.title("Combined Output "+gtitle)
 		plt.xlabel("Time (seconds)")
 		plt.grid()
@@ -735,7 +817,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,nsteps=9999,NN=10000,
 def rms_calc(f, T):
 	""" Calculates the RMS value of the provided function.
 
-	Parameters
+	Arguments
 	----------
 	f : the periodic function, a callable like f(t)
 	T : the period of the function f, so that f(0)==f(T)
@@ -770,7 +852,7 @@ def fft_coef(f, T, N, return_complex=False):
 	Refer to wikipedia for the relation between the real-valued and complex
 	valued coeffs at http://en.wikipedia.org/wiki/Fourier_series.
 
-	Parameters
+	Arguments
 	----------
 	f : the periodic function, a callable like f(t)
 	T : the period of the function f, so that f(0)==f(T)
@@ -808,7 +890,7 @@ def fft_coef(f, T, N, return_complex=False):
 def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=False):
 	""" Plots the FFT of the provided function as a stem plot.
 
-	Parameters
+	Arguments
 	----------
 	f : the periodic function, a callable like f(t)
 	T : the period of the function f, so that f(0)==f(T)
@@ -839,7 +921,7 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 
 	# Plot FFT results with respect to their sign
 	if fftplot and not absolute:
-		# Set up parameters
+		# Set up Arguments
 		rng = range(1,len(a)+1,1)
 		xtic = range(0,len(a)+1,1)
 		a0x = [0,0]
@@ -855,7 +937,7 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 
 	# Plot absolute value of FFT results
 	if fftplot and absolute:
-		# Set up parameters
+		# Set up Arguments
 		rng = range(1,len(a)+1,1)
 		xtic = range(0,len(a)+1,1)
 		a0x = [0,0]
