@@ -582,8 +582,10 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 	else:
 		num = sig.TransferFunction(system).num
 		den = sig.TransferFunction(system).den
-	num = num*wz
-	den = den*wp
+	nwz = np.array([1,wz])
+	nwp = np.array([1,wp])
+	num = convolve((num, nwz)) * wp
+	den = convolve((den, nwp)) * wz
 	sys = (num, den)
 	
 	# Calculate new Phase Margin
