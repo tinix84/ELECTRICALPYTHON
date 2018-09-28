@@ -186,7 +186,7 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 	
 
 # Define System Response Plotter function
-def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",
+def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 				stepResponse=True,rampResponse=False,parabolicResponse=False):
 	""" System Response Plotter Function
 	
@@ -264,11 +264,17 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",
 		plt.plot(TT,step,'k', label="Step Function")
 		plt.grid()
 		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
 		plt.subplot(122)
 		plt.title("Step Response Error")
 		plt.plot(TT,errS,'k', label="Error")
 		plt.grid()
 		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
 		plt.subplots_adjust(wspace=0.3)
 		plt.show()
 	if (rampResponse):
@@ -279,11 +285,17 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",
 		plt.plot(TT,ramp,'k', label="Ramp Function")
 		plt.grid()
 		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
 		plt.subplot(122)
 		plt.title("Ramp Response Error")
 		plt.plot(TT,errR,'k', label="Error")
 		plt.grid()
 		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
 		plt.subplots_adjust(wspace=0.3)
 		plt.show()
 	if (parabolicResponse):
@@ -294,16 +306,22 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",
 		plt.plot(TT,parabola,'k', label="Parabolic Function")
 		plt.grid()
 		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
 		plt.subplot(122)
 		plt.title("Parabolic Response Error")
 		plt.plot(TT,errP,'k', label="Error")
 		plt.grid()
 		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
 		plt.subplots_adjust(wspace=0.3)
 		plt.show()
 
 # Define Gain Margin Calculator Function
-def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True,find=-180):
+def gm(tf,mn=-2,mx=3,npts=1000,err=1e-12,printout=False,ret=True,find=-180):
 	""" Gain Margin Calculator
 	
 	Given a transfer function, calculates the gain margin (gm) and the
@@ -400,7 +418,7 @@ def gm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True,find=-180):
 		return(wg, gm) # Return both the gain margin frequency (where it occurs) and the gain margin.
 
 # Define Phase Margin Calculator Function
-def pm(tf,mn=-2,mx=3,npts=100,err=1e-12,printout=False,ret=True,find=0):
+def pm(tf,mn=-2,mx=3,npts=1000,err=1e-12,printout=False,ret=True,find=0):
 	""" Phase Margin Calculator
 	
 	Given a transfer function, calculates the phase margin (pm) and the
@@ -511,8 +529,12 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 	
 	Required Arguments:
 	-------------------
-	system:
-	desired:			The goal Phase-Margin. Default is 5.
+	system:				The Transfer Function; can be provided as the following:
+						- 1 (instance of lti)
+						- 2 (num, den)
+						- 3 (zeros, poles, gain)
+						- 4 (A, B, C, D)
+	desired:			The goal Phase-Margin.
 	
 	Optional Arguments:
 	-------------------
@@ -549,6 +571,9 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 	# Calculate wp and wz
 	wp = np.sqrt(alpha)*wm
 	wz = wm/np.sqrt(alpha)
+	
+	# Condition system
+	system = sys_condition(system,False)
 	
 	# Add feedback control to system
 	if(len(system) == 2):
