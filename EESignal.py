@@ -12,9 +12,8 @@
 #   Steven Weeks
 #   Dr. Dennis Sullivan
 #
-#   This library was compiled by Joe Stanley, special thanks to stackOverflow
-#   user: gg349 whose work is well documented and used for the FFT calculations
-#   used throughout this library.
+#   Special thanks to stackOverflow user: gg349 whose work is well documented
+#   and used for the FFT calculations used throughout this library.
 #
 #   Included Functions
 #   - FFT Coefficient Calculator:		fft_coef
