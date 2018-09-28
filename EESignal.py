@@ -509,34 +509,66 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 	(defined above or in EESignal.py help) necessary to achieve the
 	desired phase-margin.
 	
+	Required Arguments:
+	-------------------
+	system:
+	desired:			The goal Phase-Margin. Default is 5.
+	
+	Optional Arguments:
+	-------------------
+	tolerance:			The additional phase given to make bring
+						the output closer to the desired result.
+						Default is 5.
+	printout:			Print out the all values in order of calculation.
+						Default is False.
+	ret:				Determines if there are values returned.
+						Default is True.
+	plot:				Determines if plots are generated, will generate
+						two graphs, original and corrected. Default is False.
+						
+	Return:
+	-------
+	wp:					The Pole value of Phase Lead circuit { G(s) }
+	wz:					The Zero value of Phase Lead circuit { G(s) }
+	pm:					The phase margin of the new system.
+	
 	"""
 	# Find original phase-margin
-	wp, pm = ees.pm(sys)
+	wp, phm = pm(system)
 
 	# From original phase margin, find phi-m
-	phim = desired-pm+tolerance
+	phim = desired-phm+tolerance
 
 	# Calculate alpha:
 	alpha = (1+np.sin(np.radians(phim)))/(1-np.sin(np.radians(phim)))
 
 	# Calculate wm
 	wmp = -10*np.log10(alpha)
-	wm,x = ees.pm(sys,find=wmp)
+	wm,x = pm(system,find=wmp)
 
 	# Calculate wp and wz
 	wp = np.sqrt(alpha)*wm
 	wz = wm/np.sqrt(alpha)
 	
 	# Add feedback control to system
+	if(len(system) == 2):
+		num = system[0]
+		den = system[1]
+	else:
+		num = sig.TransferFunction(system).num
+		den = sig.TransferFunction(system).den
 	num = num*wz
 	den = den*wp
-	sys = (num,den)
+	sys = (num, den)
+	
+	# Calculate new Phase Margin
+	nwp, npm = pm(sys)
 
 	if printout:
 		print("Original Phase Margin:")
-		print("Phase Margin:",pm,"degrees at",wp,"rad/sec")
+		print("Phase Margin:",phm,"degrees at",wp,"rad/sec")
 		if plot:
-			ees.bode(sys)
+			bode(system)
 		print("Phi-M:",phim)
 		print("Alpha:",alpha)
 		print("Magnitude where Wm appears:",wmp,"dB")
@@ -544,11 +576,11 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 		print("Wp:",wp)
 		print("Wz:",wz)
 		if plot:
-			ees.bode(sys)
-		ees.pm(sys,printout=True,ret=False)
+			bode(sys)
+		print("Phase Margin:",npm,"degrees at",nwp,"rad/sec")
 	
 	if ret:
-		return(wp,wz)
+		return(wp,wz,npm)
 
 # Define Function Concatinator Class
 class c_func_concat:
