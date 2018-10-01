@@ -14,7 +14,7 @@
 #
 #   Included Constants:
 #   - 'A' Operator for Symmetrical Components: a_op
-#   -
+#   - Not a Number value (NaN): NAN
 #
 #   Included Functions
 #   - Complex Display Function:		vi_cprint
@@ -30,6 +30,8 @@
 #   - Capacitor Stored Energy:		C_energy
 #   - Cap. Voltage after Time:		C_VafterT
 #   - Cap. Voltage Discharge:		C_discharge
+#   - Total Harmonic Distortion:    thd
+#   - Total Demand Distortion:      tdd
 ###################################################################
 
 # Import libraries as needed:
@@ -40,8 +42,17 @@ import cmath as c
 
 # Define constants
 a_op = c.rect(1,np.radians(120)) # A Operator for Sym. Components
+NAN = float('nan')
 VLLcVLN = c.rect(np.sqrt(3),np.radians(30)) # Conversion Operator
 ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
+
+# Define type constants
+matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
+tuple = "<class 'tuple'>"
+ndarr = "<class 'numpy.ndarray'>"
+tint = "<class 'int'>"
+tfloat = "<class 'float'>"
+tfun = "<class 'function'>"
 
 ###################################################################
 #   Define per unit base creator function
@@ -385,3 +396,63 @@ def C_discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
         return(t-dt,E)
     else:
         return(t-dt)
+
+###################################################################
+#   Define Total Demand Distortion function
+#
+#   Returns the Total demand distortion given an array of the
+#   distortion factors.
+#
+#   Harmonic array should contain the fundamental frequency h1
+#   IL: Peak Demand load current (RMS) at fundamental frequency
+###################################################################
+def tdd(harmonics,IL):
+	# Sum all terms of 2*fundamental and up
+	sum = 0
+	for h in range(2,len(harmonics)+2):
+		sum += harmonics[h-1]**2
+	
+	# Take square-root of sum and divide by IL
+	TDD = np.sqrt(sum)/IL
+	return(TDD)
+
+###################################################################
+#   Define Total Harmonic Distortion function
+#
+#   Returns the Total harmonic distortion given an array of the
+#   distortion factors.
+#
+#   Harmonic array should contain the fundamental frequency h1
+#   PFdist: the distorted power factor, can be used to find thd
+###################################################################
+def thd(harmonics=False,PFdist=False):
+	if(PFdist != False):
+		# Use PFdistortion equation to find THD
+		THD = np.sqrt(1/(PFdist**2)-1)
+	else:
+		# Sum all terms of 2*fundamental and up
+		sum = 0
+		for h in range(2,len(harmonics)+2):
+			sum += harmonics[h-1]**2
+		
+		# Divide by magnitude of fundamental frequency
+		THD = sum/harmonics[0]
+	return(THD)
+
+###################################################################
+#   Define Distorted Power Factor function
+#
+#   Returns the distorted power factor value given I1 and IRMS or
+#   the set of harmonic current magnitudes.
+#
+#   Ih array should contain the fundamental frequency h1
+###################################################################
+def pf_dist(I1=False,IRMS=False,Ih=False):
+	if (Ih != False):
+		# Find PFdist by using THD
+		THD = thd(Ih) # Calculate THD
+		PFdist = 1/np.sqrt(1+THD**2)
+	else:
+		PFdist = I1/IRMS
+	
+	return(PFdist
