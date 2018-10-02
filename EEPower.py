@@ -432,8 +432,8 @@ def thd(harmonics=False,PFdist=False):
 	else:
 		# Sum all terms of 2*fundamental and up
 		sum = 0
-		for h in range(2,len(harmonics)+2):
-			sum += harmonics[h-1]**2
+		for h in range(1,len(harmonics)):
+			sum += harmonics[h]**2
 		
 		# Divide by magnitude of fundamental frequency
 		THD = sum/harmonics[0]
@@ -448,11 +448,12 @@ def thd(harmonics=False,PFdist=False):
 #   Ih array should contain the fundamental frequency h1
 ###################################################################
 def pf_dist(I1=False,IRMS=False,Ih=False):
-	if (Ih != False):
+	if (I1 != False and IRMS != False):
+		# Find PFdist by using fundamental and RMS current
+		PFdist = I1/IRMS
+	else:
 		# Find PFdist by using THD
 		THD = thd(Ih) # Calculate THD
 		PFdist = 1/np.sqrt(1+THD**2)
-	else:
-		PFdist = I1/IRMS
 	
 	return(PFdist)

@@ -1026,15 +1026,15 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 	f : the periodic function, a callable like f(t)
 	T : the period of the function f, so that f(0)==f(T)
 	N_max : the function will return the first N_max + 1 Fourier coeff.
-	mn : the minimum of the original signal
-	mx : the maximum of the original signal
+	mn : the minimum time value of the original signal
+	mx : the maximum time value of the original signal
 
 	Returns
 	-------
 	if fftplot=True, the function returns:
 	Plot of FFT output of function
 
-	if genSignal=True, the function returns:
+	if mx != False, the function returns:
 	Approximation of original signal from FFT results
 
 	if absolute=True, the function will:
@@ -1060,9 +1060,10 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 
 		# Plot
 		plt.title("Fourier Coefficients"+tStr)
-		plt.plot(a0x,a0y,'g')
-		plt.stem(rng,a,'r','ro')
-		plt.stem(rng,b,'b','bo')
+		plt.plot(a0x,a0y,'g',label="DC-Term")
+		plt.stem(rng,a,'r','ro',label="A-Terms")
+		plt.stem(rng,b,'b','bo',label="B-Terms")
+		plt.legend()
 		plt.xticks(xtic)
 		plt.show()
 
@@ -1076,9 +1077,10 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 
 		# Plot
 		plt.title("Fourier Coefficients"+tStr)
-		plt.plot(a0x,a0y,'g')
-		plt.stem(rng,np.abs(a),'r','ro')
-		plt.stem(rng,np.abs(b),'b','bo')
+		plt.plot(a0x,a0y,'g',label="DC-Term")
+		plt.stem(rng,np.abs(a),'r','ro',label="A-Terms")
+		plt.stem(rng,np.abs(b),'b','bo',label="B-Terms")
+		plt.legend()
 		plt.xticks(xtic)
 		plt.show()
 
