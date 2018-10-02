@@ -409,8 +409,8 @@ def C_discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
 def tdd(harmonics,IL):
 	# Sum all terms of 2*fundamental and up
 	sum = 0
-	for h in range(2,len(harmonics)+2):
-		sum += harmonics[h-1]**2
+	for h in range(1,len(harmonics)):
+		sum += harmonics[h]**2
 	
 	# Take square-root of sum and divide by IL
 	TDD = np.sqrt(sum)/IL
@@ -457,3 +457,142 @@ def pf_dist(I1=False,IRMS=False,Ih=False):
 		PFdist = 1/np.sqrt(1+THD**2)
 	
 	return(PFdist)
+
+###################################################################
+#   Define Harmonic Current Limit function
+#
+#   Returns the limits of harmonic currents given the load
+#   characteristics (Short-Circuit Current, Peak Demand Current).
+#   Prints results when printout=True.
+#
+#   By default, prints the results, does not return values as an
+#   numpy array. Returns this array when ret=True.
+#
+#   Compares to measured harmonic currents if Ih is provided.
+#
+#   N is the maximum harmonic term.
+###################################################################
+def harmonic_lim(Isc,IL,N=0,Ih=0,printout=True,ret=False):
+	percent = 1/100 # Use for scaling
+	Ir = Isc/IL # compute ratio
+	if(Ir < 20):
+		# Generate Harmonic Factors
+		f1o = 4.0*percent
+		f2o = 2.0*percent
+		f3o = 1.5*percent
+		f4o = 0.6*percent
+		f5o = 0.3*percent
+		tddL = 5.0*percent
+		f1e = f1o * 25*percent
+		f2e = f2o * 25*percent
+		f3e = f3o * 25*percent
+		f4e = f4o * 25*percent
+		f5e = f5o * 25*percent
+		
+	elif(20 <= Ir and Ir < 50):
+		# Generate Harmonic Factors
+		f1o = 7.0*percent
+		f2o = 3.5*percent
+		f3o = 2.5*percent
+		f4o = 1.0*percent
+		f5o = 0.5*percent
+		tddL = 8.0*percent
+		f1e = f1o * 25*percent
+		f2e = f2o * 25*percent
+		f3e = f3o * 25*percent
+		f4e = f4o * 25*percent
+		f5e = f5o * 25*percent
+		
+	elif(50 <= Ir and Ir < 100):
+		# Generate Harmonic Factors
+		f1o = 10.0*percent
+		f2o = 4.5*percent
+		f3o = 4.0*percent
+		f4o = 1.5*percent
+		f5o = 0.7*percent
+		tddL = 12.0*percent
+		f1e = f1o * 25*percent
+		f2e = f2o * 25*percent
+		f3e = f3o * 25*percent
+		f4e = f4o * 25*percent
+		f5e = f5o * 25*percent
+		
+	elif(100 <= Ir and Ir < 1000):
+		# Generate Harmonic Factors
+		f1o = 12.0*percent
+		f2o = 5.5*percent
+		f3o = 5.0*percent
+		f4o = 2.0*percent
+		f5o = 1.0*percent
+		tddL = 15.0*percent
+		f1e = f1o * 25*percent
+		f2e = f2o * 25*percent
+		f3e = f3o * 25*percent
+		f4e = f4o * 25*percent
+		f5e = f5o * 25*percent
+		
+	else:
+		# Generate Harmonic Factors
+		f1o = 15.0*percent
+		f2o = 7.0*percent
+		f3o = 6.0*percent
+		f4o = 2.5*percent
+		f5o = 1.4*percent
+		tddL = 20.0*percent
+		f1e = f1o * 25*percent
+		f2e = f2o * 25*percent
+		f3e = f3o * 25*percent
+		f4e = f4o * 25*percent
+		f5e = f5o * 25*percent
+	
+	# Create empty array to return
+	retArr = np.zeros(51)
+	
+	# Print out values
+	if(printout):
+		print("IEEE 519-2014 Distorted Current Limits:\n"+
+				"---------------------------------------")
+		for i in range(3, 50 + 1):
+			if(3<=i and i<11):
+				if(i%2): # Odd term
+					retArr[i] = f1o*IL
+				else: # Even term
+					retArr[i] = f1e*IL
+			elif(11<=i and i<17):
+				if(i%2): # Odd term
+					retArr[i] = f2o*IL
+				else: # Even term
+					retArr[i] = f2e*IL
+			elif(17<=i and i<23):
+				if(i%2): # Odd term
+					retArr[i] = f3o*IL
+				else: # Even term
+					retArr[i] = f3e*IL
+			elif(23<=i and i<35):
+				if(i%2): # Odd term
+					retArr[i] = f4o*IL
+				else: # Even term
+					retArr[i] = f4e*IL
+			elif(35<=i and i<=50):
+				if(i%2): # Odd term
+					retArr[i] = f5o*IL
+				else: # Even term
+					retArr[i] = f5e*IL
+			else:
+				print("Internal Error Encountered!")
+			print("Limit of "+str(i)+"th harmonic:", retArr[i],"A")
+			if(N!=0 and N<=i):
+				break
+		print("---------------------------------------")
+	
+	# Comparison requested
+	if(str(type(Ih)) == ndarr):
+		maxr = min(len(retArr), len(Ih)+1)
+		for k in range(3, maxr):
+			if(retArr[k] < Ih[k-1]):
+				print("Limit surpassed for "+str(k)+"th Harmonic term.")
+	
+	# Return values
+	if(ret):
+		return(retArr)
+	
