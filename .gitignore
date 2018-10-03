@@ -17,3 +17,7 @@
 
 # Ignore DB Files
 *.db
+
+# Ignore Excel/Tabular Files
+*.csv
+*.xlsx
