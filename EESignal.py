@@ -139,8 +139,10 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 				Default is 100.
 	gtitle:		Additional string to be added to plot titles;
 				default is "".
-	xlim:		Limit in x-axis for graph plot.
-	ylim:		Limit in y-axis for graph plot.
+	xlim:		Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
+				Default is False.
+	ylim:		Limit in y-axis for graph plot. Accepts tuple of: (xmin, xmax).
+				Default is False.
 	
 	Returns
 	-------
@@ -216,6 +218,8 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 						default is False.
 	parabolicResponse:	Plot the parabolic-response and corresponding error;
 						default is False.
+	xlim:				Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
+						Default is False.
 	
 	Returns
 	-------
