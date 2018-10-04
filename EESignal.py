@@ -115,7 +115,7 @@ def sys_condition(system,feedback):
 	return(system) # Return the conditioned system
 
 # Define System Bode Plotting Function
-def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
+def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
 	""" System Bode Plotting Function
 	
 	A simple function to generate the Bode Plot for magnitude
@@ -143,6 +143,7 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 				Default is False.
 	ylim:		Limit in y-axis for graph plot. Accepts tuple of: (xmin, xmax).
 				Default is False.
+	sv:			Save the plots as PNG files. Default is False.
 	
 	Returns
 	-------
@@ -159,7 +160,8 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 	w, mag, ang = sig.bode(system, wover)
 	
 	# Plot Magnitude
-	plt.title("Magnitude "+gtitle)
+	magTitle = "Magnitude "+gtitle
+	plt.title(magTitle)
 	plt.plot(w, mag)
 	plt.xscale("log")
 	plt.grid(which="both")
@@ -169,10 +171,13 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 		plt.xlim(xlim)
 	if ylim!=False:
 		plt.ylim(ylim)
+	if sv:
+		plt.savefig(magTitle+".png")
 	plt.show()
 
 	# Plot Angle
-	plt.title("Angle "+gtitle)
+	angTitle = "Angle "+gtitle
+	plt.title(angTitle)
 	plt.plot(w, ang)
 	plt.xscale("log")
 	plt.grid(which="both")
@@ -182,13 +187,15 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False):
 		plt.xlim(xlim)
 	if ylim!=False:
 		plt.ylim(ylim)
+	if sv:
+		plt.savefig(angTitle+".png")
 	plt.show()
 	
 	
 
 # Define System Response Plotter function
 def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
-				stepResponse=True,rampResponse=False,parabolicResponse=False):
+				stepResponse=True,rampResponse=False,parabolicResponse=False,sv=False):
 	""" System Response Plotter Function
 	
 	Given a transfer function, plots the response against step, ramp, and
@@ -220,6 +227,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 						default is False.
 	xlim:				Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
 						Default is False.
+	sv:					Save the figures plotted. Default is False.
 	
 	Returns
 	-------
@@ -262,7 +270,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 	if (stepResponse):
 		plt.figure()
 		plt.subplot(121)
-		plt.title("Step Response")
+		plt.title("Step Response "+gtitle)
 		plt.plot(TT,y1,'k--', label="Step Response")
 		plt.plot(TT,step,'k', label="Step Function")
 		plt.grid()
@@ -271,7 +279,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 		if xlim != False:
 			plt.xlim(xlim)
 		plt.subplot(122)
-		plt.title("Step Response Error")
+		plt.title("Step Response Error "+gtitle)
 		plt.plot(TT,errS,'k', label="Error")
 		plt.grid()
 		plt.legend()
@@ -279,11 +287,13 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 		if xlim != False:
 			plt.xlim(xlim)
 		plt.subplots_adjust(wspace=0.3)
+		if sv:
+			plt.savefig("Step Response ("+gtitle+").png")
 		plt.show()
 	if (rampResponse):
 		plt.figure()
 		plt.subplot(121)
-		plt.title("Ramp Response")
+		plt.title("Ramp Response "+gtitle)
 		plt.plot(TT,y2,'k--', label="Ramp Response")
 		plt.plot(TT,ramp,'k', label="Ramp Function")
 		plt.grid()
@@ -292,7 +302,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 		if xlim != False:
 			plt.xlim(xlim)
 		plt.subplot(122)
-		plt.title("Ramp Response Error")
+		plt.title("Ramp Response Error "+gtitle)
 		plt.plot(TT,errR,'k', label="Error")
 		plt.grid()
 		plt.legend()
@@ -300,11 +310,13 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 		if xlim != False:
 			plt.xlim(xlim)
 		plt.subplots_adjust(wspace=0.3)
+		if sv:
+			plt.savefig("Ramp Response ("+gtitle+").png")
 		plt.show()
 	if (parabolicResponse):
 		plt.figure()
 		plt.subplot(121)
-		plt.title("Parabolic Response")
+		plt.title("Parabolic Response "+gtitle)
 		plt.plot(TT,y3,'k--', label="Parabolic Response")
 		plt.plot(TT,parabola,'k', label="Parabolic Function")
 		plt.grid()
@@ -313,7 +325,7 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 		if xlim != False:
 			plt.xlim(xlim)
 		plt.subplot(122)
-		plt.title("Parabolic Response Error")
+		plt.title("Parabolic Response Error "+gtitle)
 		plt.plot(TT,errP,'k', label="Error")
 		plt.grid()
 		plt.legend()
@@ -321,6 +333,8 @@ def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
 		if xlim != False:
 			plt.xlim(xlim)
 		plt.subplots_adjust(wspace=0.3)
+		if sv:
+			plt.savefig("Parabolic Response ("+gtitle+").png")
 		plt.show()
 
 # Define Gain Margin Calculator Function
@@ -559,7 +573,7 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 	
 	"""
 	# Find original phase-margin
-	wp, phm = pm(system)
+	wpm, phm = pm(system)
 
 	# From original phase margin, find phi-m
 	phim = desired-phm+tolerance
@@ -596,7 +610,7 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 
 	if printout:
 		print("Original Phase Margin:")
-		print("Phase Margin:",phm,"degrees at",wp,"rad/sec")
+		print("Phase Margin:",phm,"degrees at",wpm,"rad/sec")
 		if plot:
 			bode(system)
 		print("Phi-M:",phim)

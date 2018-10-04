@@ -21,3 +21,10 @@
 # Ignore Excel/Tabular Files
 *.csv
 *.xlsx
+
+# Ignore Tex Documents
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.tex
