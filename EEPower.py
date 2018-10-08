@@ -142,16 +142,18 @@ def vi_cprint(val,unit=False,label=False,printval=True,ret=False):
 #
 #   Returns C or L as value in Ohms.
 ###################################################################
-def z_mk(f,C=False,L=False):
+def z_mk(f,C=False,L=False,imaginary=True):
 	w = 2*np.pi*f
 	#C Given in ohms, return as Z
 	if (C!=False):
-		Zc = 1/(1j*w*C)
-		return(Zc)
+		Z = -1/(w*C)
 	#L Given in ohms, return as Z
 	if (L!=False):
-		Zl = 1j*w*L
-		return(Zl)
+		Z = w*L
+	#If asked for imaginary number
+	if (imaginary):
+		Z *= 1j
+	return(Z)
 
 ###################################################################
 #   Define Parallel Impedance Adder
