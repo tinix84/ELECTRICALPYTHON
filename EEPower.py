@@ -32,6 +32,7 @@
 #   - Cap. Voltage Discharge:		C_discharge
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
+#   - Reactance Calculator:			reactance
 ###################################################################
 
 # Import libraries as needed:
@@ -53,6 +54,31 @@ ndarr = "<class 'numpy.ndarray'>"
 tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
+
+###################################################################
+#   Define Reactance Calculator
+#
+#   Accepts reactance (in ohms) and frequency (in Hertz).
+#
+#   If imaginary calculate with j factor (imaginary number)
+#
+#   Returns capacitance (in Farads) if ohmic value is negative, or
+#   inductance (in Henrys) if ohmic value is positive.
+###################################################################
+def reactance(z,f):
+	w = 2*np.pi*f
+	if isinstance(z, complex):
+		if (z.imag > 0):
+			out = z/(w*1j)
+		else:
+			out = 1/(w*1j*z)
+		out = abs(out)
+	else:
+		if (z > 0):
+			out = z/(w)
+		else:
+			out = 1/(w*z)
+	return(out)
 
 ###################################################################
 #   Define per unit base creator function
@@ -116,7 +142,8 @@ def vi_cprint(val,unit=False,label=False,printval=True,ret=False):
 #
 #   Returns C or L as value in Ohms.
 ###################################################################
-def z_mk(w,C=False,L=False):
+def z_mk(f,C=False,L=False):
+	w = 2*np.pi*f
 	#C Given in ohms, return as Z
 	if (C!=False):
 		Zc = 1/(1j*w*C)
