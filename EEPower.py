@@ -158,12 +158,16 @@ def z_mk(f,C=False,L=False,imaginary=True):
 ###################################################################
 #   Define Parallel Impedance Adder
 #
-#   Calculate parallel impedance given two inputs.
+#   Calculate parallel impedance given a tuple of impedances.
 #
-#   Requires both impedance inputs given in phasor form.
+#   Requires all impedance inputs given in phasor form.
 ###################################################################
-def P_Zadd(Z1,Z2):
-	Zp = 1/Z1+1/Z2
+def P_Zadd(Z):
+	L = len(Z)
+	Zp = (1/Z[0]+1/Z[1])**(-1)
+	if(L > 2):
+		for i in range(2,L):
+			Zp = (1/Zp+1/Z[i])**(-1)
 	return(Zp)
 
 ###################################################################
