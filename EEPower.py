@@ -60,7 +60,7 @@ tfun = "<class 'function'>"
 #
 #   Accepts reactance (in ohms) and frequency (in Hertz).
 #
-#   If imaginary calculate with j factor (imaginary number)
+#   If imaginary: calculate with j factor (imaginary number)
 #
 #   Returns capacitance (in Farads) if ohmic value is negative, or
 #   inductance (in Henrys) if ohmic value is positive.
