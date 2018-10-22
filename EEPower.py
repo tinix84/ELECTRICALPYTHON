@@ -13,7 +13,7 @@
 #   Paul Ortmann - Idaho Power
 #
 #   Included Constants:
-#   - 'A' Operator for Symmetrical Components: a_op
+#   - 'A' Operator for Symmetrical Components: a
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
@@ -42,7 +42,7 @@ import matplotlib.pyplot as plt
 import cmath as c
 
 # Define constants
-a_op = c.rect(1,np.radians(120)) # A Operator for Sym. Components
+a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
 NAN = float('nan')
 VLLcVLN = c.rect(np.sqrt(3),np.radians(30)) # Conversion Operator
 ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
