@@ -27,6 +27,9 @@
 #   - Multi-Argument Convolution:		convolve
 #   - System Bode Plot:					bode
 #   - Phase Lead System:				phase_lead
+#   - Butterworth Min Order Solver:		but_minord
+#   - Butterworth Filter Plotter:		butter_plt
+#   - Butterworth Filter Generator:		butter_gen
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:			sys_condition
@@ -60,6 +63,7 @@ ndarr = "<class 'numpy.ndarray'>"
 tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
+tnfloat = "<class 'numpy.float64'>"
 
 # Define convolution function
 def convolve(tuple):
@@ -84,6 +88,35 @@ def convolve(tuple):
 		for i in range(2,len(tuple)):
 			c = sig.convolve(c,tuple[i])
 	return(c)
+
+# Define Butterworth Minimum Order Solver:
+def but_minord(mxDev, w, wc=1):
+	""" Minimum Order Solving Function
+	
+	Finds the minimum order allowable to create the butterworth
+	filter to match the specified criteria.
+	
+	Arguments:
+	----------
+	mxDev:		The maximum allowable deviation.
+	w:			The frequency at which mxDev occurs.
+	wc:			The cuttoff frequency (default is 1).
+	
+	Returns:
+	--------
+	order:		An integer representing the minimum order."""
+	
+	# Scale to cuttoff frequency
+	w = w/wc
+	
+	# Find the H2 value
+	H2 = mxDev**2
+	
+	# Find Order
+	order = int(round( np.log10( (1/H2) - 1 )/(2*np.log10(w)) ))
+	
+	# Return output
+	return( order )
 	
 # Define System Conditioning Function
 def sys_condition(system,feedback):
@@ -191,7 +224,37 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
 		plt.savefig(angTitle+".png")
 	plt.show()
 	
+# Define Butterworth Filter Plotting Function
+def butter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle="",
+				xlim=False,ylim=False,ysize=10):
+	# Generate omega to be plotted over
+	w = np.logspace(mn,mx,npts)
 	
+	# Condition system input to ensure proper execution
+	system = sys_condition(system,False)
+	
+	# Generate transfer function
+	x, H = sig.freqs(system[0],system[1],w) # x is a don't care
+	H = np.abs(H)
+
+	# Plot
+	plt.plot(w,H) # Generate Plot of |H| over w
+	plt.title(gtitle)
+	plt.xscale("log") # Plot over log-scale on x-axis
+	plt.grid(which="both") # Display grid in both axes
+	plt.xlabel("w (rad/sec)")
+	plt.ylabel("| H(s) |")
+	if(xlim!=False): # If a limit is provided, apply it
+		plt.xlim(xlim) 
+	if(yticks!=False): # If a set of "yticks" are given, apply them
+		ytix = plt.yticks()[0] # Gather original "yticks" as the plot generated automatically
+		ytix = np.append(ytix,yticks) # Append new "yticks" to existing
+		if(forceticks!=False): # If only supplied "yticks" are desired...
+			ytix=yticks # ...only display those ticks.
+		plt.yticks(ytix,fontsize=ysize) # Set "yticks" as tickmarks on plot and set fontsize
+	if(ylim!=False):
+		plt.ylim(ylim) # Set y-limit on plot
+	plt.show() # Display Plot
 
 # Define System Response Plotter function
 def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
@@ -676,7 +739,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 	Optional Arguments:
 	--------------------
 	x :			Matrix x; if not type=numpy.matrix, converts to numpy.matrix
-	fn :		Forcing Function; must be provided as callable function that
+	f :			Forcing Function; must be provided as callable function that
 				will return any/all forcing function Arguments needed as
 				numpy matrix (preferred), numpy array, or tuple.
 				Forcing function(s) can be provided as tuple of function
@@ -698,12 +761,11 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 	plot:		If true: Plots individual state space terms
 	pltfn:		If true: Plots original Forcing Functions
 
-	Returns:
+	Figures:
 	--------
-	If plot=True:	Generates and displays a plot of state-space simulation
-	If ret=True:	Returns X-Axis variable and each state space term
-					ex: ( x_axis, ( x1, x2, ... , xn ) )
-					State-Space Variables return as tuple.
+	Forcing Functions:		The plot of forcing functions, only provided if pltfn is true.
+	State Variables:		The plot of state variables, always provided if plot is true.
+	Combined Output:		The plot of the combined terms in the output, provided if C and D are not False.
 
 	"""
 
@@ -800,7 +862,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 		print("WARNING: Converting Forcing Function from type: numpy array")
 		fn = lambda x: nparr_to_matrix(x, f) # Use conversion function
 		rF, cF = fn(1).shape # Prepare for further testing
-	elif (mF==tint) or (mF==tfloat): # If function returns int or float
+	elif (mF==tint) or (mF==tfloat) or (mF==tnfloat): # If function returns int or float or numpy float
 		fn = f # Pass function handle
 	elif (mF==matrix): # If function returns matrix
 		fn = f # Pass function handle
@@ -903,7 +965,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 
 	# Plot Forcing Functions
 	if (pltfn):
-		#print(fn_arr)
+		fffig = plt.figure("Forcing Functions")
 		if fnc > 1:
 			for x in range(fnc):
 				plt.plot(TT,fn_arr[x],label="f"+str(x+1))
@@ -923,6 +985,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 			plt.show()
 
 	# Plot each state-variable over time
+	stvfig = plt.figure("State Variables")
 	for x in range(xtim_len):
 		plt.plot(TT,xtim[x],label="x"+str(x+1))
 	if xlim!=False:
@@ -940,6 +1003,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 
 	# Plot combined output
 	if (solution==3):
+		cofig = plt.figure("Combined Output")
 		C = np.asarray(C) # convert back to array for operation
 		for i in range(cC):
 			yout = yout + xtim[i]*C[0][i] # Sum all st-space var mult. by their coeff
