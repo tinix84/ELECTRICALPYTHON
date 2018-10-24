@@ -467,7 +467,8 @@ def thd(harmonics=False,PFdist=False):
 		sum = 0
 		for h in range(1,len(harmonics)):
 			sum += harmonics[h]**2
-		
+		# Take Square Root of Sum
+		sum = np.sqrt(sum)
 		# Divide by magnitude of fundamental frequency
 		THD = sum/harmonics[0]
 	return(THD)
