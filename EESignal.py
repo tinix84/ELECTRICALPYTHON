@@ -28,8 +28,9 @@
 #   - System Bode Plot:					bode
 #   - Phase Lead System:				phase_lead
 #   - Butterworth Min Order Solver:		but_minord
-#   - Butterworth Filter Plotter:		butter_plt
+#   - Butterworth Filter Plotter:		filter_plt
 #   - Butterworth Filter Generator:		butter_gen
+#   - Chebyshev Filter Term Solver:		cheb_I_terms
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:			sys_condition
@@ -118,6 +119,109 @@ def but_minord(mxDev, w, wc=1):
 	# Return output
 	return( order )
 	
+# Define Chebyshev Pole Calculator
+def cheb_poles(n, a, b,type=1):
+	totPole = np.array([1])
+	ang = 180
+	# Determine if order is odd or even
+	if (n%2 == 0): # Even Order
+		for i in range( int(n/2) ):
+			div = 180/n
+			if i == 0:
+				ang -= div/2
+			else:
+				ang -= div
+			ang_r = np.radians(ang)
+			s = a*np.cos(ang_r)+1j*b*np.sin(ang_r)
+			if type == 1: # Type I Cheb Filter
+				pole = np.polymul( [1, -s], [1, -np.conj(s)] )
+			elif type == 2: # Type 2 Cheb Filter
+				pole = np.polymul( 1/np.array([1, -s]), 1/np.array([1, -np.conj(s)]) )
+			else:
+				print("WARNING: Cheb Filter must be of type 1 or 2.")
+			totPole = np.polymul(totPole, pole)
+	else: # Odd Order
+		for i in range( int((n-1)/2) ):
+			div = 180/n
+			if i == 0:
+				totPole = np.array([1, 1])
+				if type == 2:
+					totPole = 1/totPole
+			ang -= div
+			ang_r = np.radians(ang)
+			s = a*np.cos(ang_r)+1j*b*np.sin(ang_r)
+			if type == 1: # Type I Cheb Filter
+				pole = np.polymul( [1, -s], [1, -np.conj(s)] )
+			elif type == 2: # Type 2 Cheb Filter
+				pole = np.polymul( 1/np.array([1, -s]), 1/np.array([1, -np.conj(s)]) )
+			else:
+				print("WARNING: Cheb Filter must be of type 1 or 2.")
+			totPole = np.polymul(totPole, pole)
+	return(totPole)
+	
+# Define Chebyshev Zero Calculator
+def cheb_zeros(n):
+	zeros = np.array([1])
+	wk = np.array([])
+	for i in range(n):
+		k = 2*i +1
+		w = 1/np.cos( k*np.pi/(2*n) )
+		if abs(w) < 1e10: # Test for value less than infinity
+			zeros = np.polymul( zeros, [1, w] )
+		wk = np.append(wk, w)
+	for i in range(len(zeros)):
+		if abs(zeros.item(i))<1e-10:
+			zeros[i] = 0
+		if zeros.item(i) < 0:
+			zeros[i] = abs(zeros.item(i))
+	return(wk, zeros)
+
+# Define Chebyshev I Filter Terms Solver
+def cheb_I_terms(ws, Hs, Hp, n=False):
+	# Calculate Epsilon
+	ep = np.sqrt( 1/Hp**2 - 1 )
+	
+	# Determine minimum order n if not provided
+	if ( n == False ):
+		n = (np.arccosh( (1/ep) * np.sqrt( 1/(Hs**2) - 1 ) ) * 
+			( 1 / np.arccosh( ws ) ))
+
+	# Cast as int and round as necessary
+	nn = int( round(n, 0) )
+	if nn < n: # fractional part exists
+		n = nn + 1
+	else:
+		n = nn
+	
+	# Calculate alpha, a, b
+	alpha = 1/ep + np.sqrt( 1 + 1/ep**2 )
+	a = 1/2 * ( alpha**(1/n) - alpha**(-1/n) )
+	b = 1/2 * ( alpha**(1/n) + alpha**(-1/n) )
+	
+	# Return Epsilon, n, alpha, a, b as tuple
+	return(ep,n,alpha,a,b)
+
+# Define Chebyshev II Filter Terms Solver
+def cheb_II_terms(wp, Hs, Hp, n=False):
+	# Calculate Epsilon
+	ep = np.sqrt( Hs**2 / (1-Hs**2) )
+	
+	# Determine minimum order n if not provided
+	if ( n == False ):
+		n = (np.arccosh( np.sqrt( (1/ep**2) * (1/(1-Hp**2)) ) ) * 
+			( 1 / np.arccosh( 1/wp ) ))
+	
+	# Cast as int and round as necessary
+	n = int( round(n, 0) )
+	
+	# Calculate alpha, a, b
+	alpha = 1/ep + np.sqrt( 1 + 1/ep**2 )
+	a = 1/2 * ( alpha**(1/n) - alpha**(-1/n) )
+	b = 1/2 * ( alpha**(1/n) + alpha**(-1/n) )
+	
+	# Return Epsilon, n as tuple
+	return(ep,n,alpha,a,b)
+
 # Define System Conditioning Function
 def sys_condition(system,feedback):
 	if ( len(system) == 2 ):		# System found to be num and den
@@ -224,8 +328,8 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
 		plt.savefig(angTitle+".png")
 	plt.show()
 	
-# Define Butterworth Filter Plotting Function
-def butter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle="",
+# Define Analog Filter Plotting Function
+def filter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle="",
 				xlim=False,ylim=False,ysize=10):
 	# Generate omega to be plotted over
 	w = np.logspace(mn,mx,npts)
