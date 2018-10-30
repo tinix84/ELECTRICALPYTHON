@@ -30,6 +30,7 @@
 #   - Capacitor Stored Energy:		C_energy
 #   - Cap. Voltage after Time:		C_VafterT
 #   - Cap. Voltage Discharge:		C_discharge
+#   - Rectifier Cap. Calculation:	C_rectifier
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
 #   - Reactance Calculator:			reactance
@@ -429,6 +430,17 @@ def C_discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
         return(t-dt,E)
     else:
         return(t-dt)
+
+###################################################################
+#   Define Rectifier Capacitor Calculator
+#
+#   Returns the capacitance (in Farads) for a needed capacitor in
+#   a rectifier configuration given the system frequency (in Hz),
+#   the load (in amps) and the desired voltage ripple.
+###################################################################
+def C_rectifier(Iload, fsys, dVout):
+	C = Iload / (fsys * dVout)
+	return(C)
 
 ###################################################################
 #   Define Total Demand Distortion function
