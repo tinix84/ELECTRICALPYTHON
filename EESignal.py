@@ -55,6 +55,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad as integrate
 from scipy import signal as sig
+import sympy as sym
+from sympy.abc import s as s
 
 # Define constants
 NAN = float('nan')
@@ -212,7 +214,11 @@ def cheb_II_terms(wp, Hs, Hp, n=False):
 			( 1 / np.arccosh( 1/wp ) ))
 	
 	# Cast as int and round as necessary
-	n = int( round(n, 0) )
+	nn = int( round(n, 0) )
+	if nn < n: # fractional part exists
+		n = nn + 1
+	else:
+		n = nn
 	
 	# Calculate alpha, a, b
 	alpha = 1/ep + np.sqrt( 1 + 1/ep**2 )
@@ -221,6 +227,37 @@ def cheb_II_terms(wp, Hs, Hp, n=False):
 	
 	# Return Epsilon, n as tuple
 	return(ep,n,alpha,a,b)
+	
+# Define System Factor Generator
+def filter_factor(sys):
+	# Find roots to evaluate expression
+	expr = np.roots(sys)
+	
+	# Generate Arbitrary Array with zeros to be removed later
+	poles = np.array([[0,0,0],[0,0,0]])
+
+	# Iteratively Compute Factors
+	for i in range(len(expr)):
+		# If value is complex, use value and next value
+		if np.iscomplex(expr.item(i)):
+			# Perform calculation only if even term in set
+			if (i%2 == 0):
+				mult = np.array(np.polymul([1,-expr.item(i)],[1,-expr.item(i+1)])).real
+				poles = np.append(poles,[mult],axis=0)
+		# If value is real (all else)
+		else:
+			# If value is 0 (or 0 for all intents and purposes)
+			# then factor must be s, (or s^2, which isn't accounted for)
+			if expr.item(i) == 0 or abs(expr.item(0)) < 1e-12:
+				poles = np.append(poles,[[0,1,0]],axis=0)
+			# All other values indicate an (s-value) factor
+			else:
+				poles = np.append(poles,[[0,1,-expr.item(i)]],axis=0)
+	# Remove Leading zero factors
+	poles = poles[2:]
+	
+	# Return resulting factor terms
+	return(poles)
 
 # Define System Conditioning Function
 def sys_condition(system,feedback):
@@ -250,6 +287,80 @@ def sys_condition(system,feedback):
 				break 				# Break out of for loop
 		system = (num,den)  # Repack system
 	return(system) # Return the conditioned system
+
+# Define Filter to band-pass function
+def filter_convert( sys, convn, convd=1, debug=False, TFprint=False):
+	# Condition Symbolic Conversion terms
+	convn = sym.expand( convn * s**0 )
+	convd = sym.expand( convd * s**0 )
+	
+	# Pull numerator and denominator terms
+	num = sys[0]
+	den = sys[1]
+	
+	# Convert to symbolic system
+	den = sum(co*s**i for i, co in enumerate(reversed(den)))
+	num = sum(co*s**i for i, co in enumerate(reversed(num)))
+
+	# Substitute (s^2 + wc^2)/s for s
+	den1 = den.subs(s,(convn/convd))
+	den2 = sym.expand(den1)
+	num1 = num.subs(s,(convn/convd))
+	num2 = sym.expand(num1)
+
+	# Find the maximum order of the system
+	enable = sym.degree(sym.poly(convd,s))
+	order = sym.degree(sym.poly(den,s))
+	m = s**(order*enable)
+
+	# Multiply by maximum order to make all exponents positive
+	exp_den = sym.expand( den2 * m )
+	exp_num = sym.expand( num2 * m )
+	
+	# Find the leading coefficient of the system
+	LC = sym.LC(sym.poly(exp_den))
+	
+	# Multiply by 1 / leading coefficient to reduce LC to 1
+	den3 = sym.expand( exp_den * 1/LC )
+	num3 = sym.expand( exp_num * 1/LC )
+
+	# Generate output as numpy array
+	final_den = sym.poly(den3)
+	final_num = sym.poly(num3)
+	den = np.asarray(final_den.all_coeffs()).astype(np.double)
+	num = np.asarray(final_num.all_coeffs()).astype(np.double)
+
+	# Print debug information if needed
+	if debug:
+		print(num1,num2)
+		print(den1,den2)
+		print(m)
+		print(LC)
+		print(final_num)
+		print(final_den)
+		print(den)
+		print(num)
+	if TFprint:
+		print("\nTransfer Function:\n")
+		# Calculate number of spaces needed
+		nchar_den = len(str(exp_den))
+		nchar_num = len(str(exp_num))
+		leftover = nchar_den - nchar_num
+		# Generate Numerator
+		numstr = ""
+		for i in range(int(leftover/2)):
+			numstr += " "
+		print(numstr + str(exp_num))
+		# Generate fractional division
+		frac = ""
+		for i in range(int(nchar_den)):
+			frac += "-"
+		print(frac)
+		# Print Denominator
+		print(str(exp_den))
+	
+	# Return
+	return(num, den)
 
 # Define System Bode Plotting Function
 def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
@@ -330,7 +441,7 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
 	
 # Define Analog Filter Plotting Function
 def filter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle="",
-				xlim=False,ylim=False,ysize=10):
+				xlim=False,ylim=False,ysize=10,xticks=False,xsize=False,sv=False):
 	# Generate omega to be plotted over
 	w = np.logspace(mn,mx,npts)
 	
@@ -348,16 +459,24 @@ def filter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle=
 	plt.grid(which="both") # Display grid in both axes
 	plt.xlabel("w (rad/sec)")
 	plt.ylabel("| H(s) |")
-	if(xlim!=False): # If a limit is provided, apply it
-		plt.xlim(xlim) 
 	if(yticks!=False): # If a set of "yticks" are given, apply them
 		ytix = plt.yticks()[0] # Gather original "yticks" as the plot generated automatically
 		ytix = np.append(ytix,yticks) # Append new "yticks" to existing
 		if(forceticks!=False): # If only supplied "yticks" are desired...
 			ytix=yticks # ...only display those ticks.
 		plt.yticks(ytix,fontsize=ysize) # Set "yticks" as tickmarks on plot and set fontsize
+	if(xticks!=False): # If a set of "xticks" are given, apply them
+		xtix = plt.xticks()[0] # Gather original "xticks" as the plot generated automatically
+		xtix = np.append(xtix,xticks) # Append new "xticks" to existing
+		if(forceticks!=False): # If only supplied "xticks" are desired...
+			xtix=xticks # ...only display those ticks.
+		plt.xticks(xtix,fontsize=xsize) # Set "xticks" as tickmarks on plot and set fontsize
+	if(xlim!=False): # If a limit is provided, apply it
+		plt.xlim(xlim) 
 	if(ylim!=False):
 		plt.ylim(ylim) # Set y-limit on plot
+	if sv!=False:
+		plt.savefig(sv+" "+gtitle+".png")
 	plt.show() # Display Plot
 
 # Define System Response Plotter function
