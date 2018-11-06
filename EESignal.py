@@ -30,7 +30,10 @@
 #   - Butterworth Min Order Solver:		but_minord
 #   - Butterworth Filter Plotter:		filter_plt
 #   - Butterworth Filter Generator:		butter_gen
-#   - Chebyshev Filter Term Solver:		cheb_I_terms
+#   - Chebyshev Filter I Term Solver:	cheb_I_terms
+#   - Chebyshev Filter II Term Solver:	cheb_II_terms
+#   - Filter Conversion:				filter_convert
+#   - Filter Polynomial Factoring:		filter_factor
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:			sys_condition
@@ -123,6 +126,28 @@ def but_minord(mxDev, w, wc=1):
 	
 # Define Chebyshev Pole Calculator
 def cheb_poles(n, a, b,type=1):
+	""" Chebyshev Poles Calculation Function
+	
+	Purpose: Calculate and return a polynomial set (numpy array)
+	describing the poles of a Chebyshev Filter.
+	
+	Required Arguments:
+	-------------------
+	n:		Filter Order
+	a:		Calculated descriptive term "a"
+	b:		Calculated descriptive term "b"
+	
+	Optional Arguments:
+	-------------------
+	type:	The Filter type, either 1 or 2 denoting
+			Chebyshev type I or type II.
+			
+	Returns:
+	--------
+	totPole:	The complete system of poles returned as a
+				numpy array representing polynomial coefficients.
+				[s^m, ... s^2, s^1, s^0]
+	"""
 	totPole = np.array([1])
 	ang = 180
 	# Determine if order is odd or even
@@ -163,6 +188,22 @@ def cheb_poles(n, a, b,type=1):
 	
 # Define Chebyshev Zero Calculator
 def cheb_zeros(n):
+""" Chebyshev Zeros Calculation Function
+	
+	Purpose: Calculate and return a polynomial set (numpy array)
+	describing the zeros of a Chebyshev Filter.
+	
+	Required Arguments:
+	-------------------
+	n:		Filter Order
+			
+	Returns:
+	--------
+	wk:		Each omega returned as a list
+	zeros:	The complete system of zeros returned as a
+			numpy array representing polynomial coefficients.
+			[s^m, ... s^2, s^1, s^0]
+	"""
 	zeros = np.array([1])
 	wk = np.array([])
 	for i in range(n):
@@ -180,6 +221,29 @@ def cheb_zeros(n):
 
 # Define Chebyshev I Filter Terms Solver
 def cheb_I_terms(ws, Hs, Hp, n=False):
+	""" Chebyshev Type I Term Function
+	
+	Purpose: A function to calculate specific terms used
+	in the process of design and development of a Chebyshev
+	type I filter.
+	
+	Required Arguments:
+	-------------------
+	ws:		Stop-Band Frequency
+	Hs:		Stop-Band Magnitude
+	Hp:		Pass-Band Magnitude
+	
+	Optional Arguments:
+	-------------------
+	n:		Filter Order, used to force and bypass calculation of n.
+	
+	Returns:
+	ep:		Epsilon of system
+	n:		System Order
+	alpha:	Alpha of system
+	a:		A constant of system
+	b:		B constant of system
+	"""
 	# Calculate Epsilon
 	ep = np.sqrt( 1/Hp**2 - 1 )
 	
@@ -205,6 +269,29 @@ def cheb_I_terms(ws, Hs, Hp, n=False):
 
 # Define Chebyshev II Filter Terms Solver
 def cheb_II_terms(wp, Hs, Hp, n=False):
+	""" Chebyshev Type II Term Function
+	
+	Purpose: A function to calculate specific terms used
+	in the process of design and development of a Chebyshev
+	type I filter.
+	
+	Required Arguments:
+	-------------------
+	wp:		Pass-Band Frequency
+	Hs:		Stop-Band Magnitude
+	Hp:		Pass-Band Magnitude
+	
+	Optional Arguments:
+	-------------------
+	n:		Filter Order, used to force and bypass calculation of n.
+	
+	Returns:
+	ep:		Epsilon of system
+	n:		System Order
+	alpha:	Alpha of system
+	a:		A constant of system
+	b:		B constant of system
+	"""
 	# Calculate Epsilon
 	ep = np.sqrt( Hs**2 / (1-Hs**2) )
 	
@@ -230,6 +317,20 @@ def cheb_II_terms(wp, Hs, Hp, n=False):
 	
 # Define System Factor Generator
 def filter_factor(sys):
+	""" Filter Factorization Function
+	
+	Purpose: accept a system polynomial and factor it as needed
+	to create a set of 1st and 2nd order polynomial factors.
+	
+	Arguments:
+	----------
+	sys:	The polynomial passed to the factorization function.
+	
+	Returns:
+	--------
+	poles:	The numpy array of polynomial factors.
+	
+	"""
 	# Find roots to evaluate expression
 	expr = np.roots(sys)
 	
@@ -290,6 +391,30 @@ def sys_condition(system,feedback):
 
 # Define Filter to band-pass function
 def filter_convert( sys, convn, convd=1, debug=False, TFprint=False):
+	""" Filter Conversion Function
+	
+	Purpose: This function is developed to perform the polynomial
+	shift and conversion as dictated by the inputs. This function
+	is to be used to shift transfer function systems or to convert
+	the system as prescribed.
+	
+	Required Arguments:
+	-------------------
+	sys:		The tuple of the system, (numerator, denominator)
+	convn:		The numerator of the conversion factor
+	
+	Optional Arguments:
+	-------------------
+	convd:		The denominator of the conversion factor, default=1
+	debug:		Print debugging information, default=False
+	TFprint:	Print the resulting transfer function, default=False
+	
+	Returns:
+	--------
+	num:		The newly updated numerator polynomial
+	den:		The newly updated denominator polynomial
+	
+	"""
 	# Condition Symbolic Conversion terms
 	convn = sym.expand( convn * s**0 )
 	convd = sym.expand( convd * s**0 )
@@ -442,6 +567,38 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
 # Define Analog Filter Plotting Function
 def filter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle="",
 				xlim=False,ylim=False,ysize=10,xticks=False,xsize=False,sv=False):
+	""" Filter Plotting Function:
+	
+	Purpose: Generates a magnitude only bode plot specifically for filter design.
+	
+	Required Arguments:
+	-------------------
+	system:		The tupled system of (numerator, denominator)
+	
+	Optional Arguments:
+	-------------------
+	mn:			The minimum value (10^mn) to be calculated; default=-1.
+	mx:			The maximum value (10^mx) to be calculated; default=3.
+	npts:		The number of points to calculate over; default=1000.
+	yticks:		An array of the points to plot as tickmarks; default=False.
+	forceticks:	A value that will allow forced elimination of preexisting
+				tickmarks and only leave those provided as yticks or xticks;
+				default=False.
+	gtitle:		A string to be presented as the plot title; default=""
+	xlim:		The list representing the minimum and maximum values over
+				which to plot in x-axis; default=False
+	ylim:		Same as xlim, but for y-axis.
+	ysize:		The font size for y-tickmarks; default is 10
+	xticks:		Same as yticks, but for x-axis.
+	xsize:		Same as ysize, but for x-axis.
+	sv:			A value that will allow the saving of the plotted figure as
+				a PNG image with filename: [sv] [gtitle].png, default=False.
+	
+	Returns:
+	--------
+	N/A
+	
+	"""
 	# Generate omega to be plotted over
 	w = np.logspace(mn,mx,npts)
 	
