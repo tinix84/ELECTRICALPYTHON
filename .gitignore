@@ -6,6 +6,10 @@
 # Ignore PDF Files
 *.pdf
 
+# Ignore Word Docs
+*.doc
+*.docx
+
 # Ignore Subdirectories
 */
 
