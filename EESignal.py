@@ -188,7 +188,7 @@ def cheb_poles(n, a, b,type=1):
 	
 # Define Chebyshev Zero Calculator
 def cheb_zeros(n):
-""" Chebyshev Zeros Calculation Function
+	""" Chebyshev Zeros Calculation Function
 	
 	Purpose: Calculate and return a polynomial set (numpy array)
 	describing the zeros of a Chebyshev Filter.
@@ -202,8 +202,8 @@ def cheb_zeros(n):
 	wk:		Each omega returned as a list
 	zeros:	The complete system of zeros returned as a
 			numpy array representing polynomial coefficients.
-			[s^m, ... s^2, s^1, s^0]
-	"""
+			[s^m, ... s^2, s^1, s^0] """
+			
 	zeros = np.array([1])
 	wk = np.array([])
 	for i in range(n):
