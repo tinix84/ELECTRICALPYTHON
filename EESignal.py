@@ -1426,7 +1426,7 @@ def rms_calc(f, T):
 	return(RMS)
 
 # FFT Coefficient Calculator Function
-def fft_coef(f, T, N, return_complex=False):
+def fft_coef(f, N, T=1, return_complex=False):
 	"""Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
 
 	Given a periodic, function f(t) with period T, this function returns the
@@ -1480,7 +1480,7 @@ def fft_coef(f, T, N, return_complex=False):
 
 
 # FFT Plotting Function
-def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=False):
+def fft_plot(f, N, T=1, mn=False, mx=False, fftplot=True, absolute=False, title=False, plotall=True):
 	""" Plots the FFT of the provided function as a stem plot.
 
 	Arguments
@@ -1501,22 +1501,27 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 
 	if absolute=True, the function will:
 	Return absolute values of the coefficients
+	
+	if plotall=True, the function will:
+	Plot each summed frequency
 
 	"""
 
 	# Calculate FFT and find coefficients
-	a0, a, b = fft_coef(f, T, N)
+	a0, a, b = fft_coef(f, N, T)
 
 	# If provided a title, add it to the title string
 	tStr = ""
 	if title!=False:
 		tStr = title
 
+	# Define Range values for plots
+	rng = range(1,len(a)+1,1)
+	xtic = range(0,len(a)+1,1)
+	
 	# Plot FFT results with respect to their sign
 	if fftplot and not absolute:
 		# Set up Arguments
-		rng = range(1,len(a)+1,1)
-		xtic = range(0,len(a)+1,1)
 		a0x = [0,0]
 		a0y = [0,a0/2]
 
@@ -1526,14 +1531,13 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		plt.stem(rng,a,'r','ro',label="A-Terms")
 		plt.stem(rng,b,'b','bo',label="B-Terms")
 		plt.legend()
-		plt.xticks(xtic)
+		if(len(xtic) < 50):
+			plt.xticks(xtic)
 		plt.show()
 
 	# Plot absolute value of FFT results
 	if fftplot and absolute:
 		# Set up Arguments
-		rng = range(1,len(a)+1,1)
-		xtic = range(0,len(a)+1,1)
 		a0x = [0,0]
 		a0y = [0,abs(a0)/2]
 
@@ -1543,7 +1547,8 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		plt.stem(rng,np.abs(a),'r','ro',label="A-Terms")
 		plt.stem(rng,np.abs(b),'b','bo',label="B-Terms")
 		plt.legend()
-		plt.xticks(xtic)
+		if(len(xtic) < 50):
+			plt.xticks(xtic)
 		plt.show()
 
 	# Plot original function as described by FFT results
@@ -1551,10 +1556,12 @@ def fft_plot(f, T, N, mn=False, mx=False, fftplot=True, absolute=False, title=Fa
 		# Create domain variable
 		x = np.arange(mn,mx,(mx-mn)/1000)
 		# Set output to DC constant
-		yout = a0
+		yout = np.ones(len(x))*a0
 		# Plot each iteration of the Fourier Series
 		for k in range(1,N):
+			if plotall:
+				plt.plot(x,yout)
 			yout = yout + a[k-1]*np.cos(k*2*np.pi*x/T) + b[k-1]*np.sin(k*2*np.pi*x/T)
-			plt.plot(x,yout)
+		plt.plot(x,yout)
 		plt.title("Fourier Series Summation"+tStr)
 		plt.show()
