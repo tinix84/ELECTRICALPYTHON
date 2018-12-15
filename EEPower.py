@@ -79,6 +79,7 @@ def reactance(z,f):
 			out = z/(w)
 		else:
 			out = 1/(w*z)
+		out = abs(out)
 	return(out)
 
 ###################################################################
