@@ -34,6 +34,7 @@
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
 #   - Reactance Calculator:			reactance
+#   - Non-Linear PF Calc:			pf_nonlin
 ###################################################################
 
 # Import libraries as needed:
@@ -504,6 +505,26 @@ def pf_dist(I1=False,IRMS=False,Ih=False):
 		PFdist = 1/np.sqrt(1+THD**2)
 	
 	return(PFdist)
+
+###################################################################
+#   Define Non-Linear Power Factor Calculator
+#
+#   Returns the the unknown variable of the set { PFtrue, PFdist,
+#   PFdisp }.
+#
+#   Requires any two of the three inputs
+###################################################################
+def pf_nonlin(PFtrue=False,PFdist=False,PFdisp=False):
+	if(PFtrue!=False and PFdist!=False and PFdisp!=False):
+		raise ValueError("ERROR: Too many constraints, no solution.") 
+	elif ( PFdist!=False and PFdisp!=False ):
+		return( PFdist * PFdisp )
+	elif ( PFtrue!=False and PFdisp!=False ):
+		return( PFtrue / PFdisp )
+	elif ( PFtrue!=False and PFdist!=False ):
+		return( PFtrue / PFdist )
+	else:
+		raise ValueError("ERROR: Function requires at least two arguments.") 
 
 ###################################################################
 #   Define Harmonic Current Limit function
