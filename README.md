@@ -1,4 +1,5 @@
-# electrical-engineering-python
+# EEPYTHON
+*electrical-engineering-python*
 Python Libraries with functions and constants related to electrical engineering.
 
 ### Special thanks to:
@@ -8,5 +9,5 @@ Python Libraries with functions and constants related to electrical engineering.
 - Paul Ortman | Power Quality Engineer - Idaho Power | Instructor - University of Idaho
 
 In this repository, there are:
-- EESignal (Used primarily for signals and systems or signal/power quality)
-- EEPower (Used primarily for electrical power calculations)
+- EESIGNAL (Used primarily for signals and systems or signal/power quality)
+- EEPOWER (Used primarily for electrical power calculations)
