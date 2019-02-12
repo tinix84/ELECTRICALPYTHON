@@ -1,5 +1,5 @@
-# EEPYTHON
-*electrical-engineering-python*
+# ELECTRICALPYTHON
+*Electrical-Engineering-for-Python*
 
 Python Libraries with functions and constants related to electrical engineering.
 
