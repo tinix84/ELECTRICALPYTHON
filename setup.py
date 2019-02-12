@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
 	long_description = fh.read()
 
 setuptools.setup(
-	name="eepython",
+	name="electricalpython",
 	version="0.0.1",
 	author="Joe Stanley",
 	author_email="stan3926@vandals.uidaho.edu",
