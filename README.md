@@ -21,13 +21,15 @@ In this repository, there are:
 
 
 ## INSTALLATION:
- 1 Install required dependencies (NUMPY, SCIPY, and MATPLOTLIB)
+ 1. Install required dependencies (NUMPY, SCIPY, and MATPLOTLIB)
   - `pip install numpy`
   - `pip install scipy`
   - `pip install matplotlib`
- 2 Install *electricalpython*
+  
+ 2. Install *electricalpython*
   - `pip install electricalpython`
- 3 Check installation success in Python environment
+  
+ 3. Check installation success in Python environment
    ```import eepower
       eepower.ver```
    
