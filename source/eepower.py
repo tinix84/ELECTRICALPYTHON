@@ -1,9 +1,10 @@
 ###################################################################
-#   EEPower.py
+#   EEPOWER.PY
 #
 #   A library of functions, constants and more
 #   that are related to Power in Electrical Engineering.
 #
+#   February 13, 2019
 #   September 3, 2018
 #   August 30, 2018
 #
@@ -17,24 +18,20 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
-#   - Complex Display Function:		vi_cprint
-#   - Impedance Conversion:			z_mk
-#   - Parallel Impedance Adder: 	P_Zadd
-#   - 3-Phase Voltage Converter: 	v_convert
-#   - 3-Phase Current Converter: 	i_convert
-#   - Power Triangle Function: 		P_triangle
-#   - Transformer SC OC Tests:		trans_scoc
-#   - Per Unit Base Creator:		pu
-#   - Per Unit Base Converter:		pu_conv
-#   - Phasor Plot Generator:		phasor_plot
-#   - Capacitor Stored Energy:		C_energy
-#   - Cap. Voltage after Time:		C_VafterT
-#   - Cap. Voltage Discharge:		C_discharge
-#   - Rectifier Cap. Calculation:	C_rectifier
+#   - Complex Display Function:     vi_cprint
+#   - Impedance Conversion:         z_mk
+#   - Parallel Impedance Adder:     P_Zadd
+#   - 3-Phase Voltage Converter:    v_convert
+#   - 3-Phase Current Converter:    i_convert
+#   - Power Triangle Function:      P_triangle
+#   - Transformer SC OC Tests:      trans_scoc
+#   - Per Unit Base Creator:        pu
+#   - Per Unit Base Converter:      pu_conv
+#   - Phasor Plot Generator:        phasor_plot
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
-#   - Reactance Calculator:			reactance
-#   - Non-Linear PF Calc:			pf_nonlin
+#   - Reactance Calculator:         reactance
+#   - Non-Linear PF Calc:           pf_nonlin
 ###################################################################
 
 # Import libraries as needed:
@@ -42,6 +39,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import cmath as c
+from . import capacitor as cap
 
 # Define constants
 a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
@@ -377,72 +375,6 @@ def phasor_plot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
 		mag, ang_r = c.polar(phasor[i])
 		plt.arrow(0,0,ang_r,mag,color=colors[i])
 	plt.show()
-	
-###################################################################
-#   Define Capacitor Energy Calculation
-#
-#   Returns energy (in Joules) of a capacitor given capacitor size
-#   (in Farads) and voltage (in Volts).
-###################################################################
-def C_energy(cap,v):
-	energy = 1/2 * cap * v**2
-	return(energy)
-
-###################################################################
-#   Define Capacitor Voltage Discharge Function
-#
-#   Returns the voltage of a discharging capacitor after time (t - 
-#   seconds) given initial voltage (vo - volts), capacitor size
-#   (cap - Farads), and load (P - Watts).
-###################################################################
-def C_VafterT(t,vo,cap,P):
-	Vt = np.sqrt(vo**2 - 2*P*t/cap)
-	return(Vt)
-	
-###################################################################
-#   Define Capacitor Discharge Function
-#
-#   Returns the time to discharge a capacitor to a specified
-#   voltage given set of inputs:
-#
-#   Vinit: Initial Voltage (in volts)
-#   Vmin: Final Voltage (the minimum allowable voltage) (in volts)
-#   cap: Capacitance (in Farads)
-#   P: Load Power being consumed (in Watts)
-#   dt: Time step-size (in seconds) (defaults to 1e-3 | 1ms)
-#   RMS: if true converts RMS Vin to peak
-#   Eremain: if true: also returns the energy remaining in cap
-#
-#   Returns time to discharge from Vinit to Vmin in seconds.
-#   May also return remaining energy in capacitor if Eremain=True
-###################################################################
-def C_discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
-    t = 0 # start at time t=0
-    if RMS:
-        vo = Vinit*np.sqrt(2) # convert RMS to peak
-    else:
-        vo = Vinit
-    vc = C_VafterT(t,vo,cap,P) # set initial cap voltage
-    while(vc >= Vmin):
-        t = t+dt # increment the time
-        vcp = vc # save previous voltage
-        vc = C_VafterT(t,vo,cap,P) # calc. new voltage
-    if(Eremain):
-        E = C_energy(cap,vcp) # calc. energy
-        return(t-dt,E)
-    else:
-        return(t-dt)
-
-###################################################################
-#   Define Rectifier Capacitor Calculator
-#
-#   Returns the capacitance (in Farads) for a needed capacitor in
-#   a rectifier configuration given the system frequency (in Hz),
-#   the load (in amps) and the desired voltage ripple.
-###################################################################
-def C_rectifier(Iload, fsys, dVout):
-	C = Iload / (fsys * dVout)
-	return(C)
 
 ###################################################################
 #   Define Total Demand Distortion function

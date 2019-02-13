@@ -16,29 +16,29 @@
 #   and used for the FFT calculations used throughout this library.
 #
 #   Included Functions
-#   - FFT Coefficient Calculator:		fft_coef
-#   - FFT Plotting Function:			fft_plot
-#   - RMS Calculator:					rms_calc
-#   - State Space Simulator:			st_space
-#   - Step Function						u
-#   - Phase Margin:						pm
-#   - Gain Margin:						gm
-#   - System Response Plotter:			sys_response
-#   - Multi-Argument Convolution:		convolve
-#   - System Bode Plot:					bode
-#   - Phase Lead System:				phase_lead
-#   - Butterworth Min Order Solver:		but_minord
-#   - Butterworth Filter Plotter:		filter_plt
-#   - Butterworth Filter Generator:		butter_gen
-#   - Chebyshev Filter I Term Solver:	cheb_I_terms
-#   - Chebyshev Filter II Term Solver:	cheb_II_terms
-#   - Filter Conversion:				filter_convert
-#   - Filter Polynomial Factoring:		filter_factor
+#   - FFT Coefficient Calculator:       fft_coef
+#   - FFT Plotting Function:            fft_plot
+#   - RMS Calculator:                   rms_calc
+#   - State Space Simulator:            st_space
+#   - Step Function:                    u
+#   - Phase Margin:                     pm
+#   - Gain Margin:                      gm
+#   - System Response Plotter:          sys_response
+#   - Multi-Argument Convolution:       convolve
+#   - System Bode Plot:                 bode
+#   - Phase Lead System:                phase_lead
+#   - Butterworth Min Order Solver:     but_minord
+#   - Butterworth Filter Plotter:       filter_plt
+#   - Butterworth Filter Generator:     butter_gen
+#   - Chebyshev Filter I Term Solver:   cheb_I_terms
+#   - Chebyshev Filter II Term Solver:  cheb_II_terms
+#   - Filter Conversion:                filter_convert
+#   - Filter Polynomial Factoring:      filter_factor
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
-#   - TF System Conditioning:			sys_condition
-#   - Tupple to Matrix Converter:		tuple_to_matrix
-#   - Numpy Array to Matrix Converter:	nparr_to_matrix
+#   - TF System Conditioning:           sys_condition
+#   - Tupple to Matrix Converter:       tuple_to_matrix
+#   - Numpy Array to Matrix Converter:  nparr_to_matrix
 #
 #   Private Classes ( Those not Intended for Use Outside of Library )
 #   - Function Concatinator:			c_func_concat
