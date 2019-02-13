@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
 	name="electricalpython",
-	version="0.0.1",
+	version="0.0.3",
 	author="Joe Stanley",
 	author_email="stan3926@vandals.uidaho.edu",
 	description="Electrical Engineering Functions in Python",

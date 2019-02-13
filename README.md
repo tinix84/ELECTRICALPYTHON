@@ -12,3 +12,10 @@ Python Libraries with functions and constants related to electrical engineering.
 In this repository, there are:
 - EESIGNAL (Used primarily for signals and systems or signal/power quality)
 - EEPOWER (Used primarily for electrical power calculations)
+  - CAPACITOR (Special functions related to capacitors in electrical engineering)
+
+### Dependencies:
+- NUMPY
+- MATPLOTLIB
+- CMATH
+- SCIPY
