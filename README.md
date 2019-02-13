@@ -17,5 +17,4 @@ In this repository, there are:
 ### Dependencies:
 - NUMPY
 - MATPLOTLIB
-- CMATH
 - SCIPY

@@ -1,11 +1,14 @@
+# Import Necessary Files
 import setuptools
+import os
 
 with open("README.md", "r") as fh:
 	long_description = fh.read()
 
+# Generate Setup Tools Argument
 setuptools.setup(
 	name="electricalpython",
-	version="0.0.3",
+	version="0.0.8",
 	author="Joe Stanley",
 	author_email="stan3926@vandals.uidaho.edu",
 	description="Electrical Engineering Functions in Python",
