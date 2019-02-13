@@ -31,8 +31,12 @@ In this repository, there are:
   
  3. Check installation success in Python environment
 
-   ```import eepower
-      eepower.ver```
+   ```
+   import eepower
+   eepower.ver
+   ```
    
-   ```import eesignal
-      eesignal.ver```
+   ```
+   import eesignal
+   eesignal.ver
+   ```
