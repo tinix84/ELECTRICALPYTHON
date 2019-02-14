@@ -21,4 +21,7 @@ setuptools.setup(
 		"License :: OSI Approved :: MIT License",
 		"Operating System :: OS Independent",
 	],
+	project_urls={
+        "Bug Tracker": "https://github.com/engineerjoe440/electrical-engineering-python/issues",
+        "Documentation": "https://engineerjoe440.github.io/electrical-engineering-python/",
 )
