@@ -1,7 +1,6 @@
-
 ---
 
-[MAIN](https://engineerjoe440.github.io/electrical-engineering-python/index/)
+[MAIN](https://engineerjoe440.github.io/electrical-engineering-python/index)
 [Example Usage](https://engineerjoe440.github.io/electrical-engineering-python/example/)
 
 ---
