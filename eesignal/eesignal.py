@@ -18,8 +18,8 @@
 #   Included Functions
 #   - FFT Coefficient Calculator:       fft_coef
 #   - FFT Plotting Function:            fft_plot
-#   - RMS Calculator:                   rms_calc
-#   - State Space Simulator:            st_space
+#   - RMS Calculator:                   rms
+#   - State Space Simulator:            statespace
 #   - Step Function:                    u
 #   - Phase Margin:                     pm
 #   - Gain Margin:                      gm
@@ -1107,7 +1107,7 @@ def nparr_to_matrix(x,yx):
 		n = np.matrix.reshape(n,(n.size,1)) # Reshape
 	return(n)
 
-def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
+def statespace(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 		xlim=False,ylim=False,gtitle="",ret=False,plot=True,pltfn=False,sv=False):
 	""" Plots the state-space simulation of an arbitrary set of matricies.
 
@@ -1407,7 +1407,7 @@ def st_space(A,B,x=0,f=0,solution=2,C=False,D=False,npts=9999,NN=10000,dt=0.01,
 
 
 # RMS Calculating Function
-def rms_calc(f, T):
+def rms(f, T):
 	""" Calculates the RMS value of the provided function.
 
 	Arguments

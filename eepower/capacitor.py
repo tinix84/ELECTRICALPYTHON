@@ -65,13 +65,13 @@ def discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
         vo = Vinit*np.sqrt(2) # convert RMS to peak
     else:
         vo = Vinit
-    vc = C_VafterT(t,vo,cap,P) # set initial cap voltage
+    vc = VafterT(t,vo,cap,P) # set initial cap voltage
     while(vc >= Vmin):
         t = t+dt # increment the time
         vcp = vc # save previous voltage
-        vc = C_VafterT(t,vo,cap,P) # calc. new voltage
+        vc = VafterT(t,vo,cap,P) # calc. new voltage
     if(Eremain):
-        E = C_energy(cap,vcp) # calc. energy
+        E = energy(cap,vcp) # calc. energy
         return(t-dt,E)
     else:
         return(t-dt)

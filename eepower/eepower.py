@@ -18,20 +18,22 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
-#   - Complex Display Function:     vi_cprint
+#   - Complex Display Function:     complex
 #   - Impedance Conversion:         z_mk
-#   - Parallel Impedance Adder:     P_Zadd
-#   - 3-Phase Voltage Converter:    v_convert
-#   - 3-Phase Current Converter:    i_convert
-#   - Power Triangle Function:      P_triangle
+#   - Parallel Impedance Adder:     parallelz
+#   - V/I Line/Phase Converter:     oonvert
+#   - Power Triangle Function:      powertriangle
 #   - Transformer SC OC Tests:      trans_scoc
-#   - Per Unit Base Creator:        pu
-#   - Per Unit Base Converter:      pu_conv
-#   - Phasor Plot Generator:        phasor_plot
+#   - Phasor Plot Generator:        phasorplot
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
 #   - Reactance Calculator:         reactance
 #   - Non-Linear PF Calc:           pf_nonlin
+#   - Harmonic Limit Calculator:    harmoniclimit
+#
+#   Additional functions available in sub-modules:
+#   - capacitor.py
+#   - perunit.py
 ###################################################################
 
 # Import libraries as needed:
@@ -40,6 +42,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import cmath as c
 from . import capacitor as cap
+from . import perunit as pu
 
 # Define constants
 a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
@@ -82,38 +85,6 @@ def reactance(z,f):
 	return(out)
 
 ###################################################################
-#   Define per unit base creator function
-#
-#   Calculate per unit base given voltage (V) and power (VA)
-#   Inputs: v, s, phase, z
-#   When calculating 3-phase per unit bases, use 3-phase-S-base
-#   and line-to-line-voltage for s and v respectively.
-#
-#   Returns per unit base of z if z=True, pu base of i if z=False
-#   Returns as value for 3-phase by default, can also provide
-#   1-phase values.
-###################################################################
-def pu(v,s,phase=3,z=True):
-	if z:
-		return(v**2/s)
-	elif (phase==3) and not z:
-		return(s/(np.sqrt(3)*v))
-	else:
-		return(v/s)
-
-###################################################################
-#   Define per unit converter function
-#
-#   Converts a [quantity] to a new per-unit base (puB_new) given an
-#   old per-unit base (puB_old).
-#
-#   Returns per-unit value in new base.
-###################################################################
-def pu_conv(quantity, puB_old, puB_new):
-	pu_new = quantity*puB_old/puB_new
-	return(pu_new)
-
-###################################################################
 #   Define display function
 #
 #   Print a complex voltage or current in polar form,
@@ -121,7 +92,7 @@ def pu_conv(quantity, puB_old, puB_new):
 #
 #   Requires voltage or current be provided as complex value.
 ###################################################################
-def vi_cprint(val,unit=False,label=False,printval=True,ret=False):
+def complex(val,unit=False,label=False,printval=True,ret=False):
 	mag, ang_r = c.polar(val) #Convert to polar form
 	ang = np.degrees(ang_r) #Convert to degrees
   	# Print values (by default)
@@ -163,7 +134,7 @@ def z_mk(f,C=False,L=False,imaginary=True):
 #
 #   Requires all impedance inputs given in phasor form.
 ###################################################################
-def P_Zadd(Z):
+def parallelz(Z):
 	L = len(Z)
 	Zp = (1/Z[0]+1/Z[1])**(-1)
 	if(L > 2):
@@ -172,13 +143,15 @@ def P_Zadd(Z):
 	return(Zp)
 
 ###################################################################
-#   Define voltage conversion
+#   Define Phase/Line Converter
 #
 #   Convert Line-Line voltage to Line-Neutral, or vice-versa.
+#   Converts Line current to Phase current, or vice-versa.
+#   Can only convert one voltage or current at a time.
 #
 #   Requires that voltage is provided in complex form.
 ###################################################################
-def v_convert(VLL=False,VLN=False):
+def convert(VLL=False,VLN=False,Iline=False,Iphase=False):
 	#Given VLL, convert to VLN
 	if (VLL!=False):
 		VLN = VLL/(VLLcVLN)
@@ -187,22 +160,8 @@ def v_convert(VLL=False,VLN=False):
 	elif (VLN!=False):
 		VLL = VLN*VLLcVLN
 		return(VLL)
-	#Neither given, error encountered
-	else:
-		print("ERROR: No value given"+
-				"or innapropriate value"+
-				"given.")
-
-###################################################################
-#   Define current conversion
-#
-#   Converts Line current to Phase current, or vice-versa.
-#
-#   Requires that current is provided in complex form.
-###################################################################
-def i_convert(Iline=False,Iphase=False):
 	#Given Iphase, convert to Iline
-	if (Iphase!=False):
+	elif (Iphase!=False):
 		Iline = Iphase*ILcIP
 		return(Iline)
 	#Given Iline, convert to Iphase
@@ -226,7 +185,7 @@ def i_convert(Iline=False,Iphase=False):
 #   Requires two values from set: { P, Q, S, PF }
 #   All values given must be given as absolute value, not complex.
 ###################################################################
-def P_triangle(P=False,Q=False,S=False,PF=False,color="red",
+def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
 			   text="",figure=1,printval=False,ret=False,plot=True):
 	#Given P and Q
 	if (P!=False) and (Q!=False):
@@ -351,7 +310,7 @@ def trans_scoc(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
 #   (e.g. [ m+ja, m+ja, m+ja, ... , m+ja ] ) No more than 12
 #   Phasors are allowed to be plotted at one time.
 ###################################################################
-def phasor_plot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
+def phasorplot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
 	numphs = len(phasor)
 	
 	colors = ["#FF0000","#800000","#FFFF00","#808000","#00ff00","#008000",
@@ -472,7 +431,7 @@ def pf_nonlin(PFtrue=False,PFdist=False,PFdisp=False):
 #
 #   N is the maximum harmonic term.
 ###################################################################
-def harmonic_lim(Isc,IL,N=0,Ih=0,printout=True,ret=False):
+def harmoniclimit(Isc,IL,N=0,Ih=0,printout=True,ret=False):
 	percent = 1/100 # Use for scaling
 	Ir = Isc/IL # compute ratio
 	if(Ir < 20):

@@ -3,6 +3,9 @@
 
 Python Libraries with functions and constants related to electrical engineering.
 
+The functions and constants that make up these modules represent a library of material compiled with the intent of being used primarily
+for research, development, education, and exploration in the realm of electrical engineering.
+
 ### Special thanks to:
 - Steven Weeks | Student - University of Idaho
 - Dr. Dennis Sullivan | Proffessor - University of Idaho
@@ -13,6 +16,7 @@ In this repository, there are:
 - EESIGNAL (Used primarily for signals and systems or signal/power quality)
 - EEPOWER (Used primarily for electrical power calculations)
   - CAPACITOR (Special functions related to capacitors in electrical engineering)
+  - PERUNIT (Special functions related to Per-Unit calculations)
 
 ### Dependencies:
 - NUMPY
