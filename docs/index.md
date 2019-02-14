@@ -22,16 +22,48 @@ The following packages are required dependencies for this package. They are requ
 ### Installation:
 #### Install Dependencies:
 The required dependencies can be installed using the following pip-install commands.
-``
+
+
+```python
 pip install numpy
 pip install scipy
 pip install matplotlib
-``
+```
+
 #### Install electricalpython:
 Following successful installation of the afore-mentioned package-dependencies, installation of *electricalpython* can be accomplished by using the following command line
-``
+
+
+```python
 pip install electricalpython
-``
+```
+
+#### Validate Installation:
+
+
+```python
+import eepower as eep # Import the EEPOWER package
+eep.ver # Display the version information for EEPOWER
+```
+
+
+
+
+    '0.1.1'
+
+
+
+
+```python
+import eesignal as ees # Import the EESIGNAL package
+ees.ver # Display the version information for EESIGNAL
+```
+
+
+
+
+    '0.1.1'
+
 
 
 
