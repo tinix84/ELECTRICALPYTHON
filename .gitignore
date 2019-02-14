@@ -10,9 +10,6 @@
 *.doc
 *.docx
 
-# Ignore Text Files
-*.txt
-
 # Ignore Image Files
 *.png
 
