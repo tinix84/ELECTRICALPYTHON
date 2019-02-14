@@ -1,4 +1,8 @@
 
+---
+title: MAIN
+---
+
 # ELECTRICALPYTHON
 *The Python Package for all Electrical Engineers!*
 
@@ -15,9 +19,9 @@ This package (*electricalpython*) includes both *eepower* and *eesignal* which e
 ### Dependencies:
 The following packages are required dependencies for this package. They are required for most, if not all, of the functions contained herein.
 
-- NUMPY ( https://pypi.org/project/numpy/ )
-- SCIPY ( https://pypi.org/project/scipy/ )
-- MATPLOTLIB ( https://pypi.org/project/matplotlib/ )
+- NUMPY [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/)
+- SCIPY [https://pypi.org/project/scipy/](https://pypi.org/project/scipy/)
+- MATPLOTLIB [https://pypi.org/project/matplotlib/](https://pypi.org/project/matplotlib/)
 
 ### Installation:
 #### Install Dependencies:
