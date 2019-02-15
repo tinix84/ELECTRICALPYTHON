@@ -1,9 +1,9 @@
 
 ---
 
-[Home](https://engineerjoe440.github.io/electrical-engineering-python/index)
+[Home](https://engineerjoe440.github.io/ELECTRICALPYTHON/index)
  | 
-[Example Usage](https://engineerjoe440.github.io/electrical-engineering-python/example)
+[Example Usage](https://engineerjoe440.github.io/ELECTRICALPYTHON/example)
 
 ---
 
