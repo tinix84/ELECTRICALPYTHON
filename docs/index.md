@@ -72,9 +72,3 @@ ees.ver # Display the version information for EESIGNAL
 
     '0.1.1'
 
-
-
-
-```python
-
-```
