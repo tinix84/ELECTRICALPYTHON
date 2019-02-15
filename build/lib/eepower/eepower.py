@@ -19,7 +19,7 @@
 #
 #   Included Functions
 #   - Complex Display Function:     complex
-#   - Impedance Conversion:         z_mk
+#   - Impedance Conversion:         phasorz
 #   - Parallel Impedance Adder:     parallelz
 #   - V/I Line/Phase Converter:     oonvert
 #   - Power Triangle Function:      powertriangle
@@ -114,7 +114,7 @@ def complex(val,unit=False,label=False,printval=True,ret=False):
 #
 #   Returns C or L as value in Ohms.
 ###################################################################
-def z_mk(f,C=False,L=False,imaginary=True):
+def phasorz(f,C=False,L=False,imaginary=True):
 	w = 2*np.pi*f
 	#C Given in ohms, return as Z
 	if (C!=False):

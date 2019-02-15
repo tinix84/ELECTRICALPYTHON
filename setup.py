@@ -4,11 +4,14 @@ import os
 
 with open("README.md", "r") as fh:
 	long_description = fh.read()
+	
+# Version Breakdown:
+# Functionality Change . Bug Fix/Minor Change . Documentation/Comment Change
 
 # Generate Setup Tools Argument
 setuptools.setup(
 	name="electricalpython",
-	version="0.1.1",
+	version="0.1.3",
 	author="Joe Stanley",
 	author_email="stan3926@vandals.uidaho.edu",
 	description="Electrical Engineering Functions in Python",
@@ -22,6 +25,7 @@ setuptools.setup(
 		"Operating System :: OS Independent",
 	],
 	project_urls={
-        "Bug Tracker": "https://github.com/engineerjoe440/electrical-engineering-python/issues",
-        "Documentation": "https://engineerjoe440.github.io/electrical-engineering-python/",
+        "Bug Tracker": "https://github.com/engineerjoe440/ELECTRICALPYTHON/issues",
+        "Documentation": "https://engineerjoe440.github.io/ELECTRICALPYTHON/",
+		}
 )

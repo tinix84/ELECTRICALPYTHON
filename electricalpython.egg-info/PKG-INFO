@@ -1,11 +1,13 @@
 Metadata-Version: 2.1
 Name: electricalpython
-Version: 0.1.1
+Version: 0.1.3
 Summary: Electrical Engineering Functions in Python
 Home-page: https://github.com/engineerjoe440/electrical-engineering-python
 Author: Joe Stanley
 Author-email: stan3926@vandals.uidaho.edu
 License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/engineerjoe440/ELECTRICALPYTHON/issues
+Project-URL: Documentation, https://engineerjoe440.github.io/ELECTRICALPYTHON/
 Description: # ELECTRICALPYTHON
         *Electrical-Engineering-for-Python*
         
