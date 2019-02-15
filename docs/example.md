@@ -1,10 +1,3 @@
----
-
-[MAIN](https://engineerjoe440.github.io/electrical-engineering-python/index)
- | 
-[Example Usage](https://engineerjoe440.github.io/electrical-engineering-python/example)
-
----
 
 # ELECTRICALPYTHON
 *The Python Package for all Electrical Engineers!*
@@ -40,7 +33,7 @@ eep.powertriangle(P=real,Q=reactive,text=" Demo",printval=True)
 ```
 
 
-![Power Triangle Output](https://raw.githubusercontent.com/engineerjoe440/electrical-engineering-python/master/docs/example_1.png)
+
 
 
 #### Help Printout for eepower.powertriangle:
