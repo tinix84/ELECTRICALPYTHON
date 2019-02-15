@@ -70,6 +70,3 @@ print(help(eep.powertriangle))
     
 
 
-```python
-
-```
