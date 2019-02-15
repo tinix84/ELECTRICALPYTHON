@@ -40,7 +40,7 @@ eep.powertriangle(P=real,Q=reactive,text=" Demo",printval=True)
 ```
 
 
-![Power Triangle Output](https://github.com/engineerjoe440/electrical-engineering-python/blob/master/docs/example_1.png)
+![Power Triangle Output](https://raw.githubusercontent.com/engineerjoe440/electrical-engineering-python/master/docs/example_1.png)
 
 
 #### Help Printout for eepower.powertriangle:
