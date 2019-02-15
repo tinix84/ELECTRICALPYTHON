@@ -40,7 +40,7 @@ reactive = 85 # VAR
 eep.powertriangle(P=real,Q=reactive,text=" Demo",printval=True)
 ```
 
-
+![Power Triangle Output](https://raw.githubusercontent.com/engineerjoe440/electrical-engineering-python/master/docs/example_1.png)
 
 
 
