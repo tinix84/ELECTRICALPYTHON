@@ -18,6 +18,7 @@ This package (*electricalpython*) includes both *eepower* and *eesignal* which e
 1. EEPOWER
     - CAPACITOR
     - PERUNIT
+    - SYSTEMSOLUTION
 2. EESIGNAL
 
 ### Dependencies:

@@ -17,6 +17,7 @@ In this repository, there are:
 - EEPOWER (Used primarily for electrical power calculations)
   - CAPACITOR (Special functions related to capacitors in electrical engineering)
   - PERUNIT (Special functions related to Per-Unit calculations)
+  - SYSTEMSOLUTION (Special functions related to solving large systems of equations)
 
 ### Dependencies:
 - NUMPY
