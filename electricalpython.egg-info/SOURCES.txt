@@ -4,6 +4,7 @@ eepower/__init__.py
 eepower/capacitor.py
 eepower/eepower.py
 eepower/perunit.py
+eepower/systemsolution.py
 eesignal/__init__.py
 eesignal/eesignal.py
 electricalpython.egg-info/PKG-INFO
