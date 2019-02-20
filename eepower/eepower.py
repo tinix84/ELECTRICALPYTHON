@@ -7,6 +7,7 @@
 #   February 13, 2019
 #   September 3, 2018
 #   August 30, 2018
+#   February 20, 2019
 #
 #   Written by Joe Stanley
 #
@@ -41,8 +42,6 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import cmath as c
-from . import capacitor as cap
-from . import perunit as pu
 
 # Define constants
 a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
