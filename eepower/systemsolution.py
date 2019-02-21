@@ -36,9 +36,13 @@ def NewtonRaphson(F, J, X0, eps=1e-4, mxiter=100):
     
     Required Arguments:
     -------------------
-    F:     The Non-Linear System
-    J:     The Jacobian of F
-    X0:    The Initial Value (or initial guess)
+    F:     The Non-Linear System; a function handle/instance.
+           The input function must accept only one (1) argument as an
+           array or int/float representing the variables required.
+    J:     The Jacobian of F; a function handle/instance.
+           The input Jacobian of F must accept only one (1) argument as
+           an array or int/float representing the variables required.
+    X0:    The Initial Value (or initial guess); a representative array.
     
     Optional Arguments:
     -------------------
