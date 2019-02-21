@@ -35,10 +35,12 @@
 #   Additional functions available in sub-modules:
 #   - capacitor.py
 #   - perunit.py
+#   - systemsolution.py
 ###################################################################
 name = "eepower"
 ver = "1.0.1"
 
+# Import Submodules
 from . import capacitor as cap
 from . import perunit as pu
 from . import systemsolution as system

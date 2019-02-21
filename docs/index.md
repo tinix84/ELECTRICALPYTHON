@@ -20,6 +20,7 @@ This package (*electricalpython*) includes both *eepower* and *eesignal* which e
     - PERUNIT
     - SYSTEMSOLUTION
 2. EESIGNAL
+    - BODE
 
 ### Dependencies:
 The following packages are required dependencies for this package. They are required for most, if not all, of the functions contained herein.

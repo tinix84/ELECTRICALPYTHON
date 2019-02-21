@@ -20,7 +20,7 @@
 #   - FFT Plotting Function:            fft_plot
 #   - RMS Calculator:                   rms
 #   - State Space Simulator:            statespace
-#   - Step Function:                    u
+#   - Step Function:                    step
 #   - Phase Margin:                     pm
 #   - Gain Margin:                      gm
 #   - System Response Plotter:          sys_response
@@ -34,6 +34,7 @@
 #   - Chebyshev Filter II Term Solver:  cheb_II_terms
 #   - Filter Conversion:                filter_convert
 #   - Filter Polynomial Factoring:      filter_factor
+#   - Convolution Bar Graph Visualizer: convbar
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:           sys_condition
@@ -51,9 +52,15 @@
 #   - Type: Integer:					tint
 #   - Type: Float:						tfloat
 #   - Type: Function Handle:			tfun
+#
+#   Submodules
+#   - Bode Plot Generator               BODE.PY
 #################################################################################
 name = "eesignal"
 ver = "1.0.1"
+
+# Import Submodules
+from . import bode
 
 # Import necessary libraries
 import numpy as np
@@ -72,6 +79,64 @@ tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
 tnfloat = "<class 'numpy.float64'>"
+
+# Define Convolution Bar-Graph Function:
+def convbar(h, x, outline=True):
+	"""
+	CONVBAR Function:
+	
+	INPUTS:
+	-------
+	h: Impulse Response - Given as Array (Prefferably Numpy Array)
+	x: Input Function - Given as Array (Prefferably Numpy Array)
+	
+	RETURNS:
+	--------
+	None.
+	
+	PLOTS:
+	------
+	Impulse Response: The bar-graph plotted version of h.
+	Input Function:   The bar-graph plotted version of x.
+	Convolved Output: The bar-graph plotted version of the convolution of h and x.
+	"""
+	
+	# The impulse response
+	M = len(h)
+	t = np.arange(M)
+	# Plot
+	plt.subplot(121)
+	if(outline): plt.plot(t,h,color='red')
+	plt.bar(t,h,color='black')
+	plt.xticks([0,5,9])
+	plt.ylabel('h')
+	plt.title('Impulse Response')
+	plt.grid()
+
+	# The input function
+	N = len(x)
+	s = np.arange(N)
+	# Plot
+	plt.subplot(122)
+	if(outline): plt.plot(s,x,color='red')
+	plt.bar(s,x,color='black')
+	plt.xticks([0,10,19])
+	plt.title('Input Function')
+	plt.grid()
+	plt.ylabel('x')
+
+	# The output
+	L = M+N-1
+	w = np.arange(L)
+	plt.figure(3)
+	y = np.convolve(h,x)
+	if(outline): plt.plot(w,y,color='red')
+	plt.bar(w,y,color='black')
+	plt.ylabel('y')
+	plt.grid()
+	plt.title('Convolved Output')
+	plt.show()
+
 
 # Define convolution function
 def convolve(tuple):
@@ -1087,12 +1152,9 @@ class c_func_concat:
 		rets = np.asmatrix(rets).T # Convert array to matrix, then transpose
 		return(rets)
 
-# Define u(t) - Step function
-def u(t):
-	if (t>0):
-		return(1)
-	else:
-		return(0)
+# Define Step function
+def step(t):
+	return( np.heaviside( t, 1) )
 
 # Tuple to Matrix Converter
 def tuple_to_matrix(x,yx):
