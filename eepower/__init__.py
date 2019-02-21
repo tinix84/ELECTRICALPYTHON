@@ -108,9 +108,9 @@ def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
 	if printval and not unit and not label:
 		print(mag,"∠",ang,"°")
 	elif printval and unit and not label:
-		print(mag,"∠",ang,"°"+unit)
+		print(mag,"∠",ang,"°",unit)
 	elif printval and unit and label:
-		print(label,mag,"∠",ang,"°"+unit)
+		print(label,mag,"∠",ang,"°",unit)
 	# Return values when requested
 	if ret:
 		return(mag,ang)
