@@ -156,7 +156,8 @@ def parallelz(Z):
 #   Converts Line current to Phase current, or vice-versa.
 #   Can only convert one voltage or current at a time.
 #
-#   Requires that voltage is provided in complex form.
+#   Input may be provided as absolute value or complex.
+#   Output may be specified as complex, but defaults to abs. val.
 ###################################################################
 def convert(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
 output = 0
