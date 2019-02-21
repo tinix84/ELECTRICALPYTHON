@@ -25,7 +25,6 @@
 #   - Gain Margin:                      gm
 #   - System Response Plotter:          sys_response
 #   - Multi-Argument Convolution:       convolve
-#   - System Bode Plot:                 bode
 #   - Phase Lead System:                phase_lead
 #   - Butterworth Min Order Solver:     but_minord
 #   - Butterworth Filter Plotter:       filter_plt
