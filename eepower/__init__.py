@@ -22,7 +22,7 @@
 #   - Complex Display Function:     complex
 #   - Impedance Conversion:         phasorz
 #   - Parallel Impedance Adder:     parallelz
-#   - V/I Line/Phase Converter:     oonvert
+#   - V/I Line/Phase Converter:     convert
 #   - Power Triangle Function:      powertriangle
 #   - Transformer SC OC Tests:      trans_scoc
 #   - Phasor Plot Generator:        phasorplot
@@ -38,7 +38,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.0.1"
+ver = "1.1.1"
 
 # Import Submodules
 from . import capacitor as cap
@@ -158,29 +158,34 @@ def parallelz(Z):
 #
 #   Requires that voltage is provided in complex form.
 ###################################################################
-def convert(VLL=False,VLN=False,Iline=False,Iphase=False):
+def convert(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
+output = 0
 	#Given VLL, convert to VLN
 	if (VLL!=False):
 		VLN = VLL/(VLLcVLN)
-		return(VLN)
+        output = VLN
 	#Given VLN, convert to VLL
 	elif (VLN!=False):
 		VLL = VLN*VLLcVLN
-		return(VLL)
+        output = VLL
 	#Given Iphase, convert to Iline
 	elif (Iphase!=False):
 		Iline = Iphase*ILcIP
-		return(Iline)
+        output = Iline
 	#Given Iline, convert to Iphase
 	elif (Iline!=False):
 		Iphase = Iline/ILcIP
-		return(Iphase)
+        output = Iphase
 	#Neither given, error encountered
 	else:
 		print("ERROR: No value given"+
 				"or innapropriate value"+
 				"given.")
-
+        return(0)
+    #Return as complex only when requested
+    if complex:
+        return( output )
+    return(abs( output ))
 ###################################################################
 #   Define Power Triangle Function
 #
