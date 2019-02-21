@@ -19,7 +19,7 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
-#   - Complex Display Function:     complex
+#   - Complex Display Function:     cprint
 #   - Impedance Conversion:         phasorz
 #   - Parallel Impedance Adder:     parallelz
 #   - V/I Line/Phase Converter:     convert
@@ -99,9 +99,11 @@ def reactance(z,f):
 #
 #   Requires voltage or current be provided as complex value.
 ###################################################################
-def complex(val,unit=False,label=False,printval=True,ret=False):
+def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
 	mag, ang_r = c.polar(val) #Convert to polar form
 	ang = np.degrees(ang_r) #Convert to degrees
+    mag = round( mag, decimals ) #Round
+    ang = round( ang, decimals ) #Round
   	# Print values (by default)
 	if printval and not unit and not label:
 		print(mag,"∠",ang,"°")
