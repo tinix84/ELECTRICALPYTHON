@@ -1,8 +1,8 @@
 #################################################################################
 #   BODE.PY
 #
-#   This file contains a variety of functions and constants related to signals.
-#   These items will commonly  be used in Electrical Engineering Applications.
+#   This file contains a set of bode plot functions related to signals.
+#   These items will commonly be used in Electrical Engineering Applications.
 #
 #   February 21, 2019
 #
@@ -19,10 +19,11 @@
 # Import External Dependencies
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.signal as sig
 from math import pi, exp, cos, sin, log, sqrt
 
 # Import Local Dependencies
-from .__init__ import sys_condition
+from .filter import sys_condition
 
 # Define System Bode Plotting Function
 def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
@@ -192,3 +193,6 @@ def zbode(f,dt=0.01,NN=1000,title=""):
 	plt.xlabel('$\phi$ (degrees)')
 	plt.title(title+" Phase")
 	plt.show()
+
+
+# End of BODE.PY

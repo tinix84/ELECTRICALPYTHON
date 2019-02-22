@@ -12,12 +12,13 @@
 #
 #   Included Functions:
 #   - Z-Domain Filter Simulator       zfiltersim
+#   - System Response Plotter:        sysresponse
 #################################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-def zfiltersim( fin, filter, NN=1000, title="",plotinput=True):
+def zfiltersim( fin, filter, NN=1000, title="",plotinput=True,legend=True):
     """
     ZFILTERSIM Function
     
@@ -43,6 +44,8 @@ def zfiltersim( fin, filter, NN=1000, title="",plotinput=True):
     title:      The title presented on each plot; default=""
     plotinput:  An argument to control whether the input is plotted
                 separately, default=True.
+    legend:     An argument to control whether the legend is shown,
+                default=True.
     
     Returns:
     --------
@@ -97,9 +100,155 @@ def zfiltersim( fin, filter, NN=1000, title="",plotinput=True):
     ytime = np.copy( x_tmp )
     # Plot Filtered Output
     plt.figure(1)
-    plt.plot(x,'k--')
-    plt.plot(ytime,'k')
+    plt.plot(x,'k--',label="Input")
+    plt.plot(ytime,'k',label="Output")
     plt.title(title)
     plt.grid(which='both')
+    if legend: plt.legend()
     plt.show()
     
+# Define System Response Plotter function
+def sys_response(system,npts=1000,dt=0.01,combine=True,gtitle="",xlim=False,
+				stepResponse=True,rampResponse=False,parabolicResponse=False,sv=False):
+	""" System Response Plotter Function
+	
+	Given a transfer function, plots the response against step, ramp, and
+	parabolic inputs and plots the error for each of these functions.
+	
+	Required Arguments
+	------------------
+	system:		The Transfer Function; can be provided as the following:
+				- 1 (instance of lti)
+				- 2 (num, den)
+				- 3 (zeros, poles, gain)
+				- 4 (A, B, C, D)
+	
+	Optional Arguments
+	------------------
+	npts:				Number of steps to calculate over; default is 1000.
+	dt:					Difference between each data point, default is 0.01.
+	combine:			If combination of numerator and denominator is needed.
+						This value should be set to "True" if the parts should be
+						combined to show the complete system with feedback.
+						Default is True.
+	gtitle:				Additional string to be added to plot titles;
+						default is "".
+	stepResponse:		Plot the step-response and corresponding error;
+						default is True.
+	rampResponse:		Plot the ramp-response and corresponding error;
+						default is False.
+	parabolicResponse:	Plot the parabolic-response and corresponding error;
+						default is False.
+	xlim:				Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
+						Default is False.
+	sv:					Save the figures plotted. Default is False.
+	
+	Returns
+	-------
+	NONE:		Generates the plot of the desired responses,
+				does not return numerical values.
+	"""
+	# Define Time Axis
+	TT = np.arange(0,npts*dt,dt)
+	
+	# Condition system input to ensure proper execution
+	system = sys_condition(system,combine)	
+	
+	# Allocate space for all outputs
+	step = np.zeros(npts)
+	ramp = np.zeros(npts)
+	parabola = np.zeros(npts)
+	errS = np.zeros(npts)
+	errR = np.zeros(npts)
+	errP = np.zeros(npts)
+	
+	# Generate Inputs
+	for i in range(npts):
+		step[i] = 1.0
+		ramp[i] = (dt*i)
+		parabola[i] = (dt*i)**(2)
+	
+	# Simulate Response for each input (step, ramp, parabola)
+	# All 'x' values are variables that are considered don't-care
+	x, y1, x = sig.lsim((system),step,TT)
+	x, y2, x = sig.lsim((system),ramp,TT)
+	x, y3, x = sig.lsim((system),parabola,TT)
+	
+	# Calculate error over all points
+	for k in range(npts):
+		errS[k] = step[k] - y1[k]
+		errR[k] = ramp[k] - y2[k]
+		errP[k] = parabola[k] - y3[k]
+	
+	# Plot responses if allowed
+	if (stepResponse):
+		plt.figure()
+		plt.subplot(121)
+		plt.title("Step Response "+gtitle)
+		plt.plot(TT,y1,'k--', label="Step Response")
+		plt.plot(TT,step,'k', label="Step Function")
+		plt.grid()
+		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
+		plt.subplot(122)
+		plt.title("Step Response Error "+gtitle)
+		plt.plot(TT,errS,'k', label="Error")
+		plt.grid()
+		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
+		plt.subplots_adjust(wspace=0.3)
+		if sv:
+			plt.savefig("Step Response ("+gtitle+").png")
+		plt.show()
+	if (rampResponse):
+		plt.figure()
+		plt.subplot(121)
+		plt.title("Ramp Response "+gtitle)
+		plt.plot(TT,y2,'k--', label="Ramp Response")
+		plt.plot(TT,ramp,'k', label="Ramp Function")
+		plt.grid()
+		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
+		plt.subplot(122)
+		plt.title("Ramp Response Error "+gtitle)
+		plt.plot(TT,errR,'k', label="Error")
+		plt.grid()
+		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
+		plt.subplots_adjust(wspace=0.3)
+		if sv:
+			plt.savefig("Ramp Response ("+gtitle+").png")
+		plt.show()
+	if (parabolicResponse):
+		plt.figure()
+		plt.subplot(121)
+		plt.title("Parabolic Response "+gtitle)
+		plt.plot(TT,y3,'k--', label="Parabolic Response")
+		plt.plot(TT,parabola,'k', label="Parabolic Function")
+		plt.grid()
+		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
+		plt.subplot(122)
+		plt.title("Parabolic Response Error "+gtitle)
+		plt.plot(TT,errP,'k', label="Error")
+		plt.grid()
+		plt.legend()
+		plt.xlabel("Time (seconds)")
+		if xlim != False:
+			plt.xlim(xlim)
+		plt.subplots_adjust(wspace=0.3)
+		if sv:
+			plt.savefig("Parabolic Response ("+gtitle+").png")
+		plt.show()
+    
+# End of FILTERSIM.PY

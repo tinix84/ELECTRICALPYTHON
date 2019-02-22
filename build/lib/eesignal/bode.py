@@ -19,6 +19,7 @@
 # Import External Dependencies
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.signal as sig
 from math import pi, exp, cos, sin, log, sqrt
 
 # Import Local Dependencies

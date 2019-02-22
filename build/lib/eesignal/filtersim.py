@@ -17,7 +17,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def zfiltersim( fin, filter, NN=1000, title="",plotinput=True):
+def zfiltersim( fin, filter, NN=1000, title="",plotinput=True,legend=True):
     """
     ZFILTERSIM Function
     
@@ -43,6 +43,8 @@ def zfiltersim( fin, filter, NN=1000, title="",plotinput=True):
     title:      The title presented on each plot; default=""
     plotinput:  An argument to control whether the input is plotted
                 separately, default=True.
+    legend:     An argument to control whether the legend is shown,
+                default=True.
     
     Returns:
     --------
@@ -97,9 +99,10 @@ def zfiltersim( fin, filter, NN=1000, title="",plotinput=True):
     ytime = np.copy( x_tmp )
     # Plot Filtered Output
     plt.figure(1)
-    plt.plot(x,'k--')
-    plt.plot(ytime,'k')
+    plt.plot(x,'k--',label="Input")
+    plt.plot(ytime,'k',label="Output")
     plt.title(title)
     plt.grid(which='both')
+    if legend: plt.legend()
     plt.show()
     

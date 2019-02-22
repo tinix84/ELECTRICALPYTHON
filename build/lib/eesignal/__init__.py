@@ -56,7 +56,7 @@
 #   - Bode Plot Generator               BODE.PY
 #################################################################################
 name = "eesignal"
-ver = "1.2.1"
+ver = "1.4.2"
 
 # Import Submodules
 from . import bode

@@ -41,9 +41,9 @@ name = "eepower"
 ver = "1.1.1"
 
 # Import Submodules
-from . import capacitor as cap
-from . import perunit as pu
-from . import systemsolution as system
+from .capacitor import *
+from .perunit import *
+from .systemsolution import *
 
 # Import libraries as needed:
 import numpy as np
