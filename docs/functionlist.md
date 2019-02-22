@@ -21,18 +21,26 @@ terminal.
 
 ---
 
-## EEPOWER (Functions Related to Power and Power Electronics)
- - cprint: Complex Print Function, used to print voltages and currents in a common and acceptable form.
- - phasorz: Phasor Impedance Generator, used to relate inductance and capacitance into phasor impedance.
- - parallelz: Parallel Impedance Adder, used to add parallel impedance/resistance joined on a line.
- - convert: Line/Phase Conversion, used to convert voltages or currents from phase to line quantities.
- - powertriangle: Power Triangle Plot Generator, used to calculate/plot the power triangle.
+## EEPOWER
+*(Functions Related to Power and Power Electronics)*
+
+ - **cprint**: Complex Print Function
+        Used to print voltages and currents in a common and acceptable form.
+ - **phasorz**: Phasor Impedance Generator
+        Used to relate inductance and capacitance into phasor impedance.
+ - **parallelz**: Parallel Impedance Adder
+        Used to add parallel impedance/resistance joined on a line.
+ - **convert**: Line/Phase Conversion
+        Used to convert voltages or currents from phase to line quantities.
+ - **powertriangle**: Power Triangle Plot Generator,
+        Used to calculate/plot the power triangle.
  
  MORE NOTES TO COME!!!
 
 ---
 
-## EESIGNAL (Functions Related to Signals and Systems)
+## EESIGNAL
+*(Functions Related to Signals and Systems)*
 
 MORE NOTES TO COME!!!
 
