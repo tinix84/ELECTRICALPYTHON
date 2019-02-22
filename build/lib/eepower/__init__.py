@@ -22,7 +22,7 @@
 #   - Complex Display Function:     cprint
 #   - Impedance Conversion:         phasorz
 #   - Parallel Impedance Adder:     parallelz
-#   - V/I Line/Phase Converter:     convert
+#   - V/I Line/Phase Converter:     phaseline
 #   - Power Triangle Function:      powertriangle
 #   - Transformer SC OC Tests:      trans_scoc
 #   - Phasor Plot Generator:        phasorplot
@@ -38,12 +38,12 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.1.1"
+ver = "1.1.2"
 
 # Import Submodules
-from . import capacitor as cap
-from . import perunit as pu
-from . import systemsolution as system
+from .capacitor import *
+from .perunit import *
+from .systemsolution import *
 
 # Import libraries as needed:
 import numpy as np
@@ -161,7 +161,7 @@ def parallelz(Z):
 #   Input may be provided as absolute value or complex.
 #   Output may be specified as complex, but defaults to abs. val.
 ###################################################################
-def convert(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
+def phaseline(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
 output = 0
 	#Given VLL, convert to VLN
 	if (VLL!=False):
@@ -201,7 +201,7 @@ output = 0
 #   All values given must be given as absolute value, not complex.
 ###################################################################
 def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
-			   text="",figure=1,printval=False,ret=False,plot=True):
+			   text="Power Triangle",figure=1,printval=False,ret=False,plot=True):
 	#Given P and Q
 	if (P!=False) and (Q!=False):
 		S = np.sqrt(P**2+Q**2)
@@ -236,7 +236,7 @@ def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
 	#Plot
 	if plot:
 		plt.figure(figure)
-		plt.title("Power Triangle"+str(text))
+		plt.title(text)
 		plt.plot(Plnx,Plny,color=color)
 		plt.plot(Qlnx,Qlny,color=color)
 		plt.plot(Slnx,Slny,color=color)

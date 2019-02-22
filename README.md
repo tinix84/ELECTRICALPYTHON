@@ -24,6 +24,7 @@ In this repository, there are:
 - NUMPY
 - MATPLOTLIB
 - SCIPY
+- SYMPY
 
 
 ## INSTALLATION:
@@ -31,6 +32,7 @@ In this repository, there are:
     - `pip install numpy`
     - `pip install scipy`
     - `pip install matplotlib`
+    - `pip install sympy`
   
  2. Install *electricalpython*
     - `pip install electricalpython`
