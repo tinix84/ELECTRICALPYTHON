@@ -26,19 +26,19 @@ terminal.
 
  - **cprint**: Complex Print Function
  
-        Used to print voltages and currents in a common and acceptable form.
+ Used to print voltages and currents in a common and acceptable form.
  - **phasorz**: Phasor Impedance Generator
  
-        Used to relate inductance and capacitance into phasor impedance.
+ Used to relate inductance and capacitance into phasor impedance.
  - **parallelz**: Parallel Impedance Adder
- 
-        Used to add parallel impedance/resistance joined on a line.
+
+ Used to add parallel impedance/resistance joined on a line.
  - **convert**: Line/Phase Conversion
  
-        Used to convert voltages or currents from phase to line quantities.
+ Used to convert voltages or currents from phase to line quantities.
  - **powertriangle**: Power Triangle Plot Generator,
  
-        Used to calculate/plot the power triangle.
+ Used to calculate/plot the power triangle.
  
  MORE NOTES TO COME!!!
 
