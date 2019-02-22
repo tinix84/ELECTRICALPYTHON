@@ -19,10 +19,10 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
-#   - Complex Display Function:     complex
+#   - Complex Display Function:     cprint
 #   - Impedance Conversion:         phasorz
 #   - Parallel Impedance Adder:     parallelz
-#   - V/I Line/Phase Converter:     oonvert
+#   - V/I Line/Phase Converter:     convert
 #   - Power Triangle Function:      powertriangle
 #   - Transformer SC OC Tests:      trans_scoc
 #   - Phasor Plot Generator:        phasorplot
@@ -35,10 +35,12 @@
 #   Additional functions available in sub-modules:
 #   - capacitor.py
 #   - perunit.py
+#   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.0.1"
+ver = "1.1.1"
 
+# Import Submodules
 from . import capacitor as cap
 from . import perunit as pu
 from . import systemsolution as system
@@ -97,16 +99,18 @@ def reactance(z,f):
 #
 #   Requires voltage or current be provided as complex value.
 ###################################################################
-def complex(val,unit=False,label=False,printval=True,ret=False):
+def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
 	mag, ang_r = c.polar(val) #Convert to polar form
 	ang = np.degrees(ang_r) #Convert to degrees
+    mag = round( mag, decimals ) #Round
+    ang = round( ang, decimals ) #Round
   	# Print values (by default)
 	if printval and not unit and not label:
 		print(mag,"∠",ang,"°")
 	elif printval and unit and not label:
-		print(mag,"∠",ang,"°"+unit)
+		print(mag,"∠",ang,"°",unit)
 	elif printval and unit and label:
-		print(label,mag,"∠",ang,"°"+unit)
+		print(label,mag,"∠",ang,"°",unit)
 	# Return values when requested
 	if ret:
 		return(mag,ang)
@@ -154,31 +158,37 @@ def parallelz(Z):
 #   Converts Line current to Phase current, or vice-versa.
 #   Can only convert one voltage or current at a time.
 #
-#   Requires that voltage is provided in complex form.
+#   Input may be provided as absolute value or complex.
+#   Output may be specified as complex, but defaults to abs. val.
 ###################################################################
-def convert(VLL=False,VLN=False,Iline=False,Iphase=False):
+def convert(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
+output = 0
 	#Given VLL, convert to VLN
 	if (VLL!=False):
 		VLN = VLL/(VLLcVLN)
-		return(VLN)
+        output = VLN
 	#Given VLN, convert to VLL
 	elif (VLN!=False):
 		VLL = VLN*VLLcVLN
-		return(VLL)
+        output = VLL
 	#Given Iphase, convert to Iline
 	elif (Iphase!=False):
 		Iline = Iphase*ILcIP
-		return(Iline)
+        output = Iline
 	#Given Iline, convert to Iphase
 	elif (Iline!=False):
 		Iphase = Iline/ILcIP
-		return(Iphase)
+        output = Iphase
 	#Neither given, error encountered
 	else:
 		print("ERROR: No value given"+
 				"or innapropriate value"+
 				"given.")
-
+        return(0)
+    #Return as complex only when requested
+    if complex:
+        return( output )
+    return(abs( output ))
 ###################################################################
 #   Define Power Triangle Function
 #

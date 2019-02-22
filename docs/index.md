@@ -4,6 +4,8 @@
 [Home](https://engineerjoe440.github.io/ELECTRICALPYTHON/index)
  | 
 [Example Usage](https://engineerjoe440.github.io/ELECTRICALPYTHON/example)
+ | 
+[Function List](https://engineerjoe440.github.io/ELECTRICALPYTHON/functionlist)
 
 ---
 

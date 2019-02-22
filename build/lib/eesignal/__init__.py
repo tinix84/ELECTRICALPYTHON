@@ -1,5 +1,5 @@
 #################################################################################
-#   EESignal.py
+#   EESIGNAL.PY
 #
 #   This file contains a variety of functions and constants related to signals.
 #   These items will commonly  be used in Electrical Engineering Applications.
@@ -20,12 +20,11 @@
 #   - FFT Plotting Function:            fft_plot
 #   - RMS Calculator:                   rms
 #   - State Space Simulator:            statespace
-#   - Step Function:                    u
+#   - Step Function:                    step
 #   - Phase Margin:                     pm
 #   - Gain Margin:                      gm
 #   - System Response Plotter:          sys_response
 #   - Multi-Argument Convolution:       convolve
-#   - System Bode Plot:                 bode
 #   - Phase Lead System:                phase_lead
 #   - Butterworth Min Order Solver:     but_minord
 #   - Butterworth Filter Plotter:       filter_plt
@@ -34,6 +33,7 @@
 #   - Chebyshev Filter II Term Solver:  cheb_II_terms
 #   - Filter Conversion:                filter_convert
 #   - Filter Polynomial Factoring:      filter_factor
+#   - Convolution Bar Graph Visualizer: convbar
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:           sys_condition
@@ -51,9 +51,16 @@
 #   - Type: Integer:					tint
 #   - Type: Float:						tfloat
 #   - Type: Function Handle:			tfun
+#
+#   Submodules
+#   - Bode Plot Generator               BODE.PY
 #################################################################################
 name = "eesignal"
-ver = "1.0.1"
+ver = "1.1.1"
+
+# Import Submodules
+from . import bode
+from . import filtersim
 
 # Import necessary libraries
 import numpy as np
@@ -72,6 +79,64 @@ tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
 tnfloat = "<class 'numpy.float64'>"
+
+# Define Convolution Bar-Graph Function:
+def convbar(h, x, outline=True):
+	"""
+	CONVBAR Function:
+	
+	INPUTS:
+	-------
+	h: Impulse Response - Given as Array (Prefferably Numpy Array)
+	x: Input Function - Given as Array (Prefferably Numpy Array)
+	
+	RETURNS:
+	--------
+	None.
+	
+	PLOTS:
+	------
+	Impulse Response: The bar-graph plotted version of h.
+	Input Function:   The bar-graph plotted version of x.
+	Convolved Output: The bar-graph plotted version of the convolution of h and x.
+	"""
+	
+	# The impulse response
+	M = len(h)
+	t = np.arange(M)
+	# Plot
+	plt.subplot(121)
+	if(outline): plt.plot(t,h,color='red')
+	plt.bar(t,h,color='black')
+	plt.xticks([0,5,9])
+	plt.ylabel('h')
+	plt.title('Impulse Response')
+	plt.grid()
+
+	# The input function
+	N = len(x)
+	s = np.arange(N)
+	# Plot
+	plt.subplot(122)
+	if(outline): plt.plot(s,x,color='red')
+	plt.bar(s,x,color='black')
+	plt.xticks([0,10,19])
+	plt.title('Input Function')
+	plt.grid()
+	plt.ylabel('x')
+
+	# The output
+	L = M+N-1
+	w = np.arange(L)
+	plt.figure(3)
+	y = np.convolve(h,x)
+	if(outline): plt.plot(w,y,color='red')
+	plt.bar(w,y,color='black')
+	plt.ylabel('y')
+	plt.grid()
+	plt.title('Convolved Output')
+	plt.show()
+
 
 # Define convolution function
 def convolve(tuple):
@@ -488,83 +553,6 @@ def filter_convert( sys, convn, convd=1, debug=False, TFprint=False):
 	
 	# Return
 	return(num, den)
-
-# Define System Bode Plotting Function
-def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
-	""" System Bode Plotting Function
-	
-	A simple function to generate the Bode Plot for magnitude
-	and frequency given a transfer function system.
-	
-	Required Arguments
-	------------------
-	system:		The Transfer Function; can be provided as the following:
-				- 1 (instance of lti)
-				- 2 (num, den)
-				- 3 (zeros, poles, gain)
-				- 4 (A, B, C, D)
-				
-	Optional Arguments
-	------------------
-	mn:			The minimum frequency (as an exponent to 10, e.g. 10^mn)
-				to be calculated for. Default is -2.
-	mx:			The maximum frequency (as an exponent to 10, e.g. 10^mx)
-				to be calculated for. Default is 3.
-	npts:		The number of points over which to calculate the system.
-				Default is 100.
-	gtitle:		Additional string to be added to plot titles;
-				default is "".
-	xlim:		Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
-				Default is False.
-	ylim:		Limit in y-axis for graph plot. Accepts tuple of: (xmin, xmax).
-				Default is False.
-	sv:			Save the plots as PNG files. Default is False.
-	
-	Returns
-	-------
-	NONE:	Generates plot of magnitude and phase, does not return
-			any numerical values.
-	"""
-	# Condition system input to ensure proper execution
-	system = sys_condition(system,False)
-	
-	# Generate the frequency range to calculate over
-	wover = np.logspace(mn,mx,npts)
-	
-	# Calculate the bode system
-	w, mag, ang = sig.bode(system, wover)
-	
-	# Plot Magnitude
-	magTitle = "Magnitude "+gtitle
-	plt.title(magTitle)
-	plt.plot(w, mag)
-	plt.xscale("log")
-	plt.grid(which="both")
-	plt.ylabel("Magnitude (dB)")
-	plt.xlabel("Frequency (rad/sec)")
-	if xlim!=False:
-		plt.xlim(xlim)
-	if ylim!=False:
-		plt.ylim(ylim)
-	if sv:
-		plt.savefig(magTitle+".png")
-	plt.show()
-
-	# Plot Angle
-	angTitle = "Angle "+gtitle
-	plt.title(angTitle)
-	plt.plot(w, ang)
-	plt.xscale("log")
-	plt.grid(which="both")
-	plt.ylabel("Angle (degrees)")
-	plt.xlabel("Frequency (rad/sec)")
-	if xlim!=False:
-		plt.xlim(xlim)
-	if ylim!=False:
-		plt.ylim(ylim)
-	if sv:
-		plt.savefig(angTitle+".png")
-	plt.show()
 	
 # Define Analog Filter Plotting Function
 def filter_plt(system,mn=-1,mx=3,npts=1000,yticks=False,forceticks=False,gtitle="",
@@ -1087,12 +1075,9 @@ class c_func_concat:
 		rets = np.asmatrix(rets).T # Convert array to matrix, then transpose
 		return(rets)
 
-# Define u(t) - Step function
-def u(t):
-	if (t>0):
-		return(1)
-	else:
-		return(0)
+# Define Step function
+def step(t):
+	return( np.heaviside( t, 1) )
 
 # Tuple to Matrix Converter
 def tuple_to_matrix(x,yx):

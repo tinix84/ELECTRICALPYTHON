@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: electricalpython
-Version: 1.0.1
+Version: 1.1.1
 Summary: Electrical Engineering Functions in Python
 Home-page: https://github.com/engineerjoe440/electrical-engineering-python
 Author: Joe Stanley
@@ -24,6 +24,7 @@ Description: # ELECTRICALPYTHON
         
         In this repository, there are:
         - EESIGNAL (Used primarily for signals and systems or signal/power quality)
+          - BODE (Special functions for generating and plotting bode plots)
         - EEPOWER (Used primarily for electrical power calculations)
           - CAPACITOR (Special functions related to capacitors in electrical engineering)
           - PERUNIT (Special functions related to Per-Unit calculations)
@@ -46,12 +47,12 @@ Description: # ELECTRICALPYTHON
           
          3. Check installation success in Python environment
         
-           ```
+           ```python
            import eepower
            eepower.ver
            ```
            
-           ```
+           ```python
            import eesignal
            eesignal.ver
            ```
