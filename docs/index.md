@@ -29,7 +29,7 @@ The following packages are required dependencies for this package. They are requ
 
 - NUMPY [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/)
 - SCIPY [https://pypi.org/project/scipy/](https://pypi.org/project/scipy/)
-- SYMPY []()
+- SYMPY [https://pypi.org/project/sympy/](https://pypi.org/project/sympy/)
 - MATPLOTLIB [https://pypi.org/project/matplotlib/](https://pypi.org/project/matplotlib/)
 
 ### Installation:
