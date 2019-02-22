@@ -1,5 +1,5 @@
 #################################################################################
-#   FILTERSIM.PY
+#   BODE.PY
 #
 #   This file contains a variety of functions and constants related to signals.
 #   These items will commonly  be used in Electrical Engineering Applications.
@@ -16,9 +16,13 @@
 #   - Z-Domain Bode Plot Generator                  zbode
 #################################################################################
 
+# Import External Dependencies
 import matplotlib.pyplot as plt
 import numpy as np
 from math import pi, exp, cos, sin, log, sqrt
+
+# Import Local Dependencies
+from .__init__ import sys_condition
 
 # Define System Bode Plotting Function
 def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False):
