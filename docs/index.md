@@ -63,7 +63,7 @@ eep.ver # Display the version information for EEPOWER
 
 
 
-    '0.1.1'
+    '1.1.2'
 
 
 
@@ -76,7 +76,7 @@ ees.ver # Display the version information for EESIGNAL
 
 
 
-    '0.1.1'
+    '2.0.1'
 
 
 
