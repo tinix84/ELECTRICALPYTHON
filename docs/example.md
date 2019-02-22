@@ -26,7 +26,7 @@ The *powertriangle* function will accept two arguments to generate a Power-Trian
 
 #### Optional Function Arguments:
 - color: Line color of the plotted triangle, default is red.
-- text: Text to appear as the plot title, default is "".
+- text: Text to appear as the plot title, default is "Power Triangle".
 - figure: Figure number, soon to be depreciated, default is 1.
 - printval: Argument specifying whether the values should be printed on the plot, default is False.
 - ret: Argument specifying whether the values should be returned after the function call, default is False.
@@ -39,7 +39,7 @@ The *powertriangle* function will accept two arguments to generate a Power-Trian
 import eepower as eep # Import EEPOWER
 real = 100 # W
 reactive = 85 # VAR
-eep.powertriangle(P=real,Q=reactive,text=" Demo",printval=True)
+eep.powertriangle(P=real,Q=reactive,text="Power Triangle Demo",printval=True)
 ```
 
 ![Power Triangle Output](https://raw.githubusercontent.com/engineerjoe440/ELECTRICALPYTHON/master/docs/example_1.png)
@@ -53,7 +53,7 @@ eep.powertriangle(P=real,Q=reactive,text=" Demo",printval=True)
 print(help(eep.powertriangle))
 ```
 
-    Help on function powertriangle in module eepower.eepower:
+    Help on function powertriangle in module eepower:
     
     powertriangle(P=False, Q=False, S=False, PF=False, color='red', text='', figure=1, printval=False, ret=False, plot=True)
         ###################################################################

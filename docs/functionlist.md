@@ -24,13 +24,13 @@ terminal.
 ## EEPOWER
 *(Functions Related to Power and Power Electronics)*
 
-| FUNCTION NAME     | BRIEF DESCRIPTION             | SUBPACKAGE    |
-|-------------------|-------------------------------|---------------|
-|**cprint**         | Complex Print Function        |               |
-|**phasorz**        | Phasor Impedance Generator    |               |
-|**parallelz**      | Parallel Impedance Adder      |               |
-|**convert**        | Line/Phase Conversion         |               |
-|**powertriangle**  | Power Triangle Plot Generator |               |
+| FUNCTION NAME                                                                         | BRIEF DESCRIPTION                 | SUBPACKAGE    |
+|---------------------------------------------------------------------------------------|-----------------------------------|---------------|
+|**cprint**                                                                             | Complex Print Function            |               |
+|**phasorz**                                                                            | Phasor Impedance Generator        |               |
+|**parallelz**                                                                          | Parallel Impedance Adder          |               |
+|**phaseline**                                                                          | Line/Phase Conversion             |               |
+|[**powertriangle**](https://engineerjoe440.github.io/ELECTRICALPYTHON/example)         | Power Triangle Plot Generator     |               |
 
  
  MORE NOTES TO COME!!!
@@ -40,9 +40,12 @@ terminal.
 ## EESIGNAL
 *(Functions Related to Signals and Systems)*
 
-| FUNCTION NAME     | BRIEF DESCRIPTION             | SUBPACKAGE    |
-|-------------------|-------------------------------|---------------|
-|**step**           | Step Function                 |               |
+| FUNCTION NAME                                                                         | BRIEF DESCRIPTION                 | SUBPACKAGE    |
+|---------------------------------------------------------------------------------------|-----------------------------------|---------------|
+|**step**                                                                               | Step Function                     |               |
+|**convolve**                                                                           | Multi-Argument Convolution        |               |
+|**convbar**                                                                            | Convolution Bar Graph Visualizer  |               |
+|**
 
 MORE NOTES TO COME!!!
 
