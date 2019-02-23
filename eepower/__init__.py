@@ -38,7 +38,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.3.2"
+ver = "1.4.2"
 
 # Import Submodules
 from .capacitor import *
@@ -111,6 +111,8 @@ def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
         print(mag,"∠",ang,"°",unit)
     elif printval and unit and label:
         print(label,mag,"∠",ang,"°",unit)
+    elif printval and label and not unit:
+        print(label,mag,"∠",ang,"°")
     # Return values when requested
     if ret:
         return(mag,ang)
