@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: electricalpython
-Version: 2.0.1
+Version: 2.1.1
 Summary: Electrical Engineering Functions in Python
 Home-page: https://github.com/engineerjoe440/electrical-engineering-python
 Author: Joe Stanley
@@ -34,6 +34,7 @@ Description: # ELECTRICALPYTHON
         - NUMPY
         - MATPLOTLIB
         - SCIPY
+        - SYMPY
         
         
         ## INSTALLATION:
@@ -41,6 +42,7 @@ Description: # ELECTRICALPYTHON
             - `pip install numpy`
             - `pip install scipy`
             - `pip install matplotlib`
+            - `pip install sympy`
           
          2. Install *electricalpython*
             - `pip install electricalpython`

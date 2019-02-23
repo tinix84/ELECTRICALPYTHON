@@ -21,6 +21,8 @@
 #   - Filter Polynomial Factoring:      factor
 #   - Phase Margin:                     pm
 #   - Gain Margin:                      gm
+#   - FIR Filter Design Assistant:      firdesign
+#   - Automatic Butterworth Builder:    autobutter
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:           sys_condition
@@ -783,5 +785,449 @@ def phase_lead(system,desired,tolerance=5,printout=False,ret=True,plot=False):
 	
 	if ret:
 		return(wp,wz,npm)
+
+# Define FIR Design Function
+def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
+              NN=1000,window=2,dispfund=True,scalef=None,freqs=None,
+              axis=None,plotfast=True,maxaproach=10,printscale=False):
+    """
+    FIRDESIGN Function
+    
+    Purpose:
+    --------
+    This function is designed to assist users in designing an FIR filter
+    by accepting the basic parameters and plotting the specified outputs.
+    
+    Required Arguments:
+    -------------------
+    f:          The input system function
+    MM:         Design parameter, number of points
+    filtermode: Specifies Low-, High-, or Band-Pass as follows:
+                    1 = Low-Pass
+                    2 = High-Pass
+                    3 = Band-Pass
+    
+    Optional Arguments:
+    -------------------
+    dt:         The time-step size; default=1e-5.
+    NN:         The number of time-steps; default=1000
+    window:     Specifies whether or not to use a square or Gaussian
+                filter window as follows:
+                    1 = Square
+                    2 = Gaussian (default)
+                    (function) = Uses the function to specify the window
+    Mstart:     Parameter for Low-Pass Envelope; default=None
+    sigma:      Parameter for Band-Pass Envelope; default=None
+    nc:         Parameter for High-Pass Envelope; default=None
+    dispfund:   Control argument to display the fundamental frequency;
+                default=True
+    scalef:     The scaling factor to set maximum of the output FFT;
+                default=None
+    freqs:      The set of frequencies to be used in the x-axis label;
+                default=None
+    axis:       The bounds of the x- and y-axes; default=None
+    plotfast:   Control argument to allow the system to plot "in process";
+                default=True
+    maxaproach: Limit of how many recursive attempts to achieve appropriately
+                scale the FFT limit; default=10
+    printscale: Control value used to enable printinf of the final scalef value;
+                default=False
+    
+    Returns:
+    --------
+    NONE (Plots Generated)
+    """
+    # Generate the required constants and arrays
+    N2 = NN//2 # '//' operator is integer-division
+    M = N2
+    K = 1
+    scale = 1
+    x = np.zeros(NN)
+    y = np.zeros(NN)
+    H = np.zeros(NN)
+    TT = np.linspace(0,dt*(NN-1),NN)
+    DF = 1/(dt*NN)
+    FF = np.linspace(0,DF*(NN-1),NN)
+    
+    # Calculate Fundamental Frequency
+    if(dispfund):
+        print("Fundamental Frequency:", DF,"Hz")
+    
+    # Append 0 to the frequencies so that it's plotted
+    if(freqs!=None):
+        freqs = np.append(np.array([0]),freqs)
+    
+    # Capture Input Function Over Range
+    y[0] = 0
+    for n in range(1,NN):
+        x[n] = f(dt*n)
+        
+    # Generate FFT Decomposition
+    X = (2/NN)*np.fft.fft(x)
+    
+    # Plot Original Function
+    plt.subplot(321)
+    plt.plot(TT,x,'k')
+    plt.title('Input System')
+    plt.ylabel('x[n]')
+    plt.xlabel('T (sec)')
+    plt.grid()
+    # Plot FFT Decomposition of Function
+    plt.subplot(322)
+    plt.plot(FF,abs(X),'k')
+    plt.grid()
+    if(axis!=None):
+        plt.axis(axis)
+    if(freqs!=None):
+        plt.xticks(axis)
+    plt.xlabel('Freq (Hz)')
+    plt.title('FFT Decomposition')
+    if(plotfast):
+        plt.show()
+    
+    # Generate Filter Window to be Convolved With
+    if(filtermode==1): # Mode set for Low-Pass
+        if(Mstart==None):
+            raise ValueError("ERROR: Mstart Must be Specified.")
+        if(window==1):
+            for n in range(0,Mstart):  # Rectangular Window
+                H[n] = 1
+        elif(window==2):
+            for n in range(Mstart,N2): # Gaussian Window   
+                H[n] =np.exp(-0.5*( ((n-Mstart)/1.5)**2))
+        else:
+            for n in range(0,Mstart):  # Personalized Window
+                H[n] = window( n ) # *window* is a function handle
+    elif(filtermode==2): # Mode set for High-Pass
+        if(nc==None):
+            raise ValueError("ERROR: nc Must be Specified.")
+        if(window==1):
+            for n in range(nc,N2):  # Rectangular Window
+                H[n] = 1
+        elif(window==2):
+            for n in range(0,N2): # Gaussian Window   
+                H[n] =np.exp(-0.5*( ((n-nc)/4)**2))
+        else:
+            for n in range(0,Mstart):  # Personalized Window
+                H[n] = window( n ) # *window* is a function handle
+    elif(filtermode==3): # Mode set for Band-Pass
+        if(window==1):
+            raise ValueError("ERROR: Window Set Improperly.",
+                             "Window may not be set to '1' (Square)",
+                             "for Band-Pass filters (mode=3).")
+        elif(window==2):
+            if(nc==None):
+                nc = 80//DF
+            if(sigma==None):
+                raise ValueError("ERROR: Sigma Must be Specified.")
+            for n in range(0,N2): # Gaussian Window   
+                H[n] =np.exp(-0.5*( ((n-nc)/sigma)**2))
+        else:
+            for n in range(0,N2):  # Personalized Window
+    else:
+        raise ValueError("ERROR: Filter Mode Set Improperly.",
+                         "Mode must be set between 1 and 3.")
+    
+    # Reflect around zero to get the negative frequencies.
+    for n in range(1,M):
+        H[NN-n] = H[n]
+    
+    # Multiply X and H to get Y, freq domain output    
+    Y = np.copy( X )
+    for n in range(0,NN):
+        Y[n] = H[n]*X[n]
+    
+    # Use an inverse FFT to Display Filtered System
+    y = (NN/2)*np.fft.ifft(Y).real
+    
+    # Plot Filtered System
+    plt.subplot(323)
+    plt.plot(y,'k')
+    plt.ylabel('y[n]')
+    plt.title('Filtered System')
+    plt.grid()
+    # Plot Filtered FFT
+    plt.subplot(324)
+    plt.plot(FF,H,'k--')
+    plt.plot(FF,abs(Y),'k')
+    if(axis!=None):
+        plt.axis(axis)
+    if(freqs!=None):
+        plt.xticks(axis)
+    plt.title('Proposed Filter in Freq. Domain')
+    plt.grid()
+    if(plotfast):
+        plt.show()
+    
+    # Use an inverse FFT to capture the Filter
+    h = (NN/2)*np.fft.ifft(H).real
+    hmax = max(h)
+    for n in range(NN):
+        h[n] = h[n]/hmax
+    
+    #  Shift h  to hh
+    hh = np.zeros(2*MM+1)
+    for n in range(0,MM): # Shifted filter is MM*2 points long
+        hh[n+MM] = h[n]
+    hh[0] = 0
+    for n in range(1,MM):    
+        hh[n] = h[NN-MM+n]
+    hsum = sum(abs(h))
+    
+    # Plot the Proposed Filter
+    plt.subplot(325)
+    plt.plot(h,'k')
+    plt.grid()
+    plt.title('Filter')
+    # Plot Shifted Proposed Filter
+    plt.subplot(326)
+    plt.plot(hh,'ko')
+    if(axis!=None):
+        plt.axis(axis)
+    if(freqs!=None):
+        plt.xticks(axis)
+    plt.title("Shifted Filter 'h'")
+    plt.grid()
+    if(plotfast):
+        plt.show()
+    
+    # Determine if Specific "scalef-Factor" was given
+    if(scalef!=None):
+        K = scalef
+        maxaproach = 1
+    
+    # Attempt to correct the "scalef-factor"
+    for i in range(maxaproach):
+        w = (K/hsum)*np.convolve(hh,x)
+        z = np.zeros(NN)
+        for n in range(NN):
+            z[n] = w[n+MM]
+        Z = (2/NN)*np.fft.fft(z)
+        # Evaluate the Maximum Z
+        mxZ = max(abs(Z))
+        if(mxZ < 1): # Increase scalef-factor
+            K += scale
+        elif(mxZ > 1): # Overshoot!
+            # Reset, then downsize scale
+            K -= scale
+            scale = scale/10
+            K += scale
+        else: # MaxZ equal to 1?
+            break
+    
+    # Plot the Output
+    plt.subplot(311)
+    plt.plot(w,'k')
+    if(axis!=None):
+        plt.axis(axis)
+    plt.grid()
+    plt.subplot(311)
+    plt.plot(z,'k')
+    plt.grid()
+    plt.subplot(313)
+    plt.plot(FF,abs(Z),'k')
+    plt.ylabel('|Z(w)|')
+    plt.yticks([0,.1,.9,1.])
+    if(axis!=None):
+        plt.axis(axis)
+    if(freqs!=None):
+        plt.xticks(axis)
+    plt.title('Final Filtered FFT of Output System')
+    plt.grid()
+    plt.show()
+    
+    # Print scalef Factor
+    if(printscale):
+        print("Scaling Value:", K)
+        print("Max of FFT:", mxZ)
+
+# Define Automatic Butterworth Filter Builder
+def autobutter(wc,wp,wpm,ws,wsm,mode,W=None,n=None,mn=1e-1,mx=1e1,
+               dt=0.01,respfreq=None):
+    """
+    AUTOBUTTER Function
+    
+    Purpose:
+    --------
+    This function is intended to automatically determine the transfer-
+    function parameters required to meet given requirements of a filter.
+    It is intended to design a Low-Pass, High-Pass or Band-Pass filter.
+    
+    Required Arguments:
+    -------------------
+    wc:         Center Frequency for LPF, HPF; Bandwidth for BP
+    wp:         Passband Cutoff
+    wpm:        Passband Magnitude at Cutoff
+    ws:         Stopband Cutoff
+    wsm:        Stopband Magnitude at Cutoff
+    mode:       Desired Filter Control; Options are:
+                    1: Low-Pass Filter
+                    2: High-Pass Filter
+                    3: Band-Pass Filter
+    
+    Optional Arguments:
+    -------------------
+    W:          Center Frequency of Band (only for BP); Required for BP;
+                default=None
+    n:          The number of poles; automatically determined if not
+                specified (forced); default=None
+    mn:         Frequency domain graph minimum x; default=1e-1
+    mx:         Frequency domain graph maximum x; default=1e+1
+    dt:         Sampling Time for Z Domain Filter, AKA: time step-size;
+                default=0.01
+    respfreq:   Response input Frequency; default=None
+    
+    Returns:
+    --------
+    ANY?
+    """
+
+    #mn = 1e-1     #Frequency domain graph minimum x
+    #mx = 1e1      #Frequency domain graph maximum x
+    w = np.linspace(mn, mx,1000)    #for Bode Plot; why not np.logspace?
+
+    #respfreq = respfreq  #Response input Frequency; what was w_in for? Not used?
+
+    #Poles calculation
+    #Butterworth Filter Conditions
+    wp = wp/wc # Passband cutoff
+    ws = ws/wc  # Stopband cutoff
+
+    p1 = np.log( (1/(wpm*wpm)) - 1)/(2*np.log(wp))
+    p2 = np.log( (1/(wsm*wsm)) - 1)/(2*np.log(ws))
+    temp_n = round(max(p1,p2))
+    n = temp_n
+    if (temp_n-max(p1,p2)<=0): #To always round up
+        n=temp_n+1  
+        
+    #Butterworth Filter Calculation
+    #Lowpass Filter Calculation
+    num  = np.array([0, 0, wc**n ])
+
+    #For Odd Pole Amounts
+    if ((n%2) == 1):
+        angle = np.pi/n
+        den = np.array([ 1, wc])  #odd pole assigned
+        int=1
+        temp_angle = angle
+        while(int < n):
+            den = np.convolve(den,np.array([1, 2*wc*np.cos(temp_angle), wc*wc]))
+            temp_angle = temp_angle+angle
+            int = int+2
+            
+    #For Even Pole Amounts
+    if((n%2) == 0):
+        angle = np.pi/(n)
+        temp_angle = angle/2
+        den = np.array([1, 2*wc*np.cos(temp_angle), wc*wc])
+        int=2
+        while(int < n):
+            temp_angle = temp_angle+angle
+            den = np.convolve(den,np.array([1, 2*wc*np.cos(temp_angle), wc*wc]))
+            int = int+2
+
+    #Save the Lowpass filter num/den for reference
+    denLP = den
+    numLP = num
+
+    #Highpass Filter Converstion
+
+    if(mode==2):
+        int = 1
+        while(int<=n):
+            num = np.convolve(num,np.array([1/wc, 0]))
+            int = int + 1
+        denHP = den
+        numHP = num
+        
+    #Bandpass Filter Conversion
+    if(mode==3):
+
+        int = 1
+        BP = np.array([1, 0, W*W])
+        temp = 1
+        while(int <=n):
+            num = np.convolve(num, np.array([1, 0]))
+            int= int + 1
+        
+        
+        a = np.zeros((n+1,3+2*(n-1)))
+        temp_arr = np.zeros(3+2*(n-1)-2)
+        a[0] = np.concatenate([temp_arr,[0, 1]], axis=0)
+        #Calculating the S -> S**2 + wc**2 coefficients
+        for i in range(0,n):
+            temp = np.convolve(temp, BP)
+            temp_cat = np.concatenate((np.zeros((1,len(a.T)-len(temp))),temp), axis=None)
+            a[i+1]= temp_cat
+        
+        temp_sum = np.zeros((n+1,1+3*(n)))
+        #multiplying the temp_cat coefficients by the correct denominator value shifted
+        for i in range(0,n+1):
+            temp_sum[i] = np.convolve(den[len(den)-i-1]*a[i], np.concatenate(((np.zeros((1,i)), 1, np.zeros((1, n-i)))), axis=None))
+       
+        den = np.sum(temp_sum, axis=0)
+        
+        
+    #------------------
+    [f, h] = sig.freqs(num,den,worN=np.logspace(np.log10(mn), np.log10(mx), 10000))      
+    #---------------------
+
+    plt.subplot(311)
+    plt.seminp.logx(f,20*np.log10(h))
+    #plt.axis([mn, mx, -60, 10])
+    plt.ylabel('|H| dB')
+    plt.yticks([-40,-20,-3,0])
+    plt.axvline(1,color='k')
+    plt.axvline(5.5e-1,color='k')
+    plt.axvline(2,color='k')
+    plt.title('My_Fbode')
+    plt.grid(which='both')
+
+
+    #Conversion to Z Domain
+    #s => (1-z**-1)/dt
+    a2 = np.zeros((n+1,3*n+1))
+    temp_arr2 = np.zeros(1+3*n-2)
+    a2[0] = np.concatenate([temp_arr2,[0, 1]], axis=0)
+    BP = [1/dt, -1/dt]
+    y = np.zeros((n+1,3*n+1))
+    tempZ = 1
+    temp_arr = np.zeros(3*n-1)
+    y[0] = np.concatenate([temp_arr,[0, 1]], axis=0)
+
+    #Calculating S-> Z/dt-1/dt
+    for i in range(0,n):
+        tempZ = np.convolve(tempZ, BP)
+        temp_cat = np.concatenate((np.zeros((1,len(a2.T)-len(tempZ))),tempZ), axis=None)
+        a2[i+1]= temp_cat
+
+    temp_sumd = np.zeros((n+1,4*n+1))
+    temp_sumn = np.zeros((n+1,4*n+1))
+
+    #Calculating the products of temp_cat, and their respectively shifted S values for num and den
+    for i in range(0,n+1):
+        temp_sumd[i] = np.convolve(den[len(den)-i-1]*a2[i], np.concatenate(((np.zeros((1,i)), 1, np.zeros((1, n-i)))), axis=None))
+        temp_sumn[i] = np.convolve(num[len(num)-i-1]*a2[i], np.concatenate(((np.zeros((1,i)), 1, np.zeros((1, n-i)))), axis=None))
+        
+    den = np.sum(temp_sumd, axis=0)
+    num = np.sum(temp_sumn, axis=0)
+
+    #-----------------------
+    [fz, hz] = sig.freqz(num,den,worN=10000) 
+    #----------------------- 
+
+    plt.subplot(313)
+    plt.seminp.logx(fz,20*np.log10(hz))
+    #plt.plot(fz,20*np.log10(hz))
+    #plt.axis([1e-3, np.pi, -20, 0.1])
+    plt.ylabel('|H| dB')
+    plt.yticks([-40,-20,-3,0])
+    #plt.axvline(30,color='k')
+    #plt.text(50,-15,'$\phi$ = {}'.format(30,fontsize=12))
+    plt.axvline(1*dt,color='k')
+    plt.axvline(5.5e-1*dt,color='k')
+    plt.axvline(2*dt,color='k')
+    plt.title('My_Zbode')
+    plt.grid(which='both')
 
 # End of FILTER.PY
