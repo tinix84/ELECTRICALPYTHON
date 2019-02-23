@@ -23,6 +23,8 @@ This package (*electricalpython*) includes both *eepower* and *eesignal* which e
     - SYSTEMSOLUTION
 2. EESIGNAL
     - BODE
+    - FILTER
+    - FILTERSIM
 
 ### Dependencies:
 The following packages are required dependencies for this package. They are required for most, if not all, of the functions contained herein.

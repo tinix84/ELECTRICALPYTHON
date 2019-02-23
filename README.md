@@ -15,6 +15,8 @@ for research, development, education, and exploration in the realm of electrical
 In this repository, there are:
 - EESIGNAL (Used primarily for signals and systems or signal/power quality)
   - BODE (Special functions for generating and plotting bode plots)
+  - FILTER (Special functions related to system filtering in analog and digital realms)
+  - FILTERSIM (Special functions related to simulating filters and systems alike)
 - EEPOWER (Used primarily for electrical power calculations)
   - CAPACITOR (Special functions related to capacitors in electrical engineering)
   - PERUNIT (Special functions related to Per-Unit calculations)
