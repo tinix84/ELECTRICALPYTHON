@@ -65,17 +65,29 @@ tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
 
-###################################################################
-#   Define Reactance Calculator
-#
-#   Accepts reactance (in ohms) and frequency (in Hertz).
-#
-#   If imaginary: calculate with j factor (imaginary number)
-#
-#   Returns capacitance (in Farads) if ohmic value is negative, or
-#   inductance (in Henrys) if ohmic value is positive.
-###################################################################
+
+# Define Reactance Calculator
 def reactance(z,f):
+    """
+    REACTANCE Function:
+    
+    Purpose:
+    --------
+    Calculates the Capacitance or Inductance in Farads or Henreys
+    (respectively) provided the impedance of an element.
+    Will return capacitance (in Farads) if ohmic impedance is
+    negative, or inductance (in Henrys) if ohmic impedance is
+    positive. If imaginary: calculate with j factor (imaginary number).
+    
+    Required Arguments:
+    -------------------
+    z:      The Impedance Provided
+    f:      The Frequency Base for Provided Impedance
+    
+    Returns:
+    --------
+    out:    Capacitance or Inductance of Impedance
+    """
     w = 2*np.pi*f
     if isinstance(z, complex):
         if (z.imag > 0):
@@ -153,35 +165,59 @@ def parallelz(Z):
             Zp = (1/Zp+1/Z[i])**(-1)
     return(Zp)
 
-###################################################################
-#   Define Phase/Line Converter
-#
-#   Convert Line-Line voltage to Line-Neutral, or vice-versa.
-#   Converts Line current to Phase current, or vice-versa.
-#   Can only convert one voltage or current at a time.
-#
-#   Input may be provided as absolute value or complex.
-#   Output may be specified as complex, but defaults to abs. val.
-###################################################################
-def phaseline(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
+# Define Phase/Line Converter
+def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
+    """
+    PHASELINE Function
+    
+    Purpose:
+    --------
+    This function is designed to return the phase- or line-equivalent
+    of the voltage/current provided. It is designed to be used when
+    converting delta- to wye-connections and vice-versa.
+    Given a voltage of one type, this function will return the
+    voltage of the opposite type. The same is true for current.
+    
+    Required Arguments:
+    -------------------
+    NONE - All optional, one optional argument MUST be specified.
+    
+    Optional Arguments:
+    -------------------
+    VLL:        The Line-to-Line Voltage; default=None
+    VLN:        The Line-to-Neutral Voltage; default=None
+    Iline:      The Line-Current; default=None
+    Iphase:     The Phase-Current; default=None
+    complex:    Control to return value in complex form; default=False
+    
+    Returns:
+    --------
+    out:        The opposite type of the input; i.e.:
+                    GIVEN       RETURNED
+                    VLL         VLN
+                    VLN         VLL
+                    Iline       Iphase
+                    Iphase      Iline
+                Output may be returned as complex if desired.
+    """
     output = 0
     #Given VLL, convert to VLN
-    if (VLL!=False):
+    if (VLL!=None):
         VLN = VLL/(VLLcVLN)
         output = VLN
     #Given VLN, convert to VLL
-    elif (VLN!=False):
+    elif (VLN!=None):
         VLL = VLN*VLLcVLN
         output = VLL
     #Given Iphase, convert to Iline
-    elif (Iphase!=False):
+    elif (Iphase!=None):
         Iline = Iphase*ILcIP
         output = Iline
     #Given Iline, convert to Iphase
-    elif (Iline!=False):
+    elif (Iline!=None):
         Iphase = Iline/ILcIP
         output = Iphase
-    #Neither given, error encountered
+    #None given, error encountered
     else:
         print("ERROR: No value given"+
                 "or innapropriate value"+
@@ -191,6 +227,7 @@ def phaseline(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
     if complex:
         return( output )
     return(abs( output ))
+
 ###################################################################
 #   Define Power Triangle Function
 #
