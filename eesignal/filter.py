@@ -924,6 +924,7 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
                 H[n] =np.exp(-0.5*( ((n-nc)/sigma)**2))
         else:
             for n in range(0,N2):  # Personalized Window
+                H[n] = window( n ) # *window* is a function handle
     else:
         raise ValueError("ERROR: Filter Mode Set Improperly.",
                          "Mode must be set between 1 and 3.")
