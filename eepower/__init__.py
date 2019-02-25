@@ -19,9 +19,9 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
-#   - Phasor Generator (V/I):       phasor
-#   - Complex Display Function:     cprint
+#   - Phasor V/I Generator:         phasor
 #   - Phasor Impedance Generator:   phasorz
+#   - Complex Display Function:     cprint
 #   - Parallel Impedance Adder:     parallelz
 #   - V/I Line/Phase Converter:     phaseline
 #   - Power Triangle Function:      powertriangle
