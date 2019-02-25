@@ -1231,4 +1231,59 @@ def autobutter(wc,wp,wpm,ws,wsm,mode,W=None,n=None,mn=1e-1,mx=1e1,
     plt.title('My_Zbode')
     plt.grid(which='both')
 
+# Define Complex Completing-The-Square Terms Finder
+def completesquare(system):
+    """
+    COMPLETESQUARE Function
+    
+    Purpose:
+    --------
+    This function is designed to decompose a complex
+    laplacian-domain system into K1, K2, alpha, omega
+    in the following structure:
+    
+       a1*s + a0              o                s + a
+    ---------------  = K1------------- + K2--------------
+    s^2 + b1*s + b0      (s+a)^2 + o^2     (s+a)^2 + o^2
+    
+    where a = alpha, and o = omega.
+    
+    Required Arguments:
+    -------------------
+    system:    The Transfer Function; can be provided as the following:
+				- 1 (instance of lti)
+				- 2 (num, den)
+				- 3 (zeros, poles, gain)
+				- 4 (A, B, C, D)
+                
+    Returns:
+    --------
+    """
+    # Condition system
+	system = sys_condition(system,False)
+    
+    # Split into Numerator and Denominator
+    num, den = system
+    
+    # Determine if the numerator and denominator
+    # meet the specified criteria.
+    num_sz = num.size
+    den_sz = den.size
+    if( num_sz!=2 or den_sz!=3):
+        raise ValueError("ERROR: Improper input system size."+
+                         " Numerator:"+str(num_sz)+
+                         " Denominator:"+str(den_sz))
+    
+    # Calculate Alpha and Omega
+    alpha = den[1]/2
+    omega = np.sqrt(den[2]-alpha**2)
+    
+    # Calculate K1 and K2
+    K1 = (num[1]-num[0]*alpha)/omega
+    K2 = num[0]
+    
+    # Return Values
+    return(K1,K2,alpha,omega)
+
+
 # End of FILTER.PY

@@ -254,6 +254,38 @@ def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
 
 # Define Power Set Function
 def powerset(P=None,Q=None,S=None,PF=None):
+    """
+    POWERSET Function
+    
+    Purpose:
+    --------
+    This function is designed to calculate all values
+    in the set { P, Q, S, PF } when two (2) of the
+    values are provided. The equations in this
+    function are prepared for AC values, that is:
+    real and reactive power, apparent power, and power
+    factor.
+    
+    Required Arguments:
+    -------------------
+    NONE; a minimum of two of the optional arguments
+          must be entered for proper execution.
+    
+    Optional Arguments:
+    -------------------
+    P:      Real Power, unitless; default=None
+    Q:      Reactive Power, unitless; default=None
+    S:      Apparent Power, unitless; default=None
+    PF:     Power Factor, unitless, provided as a
+            decimal value, lagging is positive,
+            leading is negative; default=None
+    
+    Returns:
+    --------
+    ( P, Q, S, PF ):    Completely calculated set,
+                        all terms are as described
+                        above.
+    """
     #Given P and Q
     if (P!=None) and (Q!=None):
         S = np.sqrt(P**2+Q**2)
@@ -273,11 +305,11 @@ def powerset(P=None,Q=None,S=None,PF=None):
         if PF<0:
             Q=-Q
     else:
-        print("ERROR: Invalid Parameters or too few"+
-             " parameters given to calculate.")
-        return(0)
+        raise ValueError("ERROR: Invalid Parameters or too few"+
+                        " parameters given to calculate.")
     
     # Return Values!
+    return(P,Q,S,PF)
 
 ###################################################################
 #   Define Power Triangle Function
@@ -290,9 +322,12 @@ def powerset(P=None,Q=None,S=None,PF=None):
 #   Requires two values from set: { P, Q, S, PF }
 #   All values given must be given as absolute value, not complex.
 ###################################################################
-def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
-               text="Power Triangle",figure=1,printval=False,ret=False,plot=True):
+def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
+                  text="Power Triangle",figure=1,printval=False):
     
+    # Calculate all values if not all are provided
+    if( P==None or Q==None or S==None or PF==None):
+        P,Q,S,PF = powerset(P,Q,S,PF)
 
     #Generate Lines
     Plnx = [0,P]
@@ -338,10 +373,6 @@ def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
         if printval:
              plt.text(x/20,y*4/5,text,color=color)
         plt.show()
-
-    # Return when requested
-    if ret:
-        return(P,Q,S,PF)
 
 ###################################################################
 #   Define Transformer Short-Circuit/Open-Circuit Function
