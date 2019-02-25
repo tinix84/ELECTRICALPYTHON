@@ -24,6 +24,7 @@
 #   - Complex Display Function:     cprint
 #   - Parallel Impedance Adder:     parallelz
 #   - V/I Line/Phase Converter:     phaseline
+#   - Power Set Values:             powerset
 #   - Power Triangle Function:      powertriangle
 #   - Transformer SC OC Tests:      trans_scoc
 #   - Phasor Plot Generator:        phasorplot
@@ -39,7 +40,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.4.2"
+ver = "1.5.2"
 
 # Import Submodules
 from .capacitor import *
@@ -251,6 +252,33 @@ def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
         return( output )
     return(abs( output ))
 
+# Define Power Set Function
+def powerset(P=None,Q=None,S=None,PF=None):
+    #Given P and Q
+    if (P!=None) and (Q!=None):
+        S = np.sqrt(P**2+Q**2)
+        PF = P/S
+        if Q<0:
+            PF=-PF
+    #Given S and PF
+    elif (S!=None) and (PF!=None):
+        P = abs(S*PF)
+        Q = np.sqrt(S**2-P**2)
+        if PF<0:
+            Q=-Q
+    #Given P and PF
+    elif (P!=None) and (PF!=None):
+        S = P/PF
+        Q = Q = np.sqrt(S**2-P**2)
+        if PF<0:
+            Q=-Q
+    else:
+        print("ERROR: Invalid Parameters or too few"+
+             " parameters given to calculate.")
+        return(0)
+    
+    # Return Values!
+
 ###################################################################
 #   Define Power Triangle Function
 #
@@ -264,28 +292,7 @@ def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
 ###################################################################
 def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
                text="Power Triangle",figure=1,printval=False,ret=False,plot=True):
-    #Given P and Q
-    if (P!=False) and (Q!=False):
-        S = np.sqrt(P**2+Q**2)
-        PF = P/S
-        if Q<0:
-            PF=-PF
-    #Given S and PF
-    elif (S!=False) and (PF!=False):
-        P = abs(S*PF)
-        Q = np.sqrt(S**2-P**2)
-        if PF<0:
-            Q=-Q
-    #Given P and PF
-    elif (P!=False) and (PF!=False):
-        S = P/PF
-        Q = Q = np.sqrt(S**2-P**2)
-        if PF<0:
-            Q=-Q
-    else:
-        print("ERROR: Invalid Parameters or too few"+
-             " parameters given to calculate.")
-        return(0)
+    
 
     #Generate Lines
     Plnx = [0,P]
