@@ -19,8 +19,9 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
+#   - Phasor Generator (V/I):       phasor
 #   - Complex Display Function:     cprint
-#   - Impedance Conversion:         phasorz
+#   - Phasor Impedance Generator:   phasorz
 #   - Parallel Impedance Adder:     parallelz
 #   - V/I Line/Phase Converter:     phaseline
 #   - Power Triangle Function:      powertriangle
@@ -65,6 +66,28 @@ tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
 
+# Define Phasor Generator
+def phasor( mag, ang ):
+    """
+    PHASOR Function:
+    
+    Purpose:
+    --------
+    Generates the standard Pythonic complex representation
+    of a phasor voltage or current when given the magnitude
+    and angle of the specific voltage or current.
+    
+    Required Arguments:
+    -------------------
+    mag:        The Magnitude of the Voltage/Current
+    ang:        The Angle (in degrees) of the Voltage/Current
+    
+    Returns:
+    --------
+    phasor:     Standard Pythonic Complex Representation of
+                the specified voltage or current.
+    """
+    return( c.rect( mag, np.radians( ang ) ) )
 
 # Define Reactance Calculator
 def reactance(z,f):
