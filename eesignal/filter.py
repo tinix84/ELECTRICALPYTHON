@@ -1246,7 +1246,7 @@ def completesquare(system):
     ---------------  = K1------------- + K2--------------
     s^2 + b1*s + b0      (s+a)^2 + o^2     (s+a)^2 + o^2
     
-    where a = alpha, and o = omega.
+    where: a = alpha, and o = omega.
     
     Required Arguments:
     -------------------
@@ -1258,6 +1258,8 @@ def completesquare(system):
                 
     Returns:
     --------
+    (K1,K2,alpha,omega): Set of constants as defined in Purpose
+                         section above.
     """
     # Condition system
 	system = sys_condition(system,False)
