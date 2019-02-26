@@ -19,10 +19,12 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Included Functions
+#   - Phasor V/I Generator:         phasor
+#   - Phasor Impedance Generator:   phasorz
 #   - Complex Display Function:     cprint
-#   - Impedance Conversion:         phasorz
 #   - Parallel Impedance Adder:     parallelz
 #   - V/I Line/Phase Converter:     phaseline
+#   - Power Set Values:             powerset
 #   - Power Triangle Function:      powertriangle
 #   - Transformer SC OC Tests:      trans_scoc
 #   - Phasor Plot Generator:        phasorplot
@@ -38,7 +40,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.3.2"
+ver = "1.5.2"
 
 # Import Submodules
 from .capacitor import *
@@ -65,17 +67,51 @@ tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
 
-###################################################################
-#   Define Reactance Calculator
-#
-#   Accepts reactance (in ohms) and frequency (in Hertz).
-#
-#   If imaginary: calculate with j factor (imaginary number)
-#
-#   Returns capacitance (in Farads) if ohmic value is negative, or
-#   inductance (in Henrys) if ohmic value is positive.
-###################################################################
+# Define Phasor Generator
+def phasor( mag, ang ):
+    """
+    PHASOR Function:
+    
+    Purpose:
+    --------
+    Generates the standard Pythonic complex representation
+    of a phasor voltage or current when given the magnitude
+    and angle of the specific voltage or current.
+    
+    Required Arguments:
+    -------------------
+    mag:        The Magnitude of the Voltage/Current
+    ang:        The Angle (in degrees) of the Voltage/Current
+    
+    Returns:
+    --------
+    phasor:     Standard Pythonic Complex Representation of
+                the specified voltage or current.
+    """
+    return( c.rect( mag, np.radians( ang ) ) )
+
+# Define Reactance Calculator
 def reactance(z,f):
+    """
+    REACTANCE Function:
+    
+    Purpose:
+    --------
+    Calculates the Capacitance or Inductance in Farads or Henreys
+    (respectively) provided the impedance of an element.
+    Will return capacitance (in Farads) if ohmic impedance is
+    negative, or inductance (in Henrys) if ohmic impedance is
+    positive. If imaginary: calculate with j factor (imaginary number).
+    
+    Required Arguments:
+    -------------------
+    z:      The Impedance Provided
+    f:      The Frequency Base for Provided Impedance
+    
+    Returns:
+    --------
+    out:    Capacitance or Inductance of Impedance
+    """
     w = 2*np.pi*f
     if isinstance(z, complex):
         if (z.imag > 0):
@@ -111,6 +147,8 @@ def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
         print(mag,"∠",ang,"°",unit)
     elif printval and unit and label:
         print(label,mag,"∠",ang,"°",unit)
+    elif printval and label and not unit:
+        print(label,mag,"∠",ang,"°")
     # Return values when requested
     if ret:
         return(mag,ang)
@@ -151,35 +189,59 @@ def parallelz(Z):
             Zp = (1/Zp+1/Z[i])**(-1)
     return(Zp)
 
-###################################################################
-#   Define Phase/Line Converter
-#
-#   Convert Line-Line voltage to Line-Neutral, or vice-versa.
-#   Converts Line current to Phase current, or vice-versa.
-#   Can only convert one voltage or current at a time.
-#
-#   Input may be provided as absolute value or complex.
-#   Output may be specified as complex, but defaults to abs. val.
-###################################################################
-def phaseline(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
+# Define Phase/Line Converter
+def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
+    """
+    PHASELINE Function
+    
+    Purpose:
+    --------
+    This function is designed to return the phase- or line-equivalent
+    of the voltage/current provided. It is designed to be used when
+    converting delta- to wye-connections and vice-versa.
+    Given a voltage of one type, this function will return the
+    voltage of the opposite type. The same is true for current.
+    
+    Required Arguments:
+    -------------------
+    NONE - All optional, one optional argument MUST be specified.
+    
+    Optional Arguments:
+    -------------------
+    VLL:        The Line-to-Line Voltage; default=None
+    VLN:        The Line-to-Neutral Voltage; default=None
+    Iline:      The Line-Current; default=None
+    Iphase:     The Phase-Current; default=None
+    complex:    Control to return value in complex form; default=False
+    
+    Returns:
+    --------
+    out:        The opposite type of the input; i.e.:
+                    GIVEN       RETURNED
+                    VLL         VLN
+                    VLN         VLL
+                    Iline       Iphase
+                    Iphase      Iline
+                Output may be returned as complex if desired.
+    """
     output = 0
     #Given VLL, convert to VLN
-    if (VLL!=False):
+    if (VLL!=None):
         VLN = VLL/(VLLcVLN)
         output = VLN
     #Given VLN, convert to VLL
-    elif (VLN!=False):
+    elif (VLN!=None):
         VLL = VLN*VLLcVLN
         output = VLL
     #Given Iphase, convert to Iline
-    elif (Iphase!=False):
+    elif (Iphase!=None):
         Iline = Iphase*ILcIP
         output = Iline
     #Given Iline, convert to Iphase
-    elif (Iline!=False):
+    elif (Iline!=None):
         Iphase = Iline/ILcIP
         output = Iphase
-    #Neither given, error encountered
+    #None given, error encountered
     else:
         print("ERROR: No value given"+
                 "or innapropriate value"+
@@ -189,6 +251,66 @@ def phaseline(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
     if complex:
         return( output )
     return(abs( output ))
+
+# Define Power Set Function
+def powerset(P=None,Q=None,S=None,PF=None):
+    """
+    POWERSET Function
+    
+    Purpose:
+    --------
+    This function is designed to calculate all values
+    in the set { P, Q, S, PF } when two (2) of the
+    values are provided. The equations in this
+    function are prepared for AC values, that is:
+    real and reactive power, apparent power, and power
+    factor.
+    
+    Required Arguments:
+    -------------------
+    NONE; a minimum of two of the optional arguments
+          must be entered for proper execution.
+    
+    Optional Arguments:
+    -------------------
+    P:      Real Power, unitless; default=None
+    Q:      Reactive Power, unitless; default=None
+    S:      Apparent Power, unitless; default=None
+    PF:     Power Factor, unitless, provided as a
+            decimal value, lagging is positive,
+            leading is negative; default=None
+    
+    Returns:
+    --------
+    ( P, Q, S, PF ):    Completely calculated set,
+                        all terms are as described
+                        above.
+    """
+    #Given P and Q
+    if (P!=None) and (Q!=None):
+        S = np.sqrt(P**2+Q**2)
+        PF = P/S
+        if Q<0:
+            PF=-PF
+    #Given S and PF
+    elif (S!=None) and (PF!=None):
+        P = abs(S*PF)
+        Q = np.sqrt(S**2-P**2)
+        if PF<0:
+            Q=-Q
+    #Given P and PF
+    elif (P!=None) and (PF!=None):
+        S = P/PF
+        Q = Q = np.sqrt(S**2-P**2)
+        if PF<0:
+            Q=-Q
+    else:
+        raise ValueError("ERROR: Invalid Parameters or too few"+
+                        " parameters given to calculate.")
+    
+    # Return Values!
+    return(P,Q,S,PF)
+
 ###################################################################
 #   Define Power Triangle Function
 #
@@ -200,30 +322,12 @@ def phaseline(VLL=False,VLN=False,Iline=False,Iphase=False,complex=False):
 #   Requires two values from set: { P, Q, S, PF }
 #   All values given must be given as absolute value, not complex.
 ###################################################################
-def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
-               text="Power Triangle",figure=1,printval=False,ret=False,plot=True):
-    #Given P and Q
-    if (P!=False) and (Q!=False):
-        S = np.sqrt(P**2+Q**2)
-        PF = P/S
-        if Q<0:
-            PF=-PF
-    #Given S and PF
-    elif (S!=False) and (PF!=False):
-        P = abs(S*PF)
-        Q = np.sqrt(S**2-P**2)
-        if PF<0:
-            Q=-Q
-    #Given P and PF
-    elif (P!=False) and (PF!=False):
-        S = P/PF
-        Q = Q = np.sqrt(S**2-P**2)
-        if PF<0:
-            Q=-Q
-    else:
-        print("ERROR: Invalid Parameters or too few"+
-             " parameters given to calculate.")
-        return(0)
+def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
+                  text="Power Triangle",figure=1,printval=False):
+    
+    # Calculate all values if not all are provided
+    if( P==None or Q==None or S==None or PF==None):
+        P,Q,S,PF = powerset(P,Q,S,PF)
 
     #Generate Lines
     Plnx = [0,P]
@@ -269,10 +373,6 @@ def powertriangle(P=False,Q=False,S=False,PF=False,color="red",
         if printval:
              plt.text(x/20,y*4/5,text,color=color)
         plt.show()
-
-    # Return when requested
-    if ret:
-        return(P,Q,S,PF)
 
 ###################################################################
 #   Define Transformer Short-Circuit/Open-Circuit Function
