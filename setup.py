@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 # Generate Setup Tools Argument
 setuptools.setup(
     name="electricalpython",
-    version="2.5.2",
+    version="2.5.12",
     author="Joe Stanley",
     author_email="stan3926@vandals.uidaho.edu",
     description="Electrical Engineering Functions in Python",

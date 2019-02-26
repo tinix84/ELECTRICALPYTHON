@@ -824,8 +824,9 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     scalef:     The scaling factor to set maximum of the output FFT;
                 default=None
     freqs:      The set of frequencies to be used in the x-axis label;
-                default=None
-    axis:       The bounds of the x- and y-axes; default=None
+                default=None; example: freqs=[100,200,300]
+    axis:       The bounds of the x- and y-axes; default=None;
+                example: axis=[0,6500,-0.2,1.1]
     plotfast:   Control argument to allow the system to plot "in process";
                 default=True
     maxaproach: Limit of how many recursive attempts to achieve appropriately
@@ -855,7 +856,7 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     
     # Append 0 to the frequencies so that it's plotted
     if(freqs!=None):
-        freqs = np.append(np.array([0]),freqs)
+        freqs.append(0)
     
     # Capture Input Function Over Range
     y[0] = 0
@@ -866,6 +867,7 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     X = (2/NN)*np.fft.fft(x)
     
     # Plot Original Function
+    plt.figure()
     plt.subplot(321)
     plt.plot(TT,x,'k')
     plt.title('Input System')
@@ -879,7 +881,7 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     if(axis!=None):
         plt.axis(axis)
     if(freqs!=None):
-        plt.xticks(axis)
+        plt.xticks(freqs)
     plt.xlabel('Freq (Hz)')
     plt.title('FFT Decomposition')
     if(plotfast):
@@ -918,6 +920,8 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
         elif(window==2):
             if(nc==None):
                 nc = 80//DF
+            else:
+                nc = nc//DF
             if(sigma==None):
                 raise ValueError("ERROR: Sigma Must be Specified.")
             for n in range(0,N2): # Gaussian Window   
@@ -946,6 +950,7 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     plt.plot(y,'k')
     plt.ylabel('y[n]')
     plt.title('Filtered System')
+    plt.tight_layout()
     plt.grid()
     # Plot Filtered FFT
     plt.subplot(324)
@@ -954,7 +959,7 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     if(axis!=None):
         plt.axis(axis)
     if(freqs!=None):
-        plt.xticks(axis)
+        plt.xticks(freqs)
     plt.title('Proposed Filter in Freq. Domain')
     plt.grid()
     if(plotfast):
@@ -983,11 +988,10 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
     # Plot Shifted Proposed Filter
     plt.subplot(326)
     plt.plot(hh,'ko')
-    if(axis!=None):
-        plt.axis(axis)
-    if(freqs!=None):
-        plt.xticks(axis)
+    plt.axis([0,2*MM,-1,1.2])
+    plt.xticks([0,MM,int(2*MM)])
     plt.title("Shifted Filter 'h'")
+    plt.tight_layout()
     plt.grid()
     if(plotfast):
         plt.show()
@@ -1017,24 +1021,25 @@ def firdesign(f,MM,filtermode,Mstart=None,sigma=None,nc=None,dt=1e-5,
             break
     
     # Plot the Output
+    plt.figure()
     plt.subplot(311)
     plt.plot(w,'k')
-    if(axis!=None):
-        plt.axis(axis)
     plt.grid()
-    plt.subplot(311)
+    plt.subplot(312)
     plt.plot(z,'k')
     plt.grid()
     plt.subplot(313)
     plt.plot(FF,abs(Z),'k')
     plt.ylabel('|Z(w)|')
     plt.yticks([0,.1,.9,1.])
+    plt.tight_layout()
     if(axis!=None):
         plt.axis(axis)
     if(freqs!=None):
-        plt.xticks(axis)
+        plt.xticks(freqs)
     plt.title('Final Filtered FFT of Output System')
     plt.grid()
+    plt.subplots_adjust(hspace=0.8)
     plt.show()
     
     # Print scalef Factor
