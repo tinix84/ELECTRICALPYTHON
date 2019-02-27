@@ -378,20 +378,42 @@ def powerset(P=None,Q=None,S=None,PF=None):
     # Return Values!
     return(P,Q,S,PF)
 
-###################################################################
-#   Define Power Triangle Function
-#
-#   Draws a Power Triangle given a set of two values from set of:
-#   { P, Q, S, PF }. Can also return all values from said set.
-#   Plot title can be added to, and plot may be turned off.
-#   Color of plot may be changed, and multiple figures may be shown.
-#
-#   Requires two values from set: { P, Q, S, PF }
-#   All values given must be given as absolute value, not complex.
-###################################################################
+# Define Power Triangle Function
 def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
-                  text="Power Triangle",figure=1,printval=False):
+                  text="Power Triangle",printval=False):
+    """
+    POWERTRIANGLE Function
     
+    Purpose:
+    --------
+    This function is designed to draw a power triangle given
+    values for the complex power system.
+    
+    Required Arguments:
+    -------------------
+    NONE; a minimum of two of the optional arguments
+          must be entered for proper execution.
+    
+    Optional Arguments:
+    -------------------
+    P:          Real Power, unitless; default=None
+    Q:          Reactive Power, unitless; default=None
+    S:          Apparent Power, unitless; default=None
+    PF:         Power Factor, unitless, provided as a
+                decimal value, lagging is positive,
+                leading is negative; default=None
+    color:      The color of the power triangle lines;
+                default="red"
+    text:       The title of the power triangle plot,
+                default="Power Triangle"
+    printval:   Control argument to allow the numeric
+                values to be printed on the plot,
+                default="False"
+    
+    Returns:
+    --------
+    NONE;   plots generated.
+    """
     # Calculate all values if not all are provided
     if( P==None or Q==None or S==None or PF==None):
         P,Q,S,PF = powerset(P,Q,S,PF)
@@ -406,7 +428,7 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
 
     #Plot
     if plot:
-        plt.figure(figure)
+        plt.figure(1)
         plt.title(text)
         plt.plot(Plnx,Plny,color=color)
         plt.plot(Qlnx,Qlny,color=color)
