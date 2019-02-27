@@ -33,16 +33,16 @@
 #   Constants
 #   - NaN (Not A Number):                NAN
 #   - Type: Numpy Matrix:                matrix
-#   - Type: Tuple:                        tuple
-#   - Type: Numpy Array:                ndarr
-#   - Type: Integer:                    tint
-#   - Type: Float:                        tfloat
-#   - Type: Function Handle:            tfun
+#   - Type: Tuple:                       tuple
+#   - Type: Numpy Array:                 ndarr
+#   - Type: Integer:                     tint
+#   - Type: Float:                       tfloat
+#   - Type: Function Handle:             tfun
 #
 #   Submodules
-#   - Bode Plot Generator               BODE.PY
-#   - Filter Simulations                FILTERSIM.PY
-#   - Filter Operations/Tools           FILTER.PY
+#   - Bode Plot Generator               BODE.PY         Imported as: *
+#   - Filter Simulations                FILTERSIM.PY    Imported as: *
+#   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
 ver = "2.3.12"

@@ -27,9 +27,11 @@ terminal.
 | FUNCTION NAME                                                                         | BRIEF DESCRIPTION                 | SUBPACKAGE    |
 |---------------------------------------------------------------------------------------|-----------------------------------|---------------|
 |**cprint**                                                                             | Complex Print Function            |               |
+|**phasor**                                                                             | Phasor V/I Generator              |               |
 |**phasorz**                                                                            | Phasor Impedance Generator        |               |
 |**parallelz**                                                                          | Parallel Impedance Adder          |               |
 |**phaseline**                                                                          | Line/Phase Conversion             |               |
+|**powerset**                                                                           | Complex Power Set Calculator      |               |
 |[**powertriangle**](https://engineerjoe440.github.io/ELECTRICALPYTHON/example)         | Power Triangle Plot Generator     |               |
 
  
@@ -45,7 +47,18 @@ terminal.
 |**step**                                                                               | Step Function                     |               |
 |**convolve**                                                                           | Multi-Argument Convolution        |               |
 |**convbar**                                                                            | Convolution Bar Graph Visualizer  |               |
-|**
+|**rms**                                                                                | Function RMS Calculator           |               |
+|**bode**                                                                               | Bode Plot Generator               | BODE          |
+|**sbode**                                                                              | S-Domain Bode Plot Generator      | BODE          |
+|**zbode**                                                                              | Z-Domain Bode Plot Generator      | BODE          |
+|**convert**                                                                            | Filter Type Conversion Agent      | FILTER        |
+|**factor**                                                                             | Filter Polynomial Factoring       | FILTER        |
+|**pm**                                                                                 | Phase-Margin Calculator           | FILTER        |
+|**gm**                                                                                 | Gain-Margin Calculator            | FILTER        |
+|**firdesign**                                                                          | FIR Filter Design Assistant       | FILTER        |
+|**autobutter**                                                                         | Automatic Butterworth Builder     | FILTER        |
+|**zfiltersim**                                                                         | Z-Domain Filter Simulator         | FILTERSIM     |
+|**sysresponse**                                                                        | System Response Plotter           | FILTERSIM     |
 
 MORE NOTES TO COME!!!
 

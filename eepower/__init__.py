@@ -40,7 +40,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.5.2"
+ver = "1.5.3"
 
 # Import Submodules
 from .capacitor import *
@@ -127,15 +127,45 @@ def reactance(z,f):
         out = abs(out)
     return(out)
 
-###################################################################
-#   Define display function
-#
-#   Print a complex voltage or current in polar form,
-#   show angle in degrees.
-#
-#   Requires voltage or current be provided as complex value.
-###################################################################
+# Define display function
 def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
+    """
+    CPRINT Function
+    
+    Purpose:
+    --------
+    This function is designed to accept a complex value (val) and print
+    the value in the standard electrical engineering notation:
+    
+        magnitude ∠ angle °
+    
+    This function will print the magnitude in degrees, and can print
+    a unit and label in addition to the value itself.
+    
+    Required Arguments:
+    -------------------
+    val:        The Complex Value to be Printed
+    
+    Optional Arguments:
+    -------------------
+    unit:       The string to be printed corresponding to the unit mark.
+                default=False
+    label:      The pre-pended string used as a descriptive labeling string.
+                default=False
+    printval:   Control argument enabling/disabling printing of the string.
+                default=True
+    ret:        Control argument allowing the evaluated value to be returned.
+                default=False
+    decimals:   Control argument specifying how many decimals of the complex
+                value to be printed. May be negative to round to spaces
+                to the left of the decimal place (follows standard round()
+                functionality). default=3
+    
+    Returns:
+    --------
+    (mag, ang): The tuppled set of the magnitude and angle as computed by the
+                function, only returned when ret=True.
+    """
     mag, ang_r = c.polar(val) #Convert to polar form
     ang = np.degrees(ang_r) #Convert to degrees
     mag = round( mag, decimals ) #Round
@@ -153,37 +183,74 @@ def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
     if ret:
         return(mag,ang)
 
-###################################################################
-#   Define Impedance Conversion function
-#
-#   Converts either Capacitance (in Farads) or Inductance (in
-#   Henrys) to Impedance value (in ohms).
-#
-#   Returns C or L as value in Ohms.
-###################################################################
-def phasorz(f,C=False,L=False,imaginary=True):
+# Define Impedance Conversion function
+def phasorz(f,C=None,L=None,complex=True):
+    """
+    PHASORZ Function:
+    
+    Purpose:
+    --------
+    This function's purpose is to generate the phasor-based
+    impedance of the specified input given as either the
+    capacitance (in Farads) or the inductance (in Henreys).
+    The function will return the phasor value (in Ohms).
+    
+    Required Arguments:
+    -------------------
+    f:      The system frequency to be calculated upon
+    
+    Optional Arguments:
+    -------------------
+    C:       The capacitance value (specified in Farads),
+             default=None
+    L:       The inductance value (specified in Henreys),
+             default=None
+    complex: Control argument to specify whether the returned
+             value should be returned as a complex value.
+             default=True
+    
+    Returns:
+    --------
+    Z:      The ohmic impedance of either C or L (respectively).
+    """
     w = 2*np.pi*f
     #C Given in ohms, return as Z
-    if (C!=False):
+    if (C!=None):
         Z = -1/(w*C)
     #L Given in ohms, return as Z
-    if (L!=False):
+    if (L!=None):
         Z = w*L
     #If asked for imaginary number
-    if (imaginary):
+    if (complex):
         Z *= 1j
     return(Z)
 
-###################################################################
-#   Define Parallel Impedance Adder
-#
-#   Calculate parallel impedance given a tuple of impedances.
-#
-#   Requires all impedance inputs given in phasor form.
-###################################################################
+# Define Parallel Impedance Adder
 def parallelz(Z):
+    """
+    PARALLELZ Function:
+    
+    Purpose:
+    --------
+    This function is designed to generate the total parallel
+    impedance of a set (tuple) of impedances specified as real
+    or complex values.
+    
+    Required Arguments:
+    -------------------
+    Z:      The tupled input set of impedances, may be a tuple
+            of any size greater than 2. May be real, complex, or
+            a combination of the two.
+    
+    Returns:
+    --------
+    Zp:     The calculated parallel impedance of the input tuple.
+    """
+    # Gather length (number of elements in tuple)
     L = len(Z)
+    # Inversely add the first two elements in tuple
     Zp = (1/Z[0]+1/Z[1])**(-1)
+    # If there are more than two elements, add them all inversely
     if(L > 2):
         for i in range(2,L):
             Zp = (1/Zp+1/Z[i])**(-1)
