@@ -45,7 +45,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.3.12"
+ver = "2.9.8"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -58,8 +58,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad as integrate
 from scipy import signal as sig
-import sympy as sym
-from sympy.abc import s as s
 
 # Define constants
 NAN = float('nan')

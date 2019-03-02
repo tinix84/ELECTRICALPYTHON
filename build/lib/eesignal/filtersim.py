@@ -38,7 +38,8 @@ tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
 tnfloat = "<class 'numpy.float64'>"
 
-def zfiltersim( fin, filter, NN=1000, title="",plotinput=True,legend=True):
+def zfiltersim(fin,filter,freqs,NN=1000,dt=0.01,title="",
+               legend=True,xlim=False,xmxscale=None,figsize=None):
     """
     ZFILTERSIM Function
     
@@ -58,73 +59,95 @@ def zfiltersim( fin, filter, NN=1000, title="",plotinput=True,legend=True):
             step-size.
     filter: The filter parameter set as described at the end of
             this help/comment section.
+    freqs:  The set of frequencies to plot the input and output for.
     
     Optional Arguments:
     NN:         The number of time-steps to be plotted; default=1000
+    dt:         The time-step size; default=0.01
     title:      The title presented on each plot; default=""
-    plotinput:  An argument to control whether the input is plotted
-                separately, default=True.
+    xlim:       Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
+                default=False.
+    xmxscale:   Scaling limit of the x-axis, will set the maximum of the
+                x-axis to xmxscale/(dt*freq) where freq is the current
+                frequency being plotted.
     legend:     An argument to control whether the legend is shown,
                 default=True.
+    figsize:    The figure dimensions for each subplot, default=None
     
     Returns:
     --------
     NONE, this function generates plots.
     
     # NOTICE: ------------------------------------
-    # The *filter* argument should be provided as:
+    # The *filter* argument should be provided as
+    # a numpy-array in the form:
     # [[ a11, a12, b10, b11, b12],
     #  [ a21, a22, b20, b21, b22],
     #  [           ...          ],
     #  [ an1, an2, bn0, bn1, bn2]]
     # Where each row corresponds to a 1- or 2-pole
     # filter with the structure as follows:
-    #          b0 + b1z^-1 + b2z^-2
-    # H(z) = -----------------------------
-    #           1 - a1z^-1 - a2z^-2
+    #
+    #              b0 + b1z^-1 + b2z^-2
+    #    H(z) = ---------------------------
+    #               1 - a1z^-1 - a2z^-2
+    #
     # --------------------------------------------
     """
-    # Start with arrays set to zero
-    x = np.zeros(NN)
-    y = np.zeros(NN)
-    
-    # ----- The input  -----
-    for k in range(NN):
-        x[k] = fin(k)
-    if plotinput:
-        plt.figure()
+    if(figsize!=None): plt.figure(figsize=figsize)
+    flen = len(freqs)
+    for i in range(flen):
+        # Gather frequency
+        freq = freqs[i]
+        
+        # Start with arrays set to zero
+        x = np.zeros(NN)
+        y = np.zeros(NN)
+        
+        # ----- The input  -----
+        for k in range(NN):
+            x[k] = fin(k*dt,freq)
+        
+        # Identify how many rows were provided
+        sz = filter.size
+        if(sz < 5):
+            raise ValueError("ERROR: Too few filter arguments provided. "+
+                             "Refer to documentation for proper format.")
+        elif(sz == 5):
+            rows = 1
+        else:
+            rows, cols = filter.shape
+        # Operate with each individual filter set
+        x_tmp = np.copy( x )
+        nsteps = NN - 4
+        for row_n in range(rows):
+            row = filter[row_n] # Capture individual row
+            A1 = row[0]
+            A2 = row[1]
+            B0 = row[2]
+            B1 = row[3]
+            B2 = row[4]
+            T = 3
+            for _ in range(nsteps):
+                T = T + 1
+                # Apply Filtering Specified by Individual Row
+                y[T] = A1*y[T-1] + A2*y[T-2] + B0*x_tmp[T] + B1*x_tmp[T-1] +  B2*x_tmp[T-2]
+            # Copy New output into temporary input
+            x_tmp = np.copy( y )
+        # Copy finalized output into *ytime* for plotting
+        ytime = np.copy( x_tmp )
+        # Plot Filtered Output
+        if(flen%2==0): plt.subplot(flen,2,i+1)
+        else: plt.subplot(flen,1,i+1)
+        plt.plot(x,'k--',label="Input")
+        plt.plot(ytime,'k',label="Output")
         plt.title(title)
-        plt.plot(x)
-        plt.show()
-    
-    # Identify how many rows were provided
-    rows, cols = filter.shape
-    # Operate with each individual filter set
-    x_tmp = np.copy( x )
-    nsteps = NN - 4
-    for row_n in range(rows):
-        row = filter[row_n] # Capture individual row
-        A1 = row[0]
-        A2 = row[1]
-        B0 = row[2]
-        B1 = row[3]
-        B2 = row[4]
-        T = 3
-        for _ in range(nsteps):
-            T = T + 1
-            # Apply Filtering Specified by Individual Row
-            y[T] = A1*y[T-1] + A2*y[T-2] + B0*x_tmp[T] + B1*x_tmp[T-1] +  B2*x_tmp[T-2]
-        # Copy New output into temporary input
-        x_tmp = np.copy( y )
-    # Copy finalized output into *ytime* for plotting
-    ytime = np.copy( x_tmp )
-    # Plot Filtered Output
-    plt.figure(1)
-    plt.plot(x,'k--',label="Input")
-    plt.plot(ytime,'k',label="Output")
-    plt.title(title)
-    plt.grid(which='both')
-    if legend: plt.legend()
+        plt.grid(which='both')
+        if legend: plt.legend(title="Frequency = "+str(freq)+"Hz")
+        if xlim!=False: plt.xlim(xlim)
+        elif xmxscale!=None: plt.xlim((0,xmxscale/(freq*dt)))
+        
+    plt.tight_layout()
     plt.show()
     
 # Define System Response Plotter function

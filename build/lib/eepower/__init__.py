@@ -18,6 +18,10 @@
 #   - 'A' Operator for Symmetrical Components: a
 #   - Not a Number value (NaN): NAN
 #
+#   Symmetrical Components Matricies:
+#   - ABC to 012 Conversion:        abc012
+#   - 012 to ABC Conversion:        i012abc
+#
 #   Included Functions
 #   - Phasor V/I Generator:         phasor
 #   - Phasor Impedance Generator:   phasorz
@@ -40,7 +44,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.5.2"
+ver = "1.6.4"
 
 # Import Submodules
 from .capacitor import *
@@ -58,6 +62,14 @@ a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
 NAN = float('nan')
 VLLcVLN = c.rect(np.sqrt(3),np.radians(30)) # Conversion Operator
 ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
+
+# Define symmetrical components matricies
+abc012 = 1/3 * np.array([[ 1, 1, 1    ],
+                         [ 1, a, a**2 ],
+                         [ 1, a**2, a ]])
+i012abc = np.array([[ 1, 1, 1    ],
+                    [ 1, a**2, a ],
+                    [ 1, a, a**2 ]])
 
 # Define type constants
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
@@ -127,63 +139,142 @@ def reactance(z,f):
         out = abs(out)
     return(out)
 
-###################################################################
-#   Define display function
-#
-#   Print a complex voltage or current in polar form,
-#   show angle in degrees.
-#
-#   Requires voltage or current be provided as complex value.
-###################################################################
-def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
-    mag, ang_r = c.polar(val) #Convert to polar form
-    ang = np.degrees(ang_r) #Convert to degrees
-    mag = round( mag, decimals ) #Round
-    ang = round( ang, decimals ) #Round
-      # Print values (by default)
-    if printval and not unit and not label:
-        print(mag,"∠",ang,"°")
-    elif printval and unit and not label:
-        print(mag,"∠",ang,"°",unit)
-    elif printval and unit and label:
-        print(label,mag,"∠",ang,"°",unit)
-    elif printval and label and not unit:
-        print(label,mag,"∠",ang,"°")
+# Define display function
+def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
+    """
+    CPRINT Function
+    
+    Purpose:
+    --------
+    This function is designed to accept a complex value (val) and print
+    the value in the standard electrical engineering notation:
+    
+        magnitude ∠ angle °
+    
+    This function will print the magnitude in degrees, and can print
+    a unit and label in addition to the value itself.
+    
+    Required Arguments:
+    -------------------
+    val:        The Complex Value to be Printed
+    
+    Optional Arguments:
+    -------------------
+    unit:       The string to be printed corresponding to the unit mark.
+                default=""
+    label:      The pre-pended string used as a descriptive labeling string.
+                default=""
+    printval:   Control argument enabling/disabling printing of the string.
+                default=True
+    ret:        Control argument allowing the evaluated value to be returned.
+                default=False
+    decimals:   Control argument specifying how many decimals of the complex
+                value to be printed. May be negative to round to spaces
+                to the left of the decimal place (follows standard round()
+                functionality). default=3
+    
+    Returns:
+    --------
+    outarr:     The array of strings demonstrating the 
+    """
+    outarr = np.array([]) # Empty array
+    # Find length of the input array
+    try:
+        row, col = val.shape
+        mult = True
+    except:
+        row = 1
+        col = 1
+        mult = False
+    # For each value in the input (array)
+    for i in range(row):
+        if mult: _val = val[i]
+        else: _val = val
+        mag, ang_r = c.polar(_val) #Convert to polar form
+        ang = np.degrees(ang_r) #Convert to degrees
+        mag = round( mag, decimals ) #Round
+        ang = round( ang, decimals ) #Round
+        strg = label+" "+str(mag)+" ∠ "+str(ang)+"° "+unit
+        outarr = np.append(outarr, strg)
+    # Reshape the array to match input
+    outarr = np.reshape(outarr, (row,col))
+    # Print values (by default)
+    if printval and row==1:
+        print(strg)
+    elif printval:
+        print(outarr)
     # Return values when requested
     if ret:
-        return(mag,ang)
+        return(outarr)
 
-###################################################################
-#   Define Impedance Conversion function
-#
-#   Converts either Capacitance (in Farads) or Inductance (in
-#   Henrys) to Impedance value (in ohms).
-#
-#   Returns C or L as value in Ohms.
-###################################################################
-def phasorz(f,C=False,L=False,imaginary=True):
+# Define Impedance Conversion function
+def phasorz(f,C=None,L=None,complex=True):
+    """
+    PHASORZ Function:
+    
+    Purpose:
+    --------
+    This function's purpose is to generate the phasor-based
+    impedance of the specified input given as either the
+    capacitance (in Farads) or the inductance (in Henreys).
+    The function will return the phasor value (in Ohms).
+    
+    Required Arguments:
+    -------------------
+    f:      The system frequency to be calculated upon
+    
+    Optional Arguments:
+    -------------------
+    C:       The capacitance value (specified in Farads),
+             default=None
+    L:       The inductance value (specified in Henreys),
+             default=None
+    complex: Control argument to specify whether the returned
+             value should be returned as a complex value.
+             default=True
+    
+    Returns:
+    --------
+    Z:      The ohmic impedance of either C or L (respectively).
+    """
     w = 2*np.pi*f
     #C Given in ohms, return as Z
-    if (C!=False):
+    if (C!=None):
         Z = -1/(w*C)
     #L Given in ohms, return as Z
-    if (L!=False):
+    if (L!=None):
         Z = w*L
     #If asked for imaginary number
-    if (imaginary):
+    if (complex):
         Z *= 1j
     return(Z)
 
-###################################################################
-#   Define Parallel Impedance Adder
-#
-#   Calculate parallel impedance given a tuple of impedances.
-#
-#   Requires all impedance inputs given in phasor form.
-###################################################################
+# Define Parallel Impedance Adder
 def parallelz(Z):
+    """
+    PARALLELZ Function:
+    
+    Purpose:
+    --------
+    This function is designed to generate the total parallel
+    impedance of a set (tuple) of impedances specified as real
+    or complex values.
+    
+    Required Arguments:
+    -------------------
+    Z:      The tupled input set of impedances, may be a tuple
+            of any size greater than 2. May be real, complex, or
+            a combination of the two.
+    
+    Returns:
+    --------
+    Zp:     The calculated parallel impedance of the input tuple.
+    """
+    # Gather length (number of elements in tuple)
     L = len(Z)
+    # Inversely add the first two elements in tuple
     Zp = (1/Z[0]+1/Z[1])**(-1)
+    # If there are more than two elements, add them all inversely
     if(L > 2):
         for i in range(2,L):
             Zp = (1/Zp+1/Z[i])**(-1)
@@ -311,20 +402,42 @@ def powerset(P=None,Q=None,S=None,PF=None):
     # Return Values!
     return(P,Q,S,PF)
 
-###################################################################
-#   Define Power Triangle Function
-#
-#   Draws a Power Triangle given a set of two values from set of:
-#   { P, Q, S, PF }. Can also return all values from said set.
-#   Plot title can be added to, and plot may be turned off.
-#   Color of plot may be changed, and multiple figures may be shown.
-#
-#   Requires two values from set: { P, Q, S, PF }
-#   All values given must be given as absolute value, not complex.
-###################################################################
+# Define Power Triangle Function
 def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
-                  text="Power Triangle",figure=1,printval=False):
+                  text="Power Triangle",printval=False):
+    """
+    POWERTRIANGLE Function
     
+    Purpose:
+    --------
+    This function is designed to draw a power triangle given
+    values for the complex power system.
+    
+    Required Arguments:
+    -------------------
+    NONE; a minimum of two of the optional arguments
+          must be entered for proper execution.
+    
+    Optional Arguments:
+    -------------------
+    P:          Real Power, unitless; default=None
+    Q:          Reactive Power, unitless; default=None
+    S:          Apparent Power, unitless; default=None
+    PF:         Power Factor, unitless, provided as a
+                decimal value, lagging is positive,
+                leading is negative; default=None
+    color:      The color of the power triangle lines;
+                default="red"
+    text:       The title of the power triangle plot,
+                default="Power Triangle"
+    printval:   Control argument to allow the numeric
+                values to be printed on the plot,
+                default="False"
+    
+    Returns:
+    --------
+    NONE;   plots generated.
+    """
     # Calculate all values if not all are provided
     if( P==None or Q==None or S==None or PF==None):
         P,Q,S,PF = powerset(P,Q,S,PF)
@@ -339,7 +452,7 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
 
     #Plot
     if plot:
-        plt.figure(figure)
+        plt.figure(1)
         plt.title(text)
         plt.plot(Plnx,Plny,color=color)
         plt.plot(Qlnx,Qlny,color=color)

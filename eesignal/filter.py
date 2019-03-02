@@ -31,6 +31,8 @@
 # Import Required Libraries
 import numpy as np
 import scipy.signal as sig
+import sympy as sym
+from sympy.abc import s as s
 import matplotlib.pyplot as plt
 
 # Define Butterworth Minimum Order Solver:
@@ -389,9 +391,12 @@ def convert( sys, convn, convd=1, debug=False, TFprint=False):
 
     # Generate output as numpy array
     final_den = sym.poly(den3)
-    final_num = sym.poly(num3)
     den = np.asarray(final_den.all_coeffs()).astype(np.double)
-    num = np.asarray(final_num.all_coeffs()).astype(np.double)
+    try: # If the length is greater than 1, no exception
+        final_num = sym.poly(num3)
+        num = np.asarray(final_num.all_coeffs()).astype(np.double)
+    except: # Numerator only 1-element long
+        num = np.asarray(num3).astype(np.double)
 
     # Print debug information if needed
     if debug:

@@ -18,6 +18,10 @@
 #   - 'A' Operator for Symmetrical Components: a
 #   - Not a Number value (NaN): NAN
 #
+#   Symmetrical Components Matricies:
+#   - ABC to 012 Conversion:        abc012
+#   - 012 to ABC Conversion:        i012abc
+#
 #   Included Functions
 #   - Phasor V/I Generator:         phasor
 #   - Phasor Impedance Generator:   phasorz
@@ -40,7 +44,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.5.3"
+ver = "1.6.4"
 
 # Import Submodules
 from .capacitor import *
@@ -58,6 +62,14 @@ a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
 NAN = float('nan')
 VLLcVLN = c.rect(np.sqrt(3),np.radians(30)) # Conversion Operator
 ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
+
+# Define symmetrical components matricies
+abc012 = 1/3 * np.array([[ 1, 1, 1    ],
+                         [ 1, a, a**2 ],
+                         [ 1, a**2, a ]])
+i012abc = np.array([[ 1, 1, 1    ],
+                    [ 1, a**2, a ],
+                    [ 1, a, a**2 ]])
 
 # Define type constants
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
@@ -128,7 +140,7 @@ def reactance(z,f):
     return(out)
 
 # Define display function
-def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
+def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
     """
     CPRINT Function
     
@@ -149,9 +161,9 @@ def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
     Optional Arguments:
     -------------------
     unit:       The string to be printed corresponding to the unit mark.
-                default=False
+                default=""
     label:      The pre-pended string used as a descriptive labeling string.
-                default=False
+                default=""
     printval:   Control argument enabling/disabling printing of the string.
                 default=True
     ret:        Control argument allowing the evaluated value to be returned.
@@ -163,25 +175,37 @@ def cprint(val,unit=False,label=False,printval=True,ret=False,decimals=3):
     
     Returns:
     --------
-    (mag, ang): The tuppled set of the magnitude and angle as computed by the
-                function, only returned when ret=True.
+    outarr:     The array of strings demonstrating the 
     """
-    mag, ang_r = c.polar(val) #Convert to polar form
-    ang = np.degrees(ang_r) #Convert to degrees
-    mag = round( mag, decimals ) #Round
-    ang = round( ang, decimals ) #Round
-      # Print values (by default)
-    if printval and not unit and not label:
-        print(mag,"∠",ang,"°")
-    elif printval and unit and not label:
-        print(mag,"∠",ang,"°",unit)
-    elif printval and unit and label:
-        print(label,mag,"∠",ang,"°",unit)
-    elif printval and label and not unit:
-        print(label,mag,"∠",ang,"°")
+    outarr = np.array([]) # Empty array
+    # Find length of the input array
+    try:
+        row, col = val.shape
+        mult = True
+    except:
+        row = 1
+        col = 1
+        mult = False
+    # For each value in the input (array)
+    for i in range(row):
+        if mult: _val = val[i]
+        else: _val = val
+        mag, ang_r = c.polar(_val) #Convert to polar form
+        ang = np.degrees(ang_r) #Convert to degrees
+        mag = round( mag, decimals ) #Round
+        ang = round( ang, decimals ) #Round
+        strg = label+" "+str(mag)+" ∠ "+str(ang)+"° "+unit
+        outarr = np.append(outarr, strg)
+    # Reshape the array to match input
+    outarr = np.reshape(outarr, (row,col))
+    # Print values (by default)
+    if printval and row==1:
+        print(strg)
+    elif printval:
+        print(outarr)
     # Return values when requested
     if ret:
-        return(mag,ang)
+        return(outarr)
 
 # Define Impedance Conversion function
 def phasorz(f,C=None,L=None,complex=True):
