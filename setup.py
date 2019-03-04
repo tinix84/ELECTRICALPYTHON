@@ -6,12 +6,12 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
     
 # Version Breakdown:
-# MAJOR CHANGE . MINOR CHANGE . DOC CHANGE
+# MAJOR CHANGE . MINOR CHANGE . MICRO CHANGE
 
 # Generate Setup Tools Argument
 setuptools.setup(
     name="electricalpython",
-    version="2.12.4",
+    version="2.12.7",
     author="Joe Stanley",
     author_email="stan3926@vandals.uidaho.edu",
     description="Electrical Engineering Functions in Python",

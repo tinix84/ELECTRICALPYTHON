@@ -45,7 +45,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.9.8"
+ver = "2.9.9"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -60,6 +60,10 @@ from scipy.integrate import quad as integrate
 from scipy import signal as sig
 
 # Define constants
+u = 1e-6 # Micro (mu) Multiple
+m = 1e-3 # Mili Multiple
+k = 1e+3 # Kili Multiple
+M = 1e+6 # Mega Multiple
 NAN = float('nan')
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
 tuple = "<class 'tuple'>"

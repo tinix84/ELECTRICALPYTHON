@@ -44,7 +44,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.6.4"
+ver = "1.6.7"
 
 # Import Submodules
 from .capacitor import *
@@ -59,6 +59,10 @@ import cmath as c
 
 # Define constants
 a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
+u = 1e-6 # Micro (mu) Multiple
+m = 1e-3 # Mili Multiple
+k = 1e+3 # Kili Multiple
+M = 1e+6 # Mega Multiple
 NAN = float('nan')
 VLLcVLN = c.rect(np.sqrt(3),np.radians(30)) # Conversion Operator
 ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
@@ -175,37 +179,70 @@ def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
     
     Returns:
     --------
-    outarr:     The array of strings demonstrating the 
+    numarr:     The array of values corresponding to the magnitude and angle,
+                values are returned in the form:
+                
+                    [[ mag, ang ],
+                     [ mag, ang ],
+                          ...    ,
+                     [ mag, ang ]]
+                
+                where the angles are evaluated in degrees.
     """
-    outarr = np.array([]) # Empty array
+    printarr = np.array([]) # Empty array
+    numarr = np.array([]) # Empty array
     # Find length of the input array
     try:
         row, col = val.shape
+        sz = val.size
         mult = True
+        if label=="":
+            label = np.array([])
+            for _ in range(sz):
+                label = np.append(label,[""])
+        if unit=="":
+            unit = np.array([])
+            for _ in range(sz):
+                unit = np.append(unit,[""])
+        elif len(unit)==1:
+            tmp = unit
+            for _ in range(sz):
+                unit = np.append(unit,[tmp])
     except:
         row = 1
         col = 1
+        sz = 1
         mult = False
+        _label = label
+        _unit = unit
     # For each value in the input (array)
     for i in range(row):
-        if mult: _val = val[i]
-        else: _val = val
+        if mult:
+            _val = val[i]
+            _label = label[i]
+            _unit = unit[i]
+        else:
+            _val = val
+            _label = label
+            _unit = unit
         mag, ang_r = c.polar(_val) #Convert to polar form
         ang = np.degrees(ang_r) #Convert to degrees
         mag = round( mag, decimals ) #Round
         ang = round( ang, decimals ) #Round
-        strg = label+" "+str(mag)+" ∠ "+str(ang)+"° "+unit
-        outarr = np.append(outarr, strg)
+        strg = _label+" "+str(mag)+" ∠ "+str(ang)+"° "+_unit
+        printarr = np.append(printarr, strg)
+        numarr = np.append(numarr, [mag, ang])
     # Reshape the array to match input
-    outarr = np.reshape(outarr, (row,col))
+    printarr = np.reshape(printarr, (row,col))
+    numarr = np.reshape(numarr, (sz, 2))
     # Print values (by default)
     if printval and row==1:
         print(strg)
     elif printval:
-        print(outarr)
+        print(printarr)
     # Return values when requested
     if ret:
-        return(outarr)
+        return(numarr)
 
 # Define Impedance Conversion function
 def phasorz(f,C=None,L=None,complex=True):
