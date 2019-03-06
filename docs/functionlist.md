@@ -26,8 +26,8 @@ terminal.
 
 | FUNCTION NAME                                                                         | BRIEF DESCRIPTION                 | SUBPACKAGE    |
 |---------------------------------------------------------------------------------------|-----------------------------------|---------------|
-|**cprint**                                                                             | Complex Print Function            |               |
-|**phasor**                                                                             | Phasor V/I Generator              |               |
+|[**cprint**](https://engineerjoe440.github.io/ELECTRICALPYTHON/cprint)                 | Complex Print Function            |               |
+|[**phasor**](https://engineerjoe440.github.io/ELECTRICALPYTHON/phasor)                 | Phasor V/I Generator              |               |
 |**phasorz**                                                                            | Phasor Impedance Generator        |               |
 |**parallelz**                                                                          | Parallel Impedance Adder          |               |
 |**phaseline**                                                                          | Line/Phase Conversion             |               |
