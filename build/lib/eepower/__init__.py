@@ -44,7 +44,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.6.7"
+ver = "1.6.10"
 
 # Import Submodules
 from .capacitor import *
@@ -82,6 +82,7 @@ ndarr = "<class 'numpy.ndarray'>"
 tint = "<class 'int'>"
 tfloat = "<class 'float'>"
 tfun = "<class 'function'>"
+tstr = "<class 'str'>"
 
 # Define Phasor Generator
 def phasor( mag, ang ):
@@ -204,7 +205,7 @@ def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
             unit = np.array([])
             for _ in range(sz):
                 unit = np.append(unit,[""])
-        elif len(unit)==1:
+        elif len(unit)==1 or str(type(unit))==tstr:
             tmp = unit
             for _ in range(sz):
                 unit = np.append(unit,[tmp])
@@ -567,15 +568,29 @@ def trans_scoc(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
         print("An Error Was Encountered.\n"+
                 "Not enough arguments were provided.")
 
-###################################################################
-#   Define Phasor Plot Generator
-#
-#   Plots a phasor-diagram with angles in degrees for a number of
-#   Phasors. Phasors must be passed as a set of complex numbers.
-#   (e.g. [ m+ja, m+ja, m+ja, ... , m+ja ] ) No more than 12
-#   Phasors are allowed to be plotted at one time.
-###################################################################
-def phasorplot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
+# Define Phasor Plot Generator
+def phasorplot(phasor,title="Phasor Diagram",legend=False,bg="#d5de9c",radius=1.2):
+    """
+    PHASORPLOT Function
+    
+    Purpose:
+    --------
+    This function is designed to plot a phasor-diagram with angles in degrees
+    for up to 12 phasor sets. Phasors must be passed as a complex number set,
+    (e.g. [ m+ja, m+ja, m+ja, ... , m+ja ] ).
+    
+    Required Arguments:
+    -------------------
+    phasor:     The set of phasors to be plotted.
+    
+    Optional Arguments:
+    -------------------
+    title:      The Plot Title, default="Phasor Diagram"
+    legend:     Control argument to enable displaying the legend, must be passed
+                as an array or list of strings, default=False
+    bg:         Background-Color control, default="#d5de9c"
+    radius:     The diagram radius, default=1.2
+    """
     numphs = len(phasor)
     
     colors = ["#FF0000","#800000","#FFFF00","#808000","#00ff00","#008000",
@@ -595,9 +610,14 @@ def phasorplot(phasor,title="Phasor Diagram",bg="#d5de9c",radius=1.2):
     
     # Plot the diagram
     plt.title(title+"\n")
+    handles=np.array([]) # Empty array for plot handles
     for i in range(numphs):
         mag, ang_r = c.polar(phasor[i])
-        plt.arrow(0,0,ang_r,mag,color=colors[i])
+        if legend!=False:
+            hand = plt.arrow(0,0,ang_r,mag,color=colors[i],label=legend[i])
+            handles = np.append(handles,[hand])
+        else: plt.arrow(0,0,ang_r,mag,color=colors[i])
+    if legend!=False: plt.legend((handles),legend)
     plt.show()
 
 ###################################################################
