@@ -330,7 +330,7 @@ def sys_condition(system,feedback):
     return(system) # Return the conditioned system
 
 # Define Filter to band-pass function
-def convert( sys, convn, convd=1, debug=False, TFprint=False):
+def convert( sys, son, sod=None, debug=False, TFprint=False):
     """ Filter Conversion Function
     
     Purpose: This function is developed to perform the polynomial
@@ -341,12 +341,15 @@ def convert( sys, convn, convd=1, debug=False, TFprint=False):
     Required Arguments:
     -------------------
     sys:        The tuple of the system, (numerator, denominator)
-    convn:        The numerator of the conversion factor
+    son:        The numerator of the conversion factor, provided
+                as an array or list. (i.e. [ s^n, ... s^1, s^0 ])
     
     Optional Arguments:
     -------------------
-    convd:        The denominator of the conversion factor, default=1
-    debug:        Print debugging information, default=False
+    sod:        The denominator of the conversion factor, must be
+                provided as an array or list,
+                (i.e. [ s^n, ... s^1, s^0 ]), default=None
+    debug:      Print debugging information, default=False
     TFprint:    Print the resulting transfer function, default=False
     
     Returns:
@@ -355,9 +358,19 @@ def convert( sys, convn, convd=1, debug=False, TFprint=False):
     den:        The newly updated denominator polynomial
     
     """
+    # Evaluate Symbolic Representation of Polynomials
+    convn = 0
+    for i in range(1, len(son)):
+        convn += s**i * son[-i] # Add symbolic terms, low-ord first
+    if(sod!=None):
+        convd = 0
+        for i in range(1, len(sod)):
+            convd += s**i * sod[-i] # Add symbolic terms, low-ord first
+    else: convd = 1*s**0 # No denominator conversion term provided
+    
     # Condition Symbolic Conversion terms
-    convn = sym.expand( convn * s**0 )
-    convd = sym.expand( convd * s**0 )
+    convn = sym.expand( convn )
+    convd = sym.expand( convd )
     
     # Pull numerator and denominator terms
     num = sys[0]
@@ -400,6 +413,7 @@ def convert( sys, convn, convd=1, debug=False, TFprint=False):
 
     # Print debug information if needed
     if debug:
+        print(convn, convd)
         print(num1,num2)
         print(den1,den2)
         print(m)

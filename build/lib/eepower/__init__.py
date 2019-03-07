@@ -44,7 +44,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.6.10"
+ver = "1.6.11"
 
 # Import Submodules
 from .capacitor import *

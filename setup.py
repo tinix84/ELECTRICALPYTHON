@@ -7,11 +7,12 @@ with open("README.md", "r") as fh:
     
 # Version Breakdown:
 # MAJOR CHANGE . MINOR CHANGE . MICRO CHANGE
+ver = "2.13.2"
 
 # Generate Setup Tools Argument
 setuptools.setup(
     name="electricalpython",
-    version="2.12.10",
+    version=ver,
     author="Joe Stanley",
     author_email="stan3926@vandals.uidaho.edu",
     description="Electrical Engineering Functions in Python",

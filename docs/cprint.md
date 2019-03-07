@@ -30,8 +30,7 @@ can also return a set of values corresponding to the magnitude and angle of the 
 - decimals: (INTEGER) Control argument specifying how many decimals of the complex value to be printed. May be negative to round to spaces
 to the left of the decimal place (follows standard round() functionality). default=3
 
-Returns:
---------
+#### Returns:
 - numarr: (NUMPY.NDARRAY) The array of values corresponding to the magnitude and angle, values are returned in the form:
             
     [[ mag, ang ],
