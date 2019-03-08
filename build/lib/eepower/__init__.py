@@ -35,7 +35,7 @@
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
 #   - Reactance Calculator:         reactance
-#   - Non-Linear PF Calc:           pf_nonlin
+#   - Non-Linear PF Calc:           nlinpf
 #   - Harmonic Limit Calculator:    harmoniclimit
 #
 #   Additional functions available in sub-modules:
@@ -690,14 +690,39 @@ def pf_dist(I1=False,IRMS=False,Ih=False):
 #
 #   Requires any two of the three inputs
 ###################################################################
-def pf_nonlin(PFtrue=False,PFdist=False,PFdisp=False):
-    if(PFtrue!=False and PFdist!=False and PFdisp!=False):
+def nlinpf(PFtrue=False,PFdist=False,PFdisp=False):
+    """
+    NLINPF Function
+    
+    Purpose:
+    --------
+    This function is designed to evaluate one of three unknowns
+    given the other two. These particular unknowns are the arguments
+    and as such, they are described in the representative sections
+    below.
+    
+    Required Arguments:
+    -------------------
+    None.
+    
+    Optional Arguments:
+    -------------------
+    PFtrue:     The "True" power-factor, default=None
+    PFdist:     The "Distorted" power-factor, default=None
+    PFdisp:     The "Displacement" power-factor, default=None
+    
+    Returns:
+    --------
+    {unknown}:  This function will return the unknown variable from
+                the previously described set of variables.
+    """
+    if(PFtrue!=None and PFdist!=None and PFdisp!=None):
         raise ValueError("ERROR: Too many constraints, no solution.") 
-    elif ( PFdist!=False and PFdisp!=False ):
+    elif ( PFdist!=None and PFdisp!=None ):
         return( PFdist * PFdisp )
-    elif ( PFtrue!=False and PFdisp!=False ):
+    elif ( PFtrue!=None and PFdisp!=None ):
         return( PFtrue / PFdisp )
-    elif ( PFtrue!=False and PFdist!=False ):
+    elif ( PFtrue!=None and PFdist!=None ):
         return( PFtrue / PFdist )
     else:
         raise ValueError("ERROR: Function requires at least two arguments.") 

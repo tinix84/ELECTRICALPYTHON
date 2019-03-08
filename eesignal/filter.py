@@ -360,12 +360,12 @@ def convert( sys, son, sod=None, debug=False, TFprint=False):
     """
     # Evaluate Symbolic Representation of Polynomials
     convn = 0
-    for i in range(1, len(son)):
-        convn += s**i * son[-i] # Add symbolic terms, low-ord first
+    for i in range(len(son)):
+        convn = convn + s**i * son[-(i+1)] # Add symbolic terms, low-ord first
     if(sod!=None):
         convd = 0
-        for i in range(1, len(sod)):
-            convd += s**i * sod[-i] # Add symbolic terms, low-ord first
+        for i in range(len(sod)):
+            convd = convd + s**i * sod[-(i+1)] # Add symbolic terms, low-ord first
     else: convd = 1*s**0 # No denominator conversion term provided
     
     # Condition Symbolic Conversion terms
@@ -404,6 +404,16 @@ def convert( sys, son, sod=None, debug=False, TFprint=False):
 
     # Generate output as numpy array
     final_den = sym.poly(den3)
+    # Print debug information if needed
+    if debug:
+        print("Input Conversion Factors:", son, sod)
+        print(len(son),len(sod))
+        print("Polynomial Conversion Factors:", convn, convd)
+        print("Numerator Conversion Process:", num1,num2)
+        print("Denominator Conversion Process:", den1,den2)
+        print(m)
+        print(LC)
+        print(final_den)
     den = np.asarray(final_den.all_coeffs()).astype(np.double)
     try: # If the length is greater than 1, no exception
         final_num = sym.poly(num3)
@@ -413,13 +423,7 @@ def convert( sys, son, sod=None, debug=False, TFprint=False):
 
     # Print debug information if needed
     if debug:
-        print(convn, convd)
-        print(num1,num2)
-        print(den1,den2)
-        print(m)
-        print(LC)
         print(final_num)
-        print(final_den)
         print(den)
         print(num)
     if TFprint:

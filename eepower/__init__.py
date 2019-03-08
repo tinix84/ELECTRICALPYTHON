@@ -30,13 +30,14 @@
 #   - V/I Line/Phase Converter:     phaseline
 #   - Power Set Values:             powerset
 #   - Power Triangle Function:      powertriangle
-#   - Transformer SC OC Tests:      trans_scoc
+#   - Transformer SC OC Tests:      transformertest
 #   - Phasor Plot Generator:        phasorplot
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
 #   - Reactance Calculator:         reactance
-#   - Non-Linear PF Calc:           pf_nonlin
+#   - Non-Linear PF Calc:           nlinpf
 #   - Harmonic Limit Calculator:    harmoniclimit
+#   - Power Factor Distiortion:     pfdist
 #
 #   Additional functions available in sub-modules:
 #   - capacitor.py
@@ -525,8 +526,7 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
              plt.text(x/20,y*4/5,text,color=color)
         plt.show()
 
-###################################################################
-#   Define Transformer Short-Circuit/Open-Circuit Function
+# Define Transformer Short-Circuit/Open-Circuit Function
 #
 #   Calculates Req and Xeq, or Rc and Xm, or both sets given three
 #   values from a specific set of inputs { Poc, Voc, Ioc,  Psc,
@@ -539,19 +539,58 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
 #   All values given must be given as absolute value, not complex.
 #   All values returned are given with respect to high-side/primary
 ###################################################################
-def trans_scoc(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
+def transformertest(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
                Isc=False):
+    """
+    TRANSFORMERTEST Function
+    
+    Purpose:
+    --------
+    This function will determine the non-ideal circuit components of
+    a transformer (Req and Xeq, or Rc and Xm) given the test-case
+    parameters for the open-circuit test and/or the closed-circuit
+    test. Requires one or both of two sets: { Poc, Voc, Ioc }, or
+    { Psc, Vsc, Isc }.
+    All values given must be given as absolute value, not complex.
+    All values returned are given with respect to primary.
+    
+    Required Arguments:
+    -------------------
+    NONE,   A minimum of one complete set of optional arguments must
+            be provided for function to complete successfully.
+            Optional Arg. Sets are: { Poc, Voc, Ioc }, or
+            { Psc, Vsc, Isc }.
+    
+    Optional Arguments:
+    -------------------
+    Poc:    The open-circuit measured power (real power), default=None
+    Voc:    The open-circuit measured voltage (measured on X),
+            default=None
+    Ioc:    The open-circuit measured current (measured on primary),
+            default=None
+    Psc:    The short-circuit measured power (real power), default=None
+    Vsc:    The short-circuit measured voltage (measured on X),
+            default=None
+    Isc:    The short-circuit measured current (measured on X),
+            default=None
+    
+    Returns:
+    --------
+    {Req,Xeq,Rc,Xm}:    Given all optional args
+    {Rc, Xm}:           Given open-circuit parameters
+    {Req, Xeq}:         Given short-circuit parameters
+    """
     SC = False
     OC = False
     # Given Open-Circuit Values
-    if (Poc!=False) and (Voc!=False) and (Ioc!=False):
+    if (Poc!=None) and (Voc!=None) and (Ioc!=None):
         PF = Poc/(Voc*Ioc)
         Y = c.rect(Ioc/Voc,-np.arccos(PF))
         Rc = 1/Y.real
         Xm = -1/Y.imag
         OC = True
     # Given Short-Circuit Values
-    if (Psc!=False) and (Vsc!=False) and (Isc!=False):
+    if (Psc!=None) and (Vsc!=None) and (Isc!=None):
         PF = Psc/(Vsc*Isc)
         Zeq = c.rect(Vsc/Isc,np.arccos(PF))
         Req = Zeq.real
@@ -671,7 +710,7 @@ def thd(harmonics=False,PFdist=False):
 #
 #   Ih array should contain the fundamental frequency h1
 ###################################################################
-def pf_dist(I1=False,IRMS=False,Ih=False):
+def pfdist(I1=False,IRMS=False,Ih=False):
     if (I1 != False and IRMS != False):
         # Find PFdist by using fundamental and RMS current
         PFdist = I1/IRMS
@@ -690,14 +729,39 @@ def pf_dist(I1=False,IRMS=False,Ih=False):
 #
 #   Requires any two of the three inputs
 ###################################################################
-def pf_nonlin(PFtrue=False,PFdist=False,PFdisp=False):
-    if(PFtrue!=False and PFdist!=False and PFdisp!=False):
+def nlinpf(PFtrue=False,PFdist=False,PFdisp=False):
+    """
+    NLINPF Function
+    
+    Purpose:
+    --------
+    This function is designed to evaluate one of three unknowns
+    given the other two. These particular unknowns are the arguments
+    and as such, they are described in the representative sections
+    below.
+    
+    Required Arguments:
+    -------------------
+    None.
+    
+    Optional Arguments:
+    -------------------
+    PFtrue:     The "True" power-factor, default=None
+    PFdist:     The "Distorted" power-factor, default=None
+    PFdisp:     The "Displacement" power-factor, default=None
+    
+    Returns:
+    --------
+    {unknown}:  This function will return the unknown variable from
+                the previously described set of variables.
+    """
+    if(PFtrue!=None and PFdist!=None and PFdisp!=None):
         raise ValueError("ERROR: Too many constraints, no solution.") 
-    elif ( PFdist!=False and PFdisp!=False ):
+    elif ( PFdist!=None and PFdisp!=None ):
         return( PFdist * PFdisp )
-    elif ( PFtrue!=False and PFdisp!=False ):
+    elif ( PFtrue!=None and PFdisp!=None ):
         return( PFtrue / PFdisp )
-    elif ( PFtrue!=False and PFdist!=False ):
+    elif ( PFtrue!=None and PFdist!=None ):
         return( PFtrue / PFdist )
     else:
         raise ValueError("ERROR: Function requires at least two arguments.") 

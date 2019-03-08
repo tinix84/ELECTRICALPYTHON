@@ -26,13 +26,22 @@ terminal.
 
 | FUNCTION NAME                                                                         | BRIEF DESCRIPTION                 | SUBPACKAGE    |
 |---------------------------------------------------------------------------------------|-----------------------------------|---------------|
+|[**Available Constants**]                                                              | Values and Arrays for Calculation |               |
 |[**cprint**](https://engineerjoe440.github.io/ELECTRICALPYTHON/cprint)                 | Complex Print Function            |               |
 |[**phasor**](https://engineerjoe440.github.io/ELECTRICALPYTHON/phasor)                 | Phasor V/I Generator              |               |
-|**phasorz**                                                                            | Phasor Impedance Generator        |               |
+|[**phasorz**](https://engineerjoe440.github.io/ELECTRICALPYTHON/phasorz)               | Phasor Impedance Generator        |               |
 |**parallelz**                                                                          | Parallel Impedance Adder          |               |
+|[**reactance**]                                                                        | Phasor Reactance Calculator       |               |
 |**phaseline**                                                                          | Line/Phase Conversion             |               |
 |**powerset**                                                                           | Complex Power Set Calculator      |               |
 |[**powertriangle**](https://engineerjoe440.github.io/ELECTRICALPYTHON/example)         | Power Triangle Plot Generator     |               |
+|[**phasorplot**]                                                                       | Phasor Diagram Plotting Tool      |               |
+|[**nlinpf**]                                                                           | Non-Linear PF Calculator          |               |
+|[**thd**]                                                                              | Harmonic-Distortion Calculator    |               |
+|[**tdd**]                                                                              | Demand-Distortion Calculator      |               |
+|[**harmoniclimit**]                                                                    | IEEE-5.19 Harmonic Calculator     |               |
+|[**transformertest**]                                                                  | Transformer OC/SC Test Calculator |               |
+|[**pfdist**]                                                                           | PF Distortion Calculator          |               |
 
  
  MORE NOTES TO COME!!!
