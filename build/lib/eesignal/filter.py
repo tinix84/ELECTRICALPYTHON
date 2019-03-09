@@ -1315,5 +1315,162 @@ def completesquare(system):
     # Return Values
     return(K1,K2,alpha,omega)
 
+# Define Down-Sampler
+def dnsample(inarr,n=2):
+    """
+    DNSAMPLE Function
+    
+    Purpose:
+    --------
+    This function is designed to perform the operation
+    of down-sampling an array or list input for the
+    purposes of filtering. Down-Sampling will remove
+    every n-th term.
+    
+    Required Arguments:
+    -------------------
+    inarr:  The input array, must be list or array.
+    
+    Optional Arguments:
+    -------------------
+    n:      The down-sample rate, default=2
+    
+    Returns:
+    --------
+    outarr: The down-sampled array
+    """
+    # Condition Input
+    inarr = np.asarray(inarr)
+    # Down-Sample
+    outarr = np.copy(inarr[::n])
+    return(outarr)
+
+# Define Up-Sampler
+def upsample(inarr,n=2,trailing=False):
+    """
+    UPSAMPLE Function
+    
+    Purpose:
+    --------
+    This function is designed to perform the operation
+    of up-sampling an array or list input for the
+    purposes of filtering. Up-Sampling will add a n-1
+    zeros (0) between every other term.
+    
+    Required Arguments:
+    -------------------
+    inarr:  The input array, must be list or array.
+    
+    Optional Arguments:
+    -------------------
+    n:      The up-sample rate, default=2
+    
+    Returns:
+    --------
+    outarr: The up-sampled array
+    """
+    # Condition Input
+    inarr = np.asarray(inarr)
+    # Up-Sample
+    arrlen = len(inarr)
+    zero = np.zeros(n-1)
+    outarr = np.array([])
+    for i in range(arrlen):
+        if(i==(arrlen-1) and not trailing):
+            outarr = np.append(outarr,inarr[i])
+        else:
+            ap = np.append(inarr[i],zero)
+            outarr = np.append(outarr,ap)
+    return(outarr)
+    
+
+# Define Quadrature Mirror Filter
+def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
+               stem=True,ret=True,trailing=True,figsize=None):
+    """
+    QUADMIRROR Function
+    
+    Purpose:
+    --------
+    This function is designed to provide a 1st-order basic quadrature
+    mirror application for the purposes of filtering and compression.
+    
+    Required Arguments:
+    -------------------
+    farray:     The Function Array to be utilized in the Quad-Mirror
+    
+    Optional Arguments:
+    -------------------
+    showall:    Control argument to enable plotting intermediate steps,
+                default=False
+    pltinput:   Control argument to enable plotting input array,
+                default=False
+    pltoutput:  Control argument to enable plotting output array,
+                default=False
+    stem:       Control argument to allow plotting points as stem-function,
+                default=True
+    ret:        Control argument to enable return of array, default=True
+    figsize:    Control argument to force size of subplot sizes,
+                default=None
+    """
+    # Define Impulse:
+    imp = sig.unit_impulse
+    # Define all filter elements
+    h0 = (imp(2)+imp(2,1))
+    h1 = (imp(2)-imp(2,1))
+    f0 = (imp(2)+imp(2,1))
+    f1 = (-imp(2)+imp(2,1))
+    # Convolve to generate intermediate terms
+    theta0 = np.convolve(farray,h0)
+    theta1 = np.convolve(farray,h1)
+    # Downsample
+    c0 = dnsample(theta0)
+    c1 = dnsample(theta1)
+    # Upsample
+    u0 = upsample(c0,trailing=True)
+    u1 = upsample(c1,trailing=True)
+    # Convolve to generate final term set
+    y0 = np.convolve(u0,f0)
+    y1 = np.convolve(u1,f1)
+    # Sum output
+    y = y0+y1
+    # Plot input array
+    if pltinput:
+        plt.figure()
+        if stem: # Plot as stem values
+            plt.stem(farray,linefmt='k',
+                     basefmt='k',markerfmt='k.')
+        else: plt.plot(farray) # Plot as standard function
+        plt.title("Input")
+        plt.show()
+    # Plot all intermediate steps
+    if showall:
+        if(figsize!=None): plt.figure(figsize=figsize)
+        plots = np.array([theta0,theta1,c0,c1,u0,u1,y0,y1])
+        label = np.array(["θ-0[n]","θ-1[n]","C-0","C-1",
+                          "U-0","U-1","Y-0","Y-1"])
+        # Iteratively generate subplots
+        for plot in range(len(plots)):
+            plt.subplot(4,2,plot+1)
+            plt.grid(True)
+            plt.title(label[plot])
+            if stem: # Plot as stem values
+                plt.stem(plots[plot],linefmt='k',
+                         basefmt='k',markerfmt='k.')
+            else: plt.plot(plots[plot]) # Plot as standard function
+            plt.tight_layout()
+        plt.show()
+    # Plot the final output of the quadrature-mirror
+    if pltoutput:
+        plt.figure()
+        if stem: # Plot as stem values
+            plt.stem(y,linefmt='k',basefmt='k',
+                     markerfmt='k.')
+        else: plt.plot(y) # Plot as standard function
+        plt.title("Output")
+        plt.show()
+    # Return the computed output array
+    if ret:
+        return(y)
 
 # End of FILTER.PY

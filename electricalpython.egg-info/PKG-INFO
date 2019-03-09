@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: electricalpython
-Version: 2.13.5
+Version: 2.14.1
 Summary: Electrical Engineering Functions in Python
 Home-page: https://github.com/engineerjoe440/electrical-engineering-python
 Author: Joe Stanley
@@ -17,7 +17,9 @@ Description: # ELECTRICALPYTHON
         for research, development, education, and exploration in the realm of electrical engineering.
         
         ### Special thanks to:
-        - Steven Weeks | Student - University of Idaho
+        - Stephen Weeks | Student - University of Idaho
+        - Jeremy Perhac | Student - University of Idaho
+        - Daniel Allen | Student - Universtiy of Idaho
         - Dr. Dennis Sullivan | Proffessor - University of Idaho
         - StackOverflow user gg349
         - Paul Ortman | Power Quality Engineer - Idaho Power | Instructor - University of Idaho

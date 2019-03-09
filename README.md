@@ -7,7 +7,9 @@ The functions and constants that make up these modules represent a library of ma
 for research, development, education, and exploration in the realm of electrical engineering.
 
 ### Special thanks to:
-- Steven Weeks | Student - University of Idaho
+- Stephen Weeks | Student - University of Idaho
+- Jeremy Perhac | Student - University of Idaho
+- Daniel Allen | Student - Universtiy of Idaho
 - Dr. Dennis Sullivan | Proffessor - University of Idaho
 - StackOverflow user gg349
 - Paul Ortman | Power Quality Engineer - Idaho Power | Instructor - University of Idaho

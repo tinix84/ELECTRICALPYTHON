@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
     
 # Version Breakdown:
 # MAJOR CHANGE . MINOR CHANGE . MICRO CHANGE
-ver = "2.13.5"
+ver = "2.14.1"
 
 # Generate Setup Tools Argument
 setuptools.setup(

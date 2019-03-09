@@ -86,5 +86,7 @@ ees.ver # Display the version information for EESIGNAL
 Contributions regarding function usage, function defenition and construction were made by several generous individuals. Special thanks to:
 
 - Stephen Weeks (B.S.E.E. University of Idaho)
+- Jeremy Perhac (B.S.E.E. University of Idaho)
+- Daniel Allen (B.S.E.E. University of Idaho)
 - Dr. Dennis Sullivan (Ph.D Electrical Engineering \| Professor University of Idaho)
 - Paul Ortmann (B.S.E.E. \| Professor University of Idaho)
