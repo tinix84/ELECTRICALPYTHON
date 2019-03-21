@@ -1393,7 +1393,7 @@ def upsample(inarr,n=2,trailing=False):
 
 # Define Quadrature Mirror Filter
 def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
-               stem=True,ret=True,trailing=True,figsize=None):
+               stem=True,ret=True,trailing=True,figsize=None,ord=1):
     """
     QUADMIRROR Function
     
@@ -1419,28 +1419,13 @@ def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
     ret:        Control argument to enable return of array, default=True
     figsize:    Control argument to force size of subplot sizes,
                 default=None
+    ord:        Order of Quad-Mirror Filter, default=2, must be >= 1
     """
-    # Define Impulse:
-    imp = sig.unit_impulse
-    # Define all filter elements
-    h0 = (imp(2)+imp(2,1))
-    h1 = (imp(2)-imp(2,1))
-    f0 = (imp(2)+imp(2,1))
-    f1 = (-imp(2)+imp(2,1))
-    # Convolve to generate intermediate terms
-    theta0 = np.convolve(farray,h0)
-    theta1 = np.convolve(farray,h1)
-    # Downsample
-    c0 = dnsample(theta0)
-    c1 = dnsample(theta1)
-    # Upsample
-    u0 = upsample(c0,trailing=True)
-    u1 = upsample(c1,trailing=True)
-    # Convolve to generate final term set
-    y0 = np.convolve(u0,f0)
-    y1 = np.convolve(u1,f1)
-    # Sum output
-    y = y0+y1
+    # Order must be greater than or equal to 2
+    if( ord<2 ):
+        print("WARNING: Order cannot be less than 2.")
+        print("Setting *ord* to 2.")
+        ord = 1
     # Plot input array
     if pltinput:
         plt.figure()
@@ -1450,22 +1435,65 @@ def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
         else: plt.plot(farray) # Plot as standard function
         plt.title("Input")
         plt.show()
+    # Define Impulse:
+    imp = sig.unit_impulse
+    # Define all filter elements
+    h0 = (imp(2)+imp(2,1))
+    h1 = (imp(2)-imp(2,1))
+    f0 = (imp(2)+imp(2,1))
+    f1 = (-imp(2)+imp(2,1))
+    # Convolve to generate intermediate terms
+    theta0 = [np.convolve(farray,h0)]
+    theta1 = [np.convolve(farray,h1)]
+    # Define Empty Lists
+    c0 = []
+    c1 = []
+    y0 = []
+    y1 = []
+    y  = []
+    # Iteratively compute the layered elements
+    for branch in range(ord):
+        # Downsample
+        c0.append(dnsample(theta0[branch]))
+        c1.append(dnsample(theta1[branch]))
+        # Re-Evaluate Theta by Convolving
+        theta0.append(np.convolve(c0[branch],h0))
+        theta1.append(np.convolve(c0[branch],h1))
+    # Upsample
+    u0 = [upsample(c0[ord-1],trailing=trailing)]
+    u1 = [upsample(c1[ord-1],trailing=trailing)]
+    for i in range(ord):
+        # Determine Branch
+        branch = ord-(2+i)
+        # Convolve to generate final term set
+        y0.append(np.convolve(u0[i],f0))
+        y1.append(np.convolve(u1[i],f1))
+        # Ensure Equal Length of Arrays
+        
+        # Sum output
+        y.append(y0[i]+y1[i])
+        # Re-Evaluate U by Upsampling
+        u0.append(upsample(y[i],trailing=trailing))
+        u1.append(upsample(c1[branch],trailing=trailing))
     # Plot all intermediate steps
-    if showall:
-        if(figsize!=None): plt.figure(figsize=figsize)
-        plots = np.array([theta0,theta1,c0,c1,u0,u1,y0,y1])
-        label = np.array(["θ-0[n]","θ-1[n]","C-0","C-1",
-                          "U-0","U-1","Y-0","Y-1"])
-        # Iteratively generate subplots
-        for plot in range(len(plots)):
-            plt.subplot(4,2,plot+1)
-            plt.grid(True)
-            plt.title(label[plot])
-            if stem: # Plot as stem values
-                plt.stem(plots[plot],linefmt='k',
-                         basefmt='k',markerfmt='k.')
-            else: plt.plot(plots[plot]) # Plot as standard function
-            plt.tight_layout()
+    if(showall):
+        if(ord==2):
+            if(figsize!=None): plt.figure(figsize=figsize)
+            plots = np.array([theta0,theta1,c0,c1,u0,u1,y0,y1])
+            label = np.array(["θ-0[n]","θ-1[n]","C-0","C-1",
+                              "U-0","U-1","Y-0","Y-1"])
+            # Iteratively generate subplots
+            for plot in range(len(plots)):
+                plt.subplot(4,2,plot+1)
+                plt.grid(True)
+                plt.title(label[plot])
+                if stem: # Plot as stem values
+                    plt.stem(plots[plot],linefmt='k',
+                             basefmt='k',markerfmt='k.')
+                else: plt.plot(plots[plot]) # Plot as standard function
+                plt.tight_layout()
+        else:
+            
         plt.show()
     # Plot the final output of the quadrature-mirror
     if pltoutput:
