@@ -30,13 +30,15 @@
 #   - V/I Line/Phase Converter:     phaseline
 #   - Power Set Values:             powerset
 #   - Power Triangle Function:      powertriangle
-#   - Transformer SC OC Tests:      trans_scoc
+#   - Transformer SC OC Tests:      transformertest
 #   - Phasor Plot Generator:        phasorplot
 #   - Total Harmonic Distortion:    thd
 #   - Total Demand Distortion:      tdd
 #   - Reactance Calculator:         reactance
 #   - Non-Linear PF Calc:           nlinpf
 #   - Harmonic Limit Calculator:    harmoniclimit
+#   - Power Factor Distiortion:     pfdist
+#   - Short-Circuit RL Current:     iscrl
 #
 #   Additional functions available in sub-modules:
 #   - capacitor.py
@@ -44,12 +46,14 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "1.6.11"
+ver = "2.0.3"
 
 # Import Submodules
 from .capacitor import *
 from .perunit import *
 from .systemsolution import *
+# Import Submodules as External Functions
+from . import fault
 
 # Import libraries as needed:
 import numpy as np
@@ -68,12 +72,12 @@ VLLcVLN = c.rect(np.sqrt(3),np.radians(30)) # Conversion Operator
 ILcIP = c.rect(np.sqrt(3),np.radians(-30)) # Conversion Operator
 
 # Define symmetrical components matricies
-abc012 = 1/3 * np.array([[ 1, 1, 1    ],
-                         [ 1, a, a**2 ],
-                         [ 1, a**2, a ]])
-i012abc = np.array([[ 1, 1, 1    ],
-                    [ 1, a**2, a ],
-                    [ 1, a, a**2 ]])
+Aabc = 1/3 * np.array([[ 1, 1, 1    ],  # Convert ABC to 012
+                       [ 1, a, a**2 ],  # (i.e. phase to sequence)
+                       [ 1, a**2, a ]])
+A012 = np.array([[ 1, 1, 1    ],        # Convert 012 to ABC
+                 [ 1, a**2, a ],        # (i.e. sequence to phase)
+                 [ 1, a, a**2 ]])
 
 # Define type constants
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
@@ -488,45 +492,43 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
     Slnx = [0,P]
     Slny = [0,Q]
 
-    #Plot
-    if plot:
-        plt.figure(1)
-        plt.title(text)
-        plt.plot(Plnx,Plny,color=color)
-        plt.plot(Qlnx,Qlny,color=color)
-        plt.plot(Slnx,Slny,color=color)
-        plt.xlabel("Real Power (W)")
-        plt.ylabel("Reactive Power (VAR)")
-        mx = max(abs(P),abs(Q))
+    # Plot Power Triangle
+    plt.figure(1)
+    plt.title(text)
+    plt.plot(Plnx,Plny,color=color)
+    plt.plot(Qlnx,Qlny,color=color)
+    plt.plot(Slnx,Slny,color=color)
+    plt.xlabel("Real Power (W)")
+    plt.ylabel("Reactive Power (VAR)")
+    mx = max(abs(P),abs(Q))
 
-        if P>0:
-            plt.xlim(0,mx*1.1)
-            x=mx
-        else:
-            plt.xlim(-mx*1.1,0)
-            x=-mx
-        if Q>0:
-            plt.ylim(0,mx*1.1)
-            y=mx
-        else:
-            plt.ylim(-mx*1.1,0)
-            y=-mx
-        if PF > 0:
-            PFtext = " Lagging"
-        else:
-            PFtext = " Leading"
-        text = "P:   "+str(P)+" W\n"
-        text = text+"Q:   "+str(Q)+" VAR\n"
-        text = text+"S:   "+str(S)+" VA\n"
-        text = text+"PF:  "+str(abs(PF))+PFtext+"\n"
-        text = text+"ΘPF: "+str(np.degrees(np.arccos(PF)))+"°"+PFtext
-        # Print all values if asked to
-        if printval:
-             plt.text(x/20,y*4/5,text,color=color)
-        plt.show()
+    if P>0:
+        plt.xlim(0,mx*1.1)
+        x=mx
+    else:
+        plt.xlim(-mx*1.1,0)
+        x=-mx
+    if Q>0:
+        plt.ylim(0,mx*1.1)
+        y=mx
+    else:
+        plt.ylim(-mx*1.1,0)
+        y=-mx
+    if PF > 0:
+        PFtext = " Lagging"
+    else:
+        PFtext = " Leading"
+    text = "P:   "+str(P)+" W\n"
+    text = text+"Q:   "+str(Q)+" VAR\n"
+    text = text+"S:   "+str(S)+" VA\n"
+    text = text+"PF:  "+str(abs(PF))+PFtext+"\n"
+    text = text+"ΘPF: "+str(np.degrees(np.arccos(PF)))+"°"+PFtext
+    # Print all values if asked to
+    if printval:
+         plt.text(x/20,y*4/5,text,color=color)
+    plt.show()
 
-###################################################################
-#   Define Transformer Short-Circuit/Open-Circuit Function
+# Define Transformer Short-Circuit/Open-Circuit Function
 #
 #   Calculates Req and Xeq, or Rc and Xm, or both sets given three
 #   values from a specific set of inputs { Poc, Voc, Ioc,  Psc,
@@ -539,19 +541,58 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
 #   All values given must be given as absolute value, not complex.
 #   All values returned are given with respect to high-side/primary
 ###################################################################
-def trans_scoc(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
+def transformertest(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
                Isc=False):
+    """
+    TRANSFORMERTEST Function
+    
+    Purpose:
+    --------
+    This function will determine the non-ideal circuit components of
+    a transformer (Req and Xeq, or Rc and Xm) given the test-case
+    parameters for the open-circuit test and/or the closed-circuit
+    test. Requires one or both of two sets: { Poc, Voc, Ioc }, or
+    { Psc, Vsc, Isc }.
+    All values given must be given as absolute value, not complex.
+    All values returned are given with respect to primary.
+    
+    Required Arguments:
+    -------------------
+    NONE,   A minimum of one complete set of optional arguments must
+            be provided for function to complete successfully.
+            Optional Arg. Sets are: { Poc, Voc, Ioc }, or
+            { Psc, Vsc, Isc }.
+    
+    Optional Arguments:
+    -------------------
+    Poc:    The open-circuit measured power (real power), default=None
+    Voc:    The open-circuit measured voltage (measured on X),
+            default=None
+    Ioc:    The open-circuit measured current (measured on primary),
+            default=None
+    Psc:    The short-circuit measured power (real power), default=None
+    Vsc:    The short-circuit measured voltage (measured on X),
+            default=None
+    Isc:    The short-circuit measured current (measured on X),
+            default=None
+    
+    Returns:
+    --------
+    {Req,Xeq,Rc,Xm}:    Given all optional args
+    {Rc, Xm}:           Given open-circuit parameters
+    {Req, Xeq}:         Given short-circuit parameters
+    """
     SC = False
     OC = False
     # Given Open-Circuit Values
-    if (Poc!=False) and (Voc!=False) and (Ioc!=False):
+    if (Poc!=None) and (Voc!=None) and (Ioc!=None):
         PF = Poc/(Voc*Ioc)
         Y = c.rect(Ioc/Voc,-np.arccos(PF))
         Rc = 1/Y.real
         Xm = -1/Y.imag
         OC = True
     # Given Short-Circuit Values
-    if (Psc!=False) and (Vsc!=False) and (Isc!=False):
+    if (Psc!=None) and (Vsc!=None) and (Isc!=None):
         PF = Psc/(Vsc*Isc)
         Zeq = c.rect(Vsc/Isc,np.arccos(PF))
         Req = Zeq.real
@@ -671,7 +712,7 @@ def thd(harmonics=False,PFdist=False):
 #
 #   Ih array should contain the fundamental frequency h1
 ###################################################################
-def pf_dist(I1=False,IRMS=False,Ih=False):
+def pfdist(I1=False,IRMS=False,Ih=False):
     if (I1 != False and IRMS != False):
         # Find PFdist by using fundamental and RMS current
         PFdist = I1/IRMS
@@ -864,4 +905,89 @@ def harmoniclimit(Isc,IL,N=0,Ih=0,printout=True,ret=False):
     # Return values
     if(ret):
         return(retArr)
+
+# Define Short-Circuit RL Current Calculator
+def iscrl(V,Z,t=None,f=None,mxcurrent=True,alpha=None):
+    """
+    ISCRL Function
     
+    Purpose:
+    --------
+    The Isc-RL function (Short Circuit Current for RL Circuit)
+    is designed to calculate the short-circuit current for an
+    RL circuit.
+    
+    Required Arguments:
+    -------------------
+    V:          The absolute magnitude of the voltage.
+    Z:          The complex value of the impedance. (R + jX)
+    
+    Optional Arguments:
+    -------------------
+    t:          The time at which the value should be calculated,
+                should be specified in seconds, default=None
+    f:          The system frequency, specified in Hz, default=None
+    mxcurrent:  Control variable to enable calculating the value at
+                maximum current, default=True
+    alpha:      Angle specification, default=None
+    
+    Returns:
+    --------
+    Opt 1 - (Irms, IAC, K):     The RMS current with maximum DC
+                                offset, the AC current magnitude,
+                                and the asymmetry factor.
+    Opt 2 - (i, iAC, iDC, T):   The Instantaneous current with
+                                maximum DC offset, the instantaneous
+                                AC current, the instantaneous DC
+                                current, and the time-constant T.
+    Opt 3 - (Iac):              The RMS current without DC offset.
+    """
+    # Calculate omega, theta, R, and X
+    if(f!=None): omega = 2*np.pi*f
+    else: omega = None
+    R = abs(Z.real)
+    X = abs(Z.imag)
+    theta = np.arctan( X/R )
+    
+    # If Maximum Current is Desired and No alpha provided
+    if(mxcurrent and alpha==None):
+        alpha = theta - np.pi/2
+    elif(mxcurrent and alpha!=None):
+        raise ValueError("ERROR: Inappropriate Arguments Provided.\n"+
+                         "Not both mxcurrent and alpha can be provided.")
+    
+    # Calculate Asymmetrical (total) Current if t != None
+    if(t!=None and f!=None):
+        # Calculate RMS if none of the angular values are provided
+        if(alpha==None and omega==None):
+            # Calculate tau
+            tau = t/(1/60)
+            K = np.sqrt(1 + 2*np.exp(-4*np.pi*tau/(X/R)) )
+            IAC = abs(V/Z)
+            Irms = K*IAC
+            # Return Values
+            return(Irms,IAC,K)
+        elif(alpha==None or omega==None):
+            raise ValueError("ERROR: Inappropriate Arguments Provided.")
+        # Calculate Instantaneous if all angular values provided
+        else:
+            # Convert Degrees to Radians
+            omega = np.radians(omega)
+            alpha = np.radians(alpha)
+            theta = np.radians(theta)
+            # Calculate T
+            T = X/(2*np.pi*f*R) # seconds
+            # Calculate iAC and iDC
+            iAC = np.sqrt(2)*V/Z*np.sin(omega*t+alpha-theta)
+            iDC = -np.sqrt(2)*V/Z*np.sin(alpha-theta)*np.exp(-t/T)
+            i = iAC + iDC
+            # Return Values
+            return(i,iAC,iDC,T)
+    elif( (t!=None and f==None) or (t==None and f!=None) ):
+        raise ValueError("ERROR: Inappropriate Arguments Provided.\n"+
+                         "Must provide both t and f or neither.")
+    else:
+        IAC = abs(V/Z)
+        return(Iac)
+
+# End of __init__.py file

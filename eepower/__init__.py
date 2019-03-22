@@ -46,7 +46,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "2.0.1"
+ver = "2.0.3"
 
 # Import Submodules
 from .capacitor import *
@@ -907,7 +907,7 @@ def harmoniclimit(Isc,IL,N=0,Ih=0,printout=True,ret=False):
         return(retArr)
 
 # Define Short-Circuit RL Current Calculator
-def iscrl(V,Z,t==None,f==None,mxcurrent=True,alpha=None):
+def iscrl(V,Z,t=None,f=None,mxcurrent=True,alpha=None):
     """
     ISCRL Function
     
@@ -979,7 +979,7 @@ def iscrl(V,Z,t==None,f==None,mxcurrent=True,alpha=None):
             T = X/(2*np.pi*f*R) # seconds
             # Calculate iAC and iDC
             iAC = np.sqrt(2)*V/Z*np.sin(omega*t+alpha-theta)
-            iDC = -np.sqrt(2)*V/Z*np.sin(alpha-theta)np.exp(-t/T)
+            iDC = -np.sqrt(2)*V/Z*np.sin(alpha-theta)*np.exp(-t/T)
             i = iAC + iDC
             # Return Values
             return(i,iAC,iDC,T)

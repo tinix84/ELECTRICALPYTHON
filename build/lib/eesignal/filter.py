@@ -9,6 +9,9 @@
 #   Written by Joe Stanley
 #   Special Thanks To and Code Support From:
 #   Dr. Dennis Sullivan
+#   Steven Weeks
+#   Jeremy Perhac
+#   Daniel Allen
 #
 #   Included Functions:
 #   - Phase Lead System:                phase_lead
@@ -23,6 +26,10 @@
 #   - Gain Margin:                      gm
 #   - FIR Filter Design Assistant:      firdesign
 #   - Automatic Butterworth Builder:    autobutter
+#   - Complex Complete-Square Terms     completesquare
+#   - Down-Sampler                      dnsample
+#   - Up-Sampler                        upsample
+#   - 1st-Order Quadrature-Mirror       quadmirror
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:           sys_condition
@@ -1385,8 +1392,8 @@ def upsample(inarr,n=2,trailing=False):
     
 
 # Define Quadrature Mirror Filter
-def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
-               stem=True,ret=True,trailing=True,figsize=None):
+def quadmirror(farray,filterset=None,showall=False,pltinout=False,
+               stem=True,ret=True,trailing=False,figsize=None,ord=1):
     """
     QUADMIRROR Function
     
@@ -1401,41 +1408,27 @@ def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
     
     Optional Arguments:
     -------------------
+    filterset:  Specifies the four filters to be used (h0, h1, f0, f1),
+                must be specified as a tupple in the before mentioned
+                order, default=None
     showall:    Control argument to enable plotting intermediate steps,
                 default=False
-    pltinput:   Control argument to enable plotting input array,
-                default=False
-    pltoutput:  Control argument to enable plotting output array,
+    pltinout:   Control argument to enable plotting in- and out-put arrays,
                 default=False
     stem:       Control argument to allow plotting points as stem-function,
                 default=True
     ret:        Control argument to enable return of array, default=True
     figsize:    Control argument to force size of subplot sizes,
                 default=None
+    ord:        Order of Quad-Mirror Filter, default=2, must be >= 1
     """
-    # Define Impulse:
-    imp = sig.unit_impulse
-    # Define all filter elements
-    h0 = (imp(2)+imp(2,1))
-    h1 = (imp(2)-imp(2,1))
-    f0 = (imp(2)+imp(2,1))
-    f1 = (-imp(2)+imp(2,1))
-    # Convolve to generate intermediate terms
-    theta0 = np.convolve(farray,h0)
-    theta1 = np.convolve(farray,h1)
-    # Downsample
-    c0 = dnsample(theta0)
-    c1 = dnsample(theta1)
-    # Upsample
-    u0 = upsample(c0,trailing=True)
-    u1 = upsample(c1,trailing=True)
-    # Convolve to generate final term set
-    y0 = np.convolve(u0,f0)
-    y1 = np.convolve(u1,f1)
-    # Sum output
-    y = y0+y1
+    # Order must be greater than or equal to 1
+    if( ord<1 ):
+        print("WARNING: Order cannot be less than 1.")
+        print("Setting *ord* to 1.")
+        ord = 1
     # Plot input array
-    if pltinput:
+    if pltinout:
         plt.figure()
         if stem: # Plot as stem values
             plt.stem(farray,linefmt='k',
@@ -1443,34 +1436,133 @@ def quadmirror(farray,showall=False,pltinput=False,pltoutput=False,
         else: plt.plot(farray) # Plot as standard function
         plt.title("Input")
         plt.show()
+    
+    # Define default filter elements if None provided
+    if(filterset==None):
+        h0 = [1,1]
+        h1 = [1,-1]
+        f0 = [1,1]
+        f1 = [-1,1]
+    else:
+        h0,h1,f0,f1 = filterset
+    
+    # Calculate the shifting terms
+    nshift = np.zeros(ord+1)
+    nshift[1] = 0
+    for n in range(2,ord+1):
+        nshift[n] = 2*nshift[n-1] + 1
+    # Calculate the size of the filters
+    N = len(h0)
+    M = len(h1)
+    ishift = int((N + M)/2 - 1)
+    # Generate the Necessary Number of zeros
+    shift = np.zeros(ord)
+    for i in range(ord):
+        shift[i] = int(nshift[i+1]*ishift)
+    shift = np.flip(shift,0)
+    
+    # Convolve to generate intermediate terms
+    theta0 = [np.convolve(farray,h0)]
+    theta1 = [np.convolve(farray,h1)]
+    # Define Empty Lists
+    c0 = []
+    c1 = []
+    y0 = []
+    y1 = []
+    y  = []
+    # Ascend the filter
+    for branch in range(ord):
+        # Downsample
+        c0.append(dnsample(theta0[branch]))
+        c1t = dnsample(theta1[branch])
+        zer = int(shift[branch])
+        c1.append(np.append(np.zeros(zer),c1t))
+        if(branch<ord-1):
+            # Re-Evaluate Theta by Convolving
+            theta0.append(np.convolve(c0[branch],h0))
+            theta1.append(np.convolve(c0[branch],h1))
+    # Upsample
+    u0 = [upsample(c0[ord-1],trailing=trailing)]
+    u1 = [upsample(c1[ord-1],trailing=trailing)]
+    # Descend the filter
+    for i in range(ord):
+        # Determine Branch
+        branch = ord-(2+i)
+        # Convolve to generate final term set
+        y0.append(np.convolve(u0[i],f0))
+        y1.append(np.convolve(u1[i],f1))
+        # Ensure Equal Length of Arrays
+        zerolen = len(y0[i])-len(y1[i])
+        y1[i] = np.append(y1[i],np.zeros(zerolen))
+        # Sum output
+        y.append((y0[i]+y1[i])/2)
+        if(branch>=0):
+            # Re-Evaluate U by Upsampling
+            u0.append(upsample(y[i],trailing=trailing))
+            u1.append(upsample(c1[branch],trailing=trailing))
+    u0.reverse()
+    u1.reverse()
     # Plot all intermediate steps
-    if showall:
-        if(figsize!=None): plt.figure(figsize=figsize)
-        plots = np.array([theta0,theta1,c0,c1,u0,u1,y0,y1])
-        label = np.array(["θ-0[n]","θ-1[n]","C-0","C-1",
-                          "U-0","U-1","Y-0","Y-1"])
-        # Iteratively generate subplots
-        for plot in range(len(plots)):
-            plt.subplot(4,2,plot+1)
-            plt.grid(True)
-            plt.title(label[plot])
-            if stem: # Plot as stem values
-                plt.stem(plots[plot],linefmt='k',
-                         basefmt='k',markerfmt='k.')
-            else: plt.plot(plots[plot]) # Plot as standard function
-            plt.tight_layout()
+    if(showall):
+        if(ord==1):
+            if(figsize!=None): plt.figure(figsize=figsize)
+            plots = np.array([theta0,theta1,c0,c1,u0,u1,y0,y1])
+            label = np.array(["θ-0[n]","θ-1[n]","C-0","C-1",
+                              "U-0","U-1","Y-0","Y-1"])
+            # Iteratively generate subplots
+            for plot in range(len(plots)):
+                plt.subplot(4,2,plot+1)
+                plt.grid(True)
+                plt.title(label[plot])
+                vals = plots[plot]
+                if stem: # Plot as stem values
+                    plt.stem(vals[0],linefmt='k',
+                             basefmt='k',markerfmt='k.')
+                else: plt.plot(vals[0]) # Plot as standard function
+                plt.tight_layout()
+        else:
+            if(figsize!=None): plt.figure(figsize=figsize)
+            # Iteratively Generate Subplots
+            for n in range(ord):
+                plt.subplot(ord,2,n*2+1)
+                plt.grid(True)
+                plt.title("Level "+str(n+2)+" Downsampled Stage")
+                if stem: # Plot as stem values
+                    plt.stem(c0[n],linefmt='r',
+                             basefmt='k',markerfmt='r.')
+                    plt.stem(c1[n],linefmt='b',
+                             basefmt='k',markerfmt='b.')
+                else:
+                    plt.plot(c0[n])
+                    plt.plot(c1[n])
+                plt.subplot(ord,2,n*2+2)
+                plt.grid(True)
+                plt.title("Level "+str(n+2)+" Upsampled Stage")
+                if stem: # Plot as stem values
+                    plt.stem(u0[n],linefmt='r',
+                             basefmt='k',markerfmt='r.')
+                    plt.stem(u1[n],linefmt='b',
+                             basefmt='k',markerfmt='b.')
+                else:
+                    plt.plot(u0[n])
+                    plt.plot(u1[n])
+                plt.tight_layout()
         plt.show()
     # Plot the final output of the quadrature-mirror
-    if pltoutput:
+    if pltinout:
+        yout = y[ord-1]
         plt.figure()
         if stem: # Plot as stem values
-            plt.stem(y,linefmt='k',basefmt='k',
+            plt.stem(yout,linefmt='k',basefmt='k',
                      markerfmt='k.')
-        else: plt.plot(y) # Plot as standard function
+        else: plt.plot(yout) # Plot as standard function
         plt.title("Output")
         plt.show()
     # Return the computed output array
     if ret:
-        return(y)
+        if(ord==1):
+            return(y[0])
+        else:
+            return(y[ord-1])
 
 # End of FILTER.PY
