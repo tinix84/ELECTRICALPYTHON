@@ -29,7 +29,8 @@
 #   - Complex Complete-Square Terms     completesquare
 #   - Down-Sampler                      dnsample
 #   - Up-Sampler                        upsample
-#   - 1st-Order Quadrature-Mirror       quadmirror
+#   - Nth-Order Quadrature-Mirror       quadmirror
+#   - Quad-Mirror Transfer Builder      quadtransfers
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:           sys_condition
@@ -1392,8 +1393,8 @@ def upsample(inarr,n=2,trailing=False):
     
 
 # Define Quadrature Mirror Filter
-def quadmirror(farray,filterset=None,showall=False,pltinout=False,
-               stem=True,ret=True,trailing=False,figsize=None,ord=1):
+def quadmirror(farray,filterset=None,showall=False,pltinout=False,ord=1,
+               stem=True,ret=True,trailing=False,figsize=None,reduce=False):
     """
     QUADMIRROR Function
     
@@ -1408,7 +1409,7 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
     
     Optional Arguments:
     -------------------
-    filterset:  Specifies the four filters to be used (h0, h1, f0, f1),
+    filterset:  Specifies the four filters to be used (h0, f0, h1, f1),
                 must be specified as a tupple in the before mentioned
                 order, default=None
     showall:    Control argument to enable plotting intermediate steps,
@@ -1421,6 +1422,9 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
     figsize:    Control argument to force size of subplot sizes,
                 default=None
     ord:        Order of Quad-Mirror Filter, default=2, must be >= 1
+    reduce:     Control argument to eliminate (zero-out) the high-frequency
+                datapoints (C1) from the system, used for simulation of
+                data compression, default=False
     """
     # Order must be greater than or equal to 1
     if( ord<1 ):
@@ -1444,7 +1448,7 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
         f0 = [1,1]
         f1 = [-1,1]
     else:
-        h0,h1,f0,f1 = filterset
+        h0,f0,h1,f1 = filterset
     
     # Calculate the shifting terms
     nshift = np.zeros(ord+1)
@@ -1483,7 +1487,11 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
             theta1.append(np.convolve(c0[branch],h1))
     # Upsample
     u0 = [upsample(c0[ord-1],trailing=trailing)]
-    u1 = [upsample(c1[ord-1],trailing=trailing)]
+    # When Data Compression Requested, Zero-Out C1 Terms
+    if reduce:
+        u1 = [upsample(np.zeros(len(c1[ord-1])),trailing=trailing)]
+    else:
+        u1 = [upsample(c1[ord-1],trailing=trailing)]
     # Descend the filter
     for i in range(ord):
         # Determine Branch
@@ -1499,11 +1507,16 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
         if(branch>=0):
             # Re-Evaluate U by Upsampling
             u0.append(upsample(y[i],trailing=trailing))
-            u1.append(upsample(c1[branch],trailing=trailing))
+            # When Data Compression Requested, Zero-Out C1 Terms
+            if reduce:
+                u1.append(upsample(np.zeros(len(c1[branch])),trailing=trailing))
+            else:
+                u1.append(upsample(c1[branch],trailing=trailing))
     u0.reverse()
     u1.reverse()
     # Plot all intermediate steps
     if(showall):
+        plt.figure()
         if(ord==1):
             if(figsize!=None): plt.figure(figsize=figsize)
             plots = np.array([theta0,theta1,c0,c1,u0,u1,y0,y1])
@@ -1539,14 +1552,15 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
                 plt.grid(True)
                 plt.title("Level "+str(n+2)+" Upsampled Stage")
                 if stem: # Plot as stem values
-                    plt.stem(u0[n],linefmt='r',
+                    plt.stem(u0[n],linefmt='r',label='Top Branch',
                              basefmt='k',markerfmt='r.')
-                    plt.stem(u1[n],linefmt='b',
+                    plt.stem(u1[n],linefmt='b',label='Bottom Branch',
                              basefmt='k',markerfmt='b.')
                 else:
-                    plt.plot(u0[n])
-                    plt.plot(u1[n])
+                    plt.plot(u0[n],label='Top Branch')
+                    plt.plot(u1[n],label='Bottom Branch')
                 plt.tight_layout()
+                plt.legend()
         plt.show()
     # Plot the final output of the quadrature-mirror
     if pltinout:
@@ -1564,5 +1578,130 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,
             return(y[0])
         else:
             return(y[ord-1])
+
+
+# Define Quad-Mirror Transfer Function Builder
+def quadtransfers(p,offset=0,complex=True,round=None):
+    """
+    QUADTRANSFERS Function
+    
+    Purpose:
+    --------
+    This function is designed to generate the necessary
+    transfer function arrays for a quadrature mirror filter.
+    
+    Required Arguments:
+    -------------------
+    p:          The order of the filter arrays
+    
+    Optional Arguments:
+    -------------------
+    offset:     A setting value to arrange the poles into the two
+                filters (i.e. H0/H1) a positive value will shift
+                more poles from F0 to H0, a negative value will
+                shift poles from H0 to F0; default=0
+    complex:    Control argument to allow filters to be returned
+                as complex values, default=True
+    round:      Rounding value to be used to simplify filters,
+                default=None
+    
+    Returns:
+    --------
+    [h0,f0,h1,f1] : Tuple of Numpy Arrays Representing Transfer Functions
+    """
+    # Corner case where p=0
+    if p==0:
+        return([1],[1],[1],[1])
+    # Corner case where p=1
+    if p==1:
+        return([1,1],[1,1],[1,-1],[-1,1])
+    # Generate Transfer Functions for any p>1
+    s = [1,1]
+    s2 = s
+    # Generate Pascal's Triangle by Convolution
+    for i in range(1,2*p):
+        s = np.convolve(s,s2)
+    # Generate the Matrix To Solve for the Filters
+    b = np.zeros(p-1)
+    for i in range(0,p-1):
+        b[i] = -s[2*i+1]
+    a = [[0 for i in range(p-1)] for i in range(p-1)]
+    for m in range(1,p):
+        for n in range(2*m-1):
+            if(n >= p-1):
+                temp = 2*p-n-4
+                a[m-1][temp] = a[m-1][temp]+s[2*m-n-2]
+            else:
+                a[m-1][n] = s[2*m-n-2]
+    # Solve Matrix to Generate Filters
+    c = np.linalg.solve(a,b)
+    q = np.concatenate(([1],c),axis=None)
+    h0 = np.zeros(2*len(q)-1)
+    for i in range(len(q)):
+        h0[i] = q[i]
+    for i in range(len(q)-1):
+        h0[2*len(q)-i-2] = q[i]
+    h0 = h0*(-1)**(p)
+    f0 = s
+    P0 = np.convolve(h0,f0)
+    for i in range(0,len(P0)-1):
+        if abs(P0[i]) < 10**-10:
+            P0[i] = 0
+    H = np.roots(h0)
+    F = np.roots(f0)
+    # Alter the arangment of the filters to meet offset
+    if(offset > 0):     # Shift poles from F0 to H0 (increase H0 length)
+        SPLIT = offset
+        temp_H = np.zeros(SPLIT,dtype=np.complex)
+        temp_F = np.zeros(len(F)-SPLIT,dtype=np.complex)
+        for i in range(0,SPLIT):
+            temp_H[i] = F[i]
+        for i in range(0,len(F)-SPLIT):
+            temp_F[i] = F[i+SPLIT]
+        H2 = np.concatenate((H,temp_H))
+        F2 = temp_F
+    elif(offset < 0):   # Shift poles from H0 to F0 (decrease H0 length)
+        SPLIT = abs(offset)
+        temp_F = np.zeros(SPLIT,dtype=np.complex)
+        temp_H = np.zeros(len(H)-SPLIT,dtype=np.complex)
+        for i in range(0,SPLIT):
+            temp_F[i] = H[i]
+        for i in range(0,len(H)-SPLIT):
+            temp_H[i] = H[i+SPLIT]
+        F2 = np.concatenate((F,temp_F))
+        H2 = temp_H
+    else:               # No offset required
+        H2 = H
+        F2 = F
+    #Using the new roots to calculate the new filter coefficents
+    h0 = np.polynomial.polynomial.polyfromroots(H2)
+    f0 = np.polynomial.polynomial.polyfromroots(F2)
+    f0 = f0*(-1)**(p-1)
+    N = len(h0)
+    f1 = np.zeros(N)
+    for i in range(0,N):
+        f1[i] = ((-1)**(i-1))*h0[i]
+    M = len(f0)
+    h1 = np.zeros(M)
+    for i in range(0,M):
+        h1[i] = (-(-1)**(i-1))*f0[i]
+    # Condition the Filter Arrays Before Returning
+    # Negate All Filter Arrays
+    h0 = -1*h0
+    h1 = -1*h1
+    f0 = -1*f0
+    f1 = -1*f1
+    if not complex: # Real Part Only Requested
+        h0 = h0.real
+        h1 = h1.real
+        f0 = f0.real
+        f1 = f1.real
+    if round!=None: # Requested as Rounded Values
+        h0 = np.around(h0,decimals=round)
+        h1 = np.around(h1,decimals=round)
+        f0 = np.around(f0,decimals=round)
+        f1 = np.around(f1,decimals=round)
+    # Return the Final Filter Arrays as Tuple
+    return(h0,f0,h1,f1)
 
 # End of FILTER.PY

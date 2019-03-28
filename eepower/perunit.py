@@ -31,13 +31,19 @@ import numpy as np
 #   Returns as value for 3-phase by default, can also provide
 #   1-phase values.
 ###################################################################
-def pu(v,s,phase=3,z=True):
+def pu(S3phs,VLL=None,VLN=None,phase=3,z=True):
+    if(VLL==None and VLN==None):
+        raise ValueError("ERROR: One voltage must be provided.")
 	if z:
-		return(v**2/s)
-	elif (phase==3) and not z:
-		return(s/(np.sqrt(3)*v))
+        if VLL!=None:
+            return(VLL**2/S3phs)
+        else:
+            return((np.sqrt(3)*VLN)**2/S3phs)
 	else:
-		return(v/s)
+        if VLL!=None:
+            return(np.sqrt(3)*VLL/S3phs)
+        else:
+            return(VLN/S3phs)
 
 ###################################################################
 #   Define per unit converter function

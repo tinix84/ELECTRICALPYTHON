@@ -19,8 +19,8 @@
 #   - Not a Number value (NaN): NAN
 #
 #   Symmetrical Components Matricies:
-#   - ABC to 012 Conversion:        abc012
-#   - 012 to ABC Conversion:        i012abc
+#   - ABC to 012 Conversion:        Aabc
+#   - 012 to ABC Conversion:        A012
 #
 #   Included Functions
 #   - Phasor V/I Generator:         phasor
@@ -39,6 +39,9 @@
 #   - Harmonic Limit Calculator:    harmoniclimit
 #   - Power Factor Distiortion:     pfdist
 #   - Short-Circuit RL Current:     iscrl
+#   - Voltage Divider:              voltdiv
+#   - Current Divider:              curdiv
+#   - Instantaneous Power Calc.:    instpower
 #
 #   Additional functions available in sub-modules:
 #   - capacitor.py
@@ -46,7 +49,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "2.0.3"
+ver = "2.0.4"
 
 # Import Submodules
 from .capacitor import *
@@ -314,12 +317,14 @@ def parallelz(Z):
     """
     # Gather length (number of elements in tuple)
     L = len(Z)
-    # Inversely add the first two elements in tuple
-    Zp = (1/Z[0]+1/Z[1])**(-1)
-    # If there are more than two elements, add them all inversely
-    if(L > 2):
-        for i in range(2,L):
-            Zp = (1/Zp+1/Z[i])**(-1)
+    if L==1: Zp = Z[0] # Only One Impedance Provided
+    else:
+        # Inversely add the first two elements in tuple
+        Zp = (1/Z[0]+1/Z[1])**(-1)
+        # If there are more than two elements, add them all inversely
+        if(L > 2):
+            for i in range(2,L):
+                Zp = (1/Zp+1/Z[i])**(-1)
     return(Zp)
 
 # Define Phase/Line Converter
@@ -990,4 +995,186 @@ def iscrl(V,Z,t=None,f=None,mxcurrent=True,alpha=None):
         IAC = abs(V/Z)
         return(Iac)
 
-# End of __init__.py file
+# Define Voltage Divider Calculator
+def voltdiv(Vin,R1,R2,Rload=None):
+    """
+    VOLTDIV Function
+    
+    Purpose:
+    --------
+    This function is designed to calculate the output
+    voltage of a voltage divider given the input voltage,
+    the resistances (or impedances) and the load resistance
+    (or impedance) if present.
+    
+    Required Arguments:
+    -------------------
+    Vin:    The Input Voltage, may be real or complex
+    R1:     The top resistor of the divider (real or complex)
+    R2:     The bottom resistor of the divider, the one which
+            the output voltage is measured across, may be
+            either real or complex
+    
+    Optional Arguments:
+    -------------------
+    Rload:  The Load Resistor (or impedance), default=None
+    
+    Returns:
+    --------
+    Vout:   The Output voltage as measured across R2 and/or Rload
+    """
+    # Determine whether Rload is given
+    if(Rload==None): # No Load Given
+        Vout = Vin * R2 / (R1+R2)
+    else:   # Load was given
+        Rp = parallelz((R2,Rload))
+        Vout = Vin * Rp / (R1+Rp)
+    return(Vout)
+
+# Define Current Divider Calculator
+def curdiv(Ri,Rset,Vin=None,Iin=None,Vout=False):
+    """
+    CURDIV Function
+    
+    Purpose:
+    --------
+    This function is disigned to accept the input current, or input
+    voltage to a resistor (or impedance) network of parallel resistors
+    (impedances) and calculate the current through a particular element.
+    
+    Required Arguments:
+    -------------------
+    Ri:     The Particular Resistor of Interest, should not be included in
+            the tuple passed to Rset.
+    Rset:   Tuple of remaining resistances (impedances) in network.
+    
+    Optional Arguments:
+    -------------------
+    Vin:    The input voltage for the system, default=None
+    Iin:    The input current for the system, default=None
+    Vout:   Control Argument to enable return of the voltage across the
+            resistor (impecance) of interest (Ri)
+    
+    Returns:
+    --------
+    Opt1 - Ii:          The Current through the resistor (impedance) of interest
+    Opt2 - (Ii,Vi):     The afore mentioned current, and voltage across the
+                        resistor (impedance) of interest
+    """
+    # Calculate The total impedance
+    Rtot = parallelz( Rset + (Ri,) ) # Combine tuples, then calculate total resistance
+    # Determine Whether Input was given as Voltage or Current
+    if(Vin!=None and Iin==None): # Vin Provided
+        Iin = Vin / Rtot # Calculate total current
+        Ii = Iin * Rtot/Ri # Calculate the current of interest
+    elif(Vin==None and Iin!=None): # Iin provided
+        Ii = Iin * Rtot/Ri # Calculate the current of interest
+    else:
+        raise ValueError("ERROR: Too many or too few constraints provided.")
+    if(Vout): # Asked for voltage across resistor of interest
+        Vi = Ii * Ri
+        return(Ii, Vi)
+    else:
+        return(Ii)
+
+# Define Instantaneous Power Calculator
+def instpower(P,Q,f,t):
+    """
+    INSTPOWER Function
+    
+    Purpose:
+    --------
+    This function is designed to calculate the instantaneous power at a
+    specified time t given the magnitudes of P and Q.
+    
+    Required Arguments:
+    -------------------
+    P:  Magnitude of Real Power
+    Q:  Magnitude of Reactive Power
+    f:  System frequency (in Hz)
+    t:  Time at which to evaluate
+    
+    Optional Arguments:
+    -------------------
+    None
+    
+    Returns:
+    --------
+    Pinst:  Instantaneous Power at time t
+    """
+    # Evaluate omega
+    w = 2*np.pi*f
+    # Calculate
+    Pinst = P + P*np.cos(2*w*t) - Q*np.sin(2*w*t)
+    return(Pinst)
+
+# Define Heat-Sink "Resistance" Calculator
+def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
+             Rcs=None,Rsa=None,Rca=None):
+    """
+    HEATSINK Function
+    
+    Purpose:
+    --------
+    This function is designed to find the missing variable
+    from the set of provided variables for a heat-sink
+    electro-mechanical analog system.
+    
+    Tjunct *---[Rjc]----[Rcs]--[Rsa]--------* Tamb
+           |          |               |     |
+           |          |-----[Rca]-----|     |
+          (^)P                             (+)Tamb
+           |                                |
+           |--------------------------------|
+    
+    Required Arguments:
+    -------------------
+    None - This function needs n-1 inputs to solve for nth input
+    
+    Optional Arguments:
+    -------------------
+    P:      The Power to be disipated (in watts), default=None
+    Tjunct: The temperature at the junction (°C), default=None
+    Tamb:   The ambient temperature (°C), default=None
+    Rjc:    The thermal-resistance between the junction and the
+            case, default=None
+    Rcs:    The thermal-resistance between the case and the sink,
+            default=None
+    Rsa:    The thermal-resistance between the sink and ambient,
+            default=None
+    Rca:    The thermal-resistance between the case and ambient,
+            default=None
+            
+    Returns:
+    --------
+    P:      Provided set: { Tjunct, Tamb, Rjc, Rca }    or
+                          { Tjunct, Tamb, Rjc, Rca, Rcs, Rsa }
+    Tjunct: Provided set: { P, Tamb, Rjc, Rca }         or
+                          { P, Tamb, Rjc, Rca, Rcs, Rsa }
+    Tamb:   Provided set: { P, Tjunct, Rjc, Rca }       or
+                          { P, Tjunct, Rjc, Rca, Rcs, Rsa }
+    Rjc:    Provided set: { P, Tjunct, Tamb, Rca }      or
+                          { P, Tjunct, Tamb, Rca, Rcs, Rsa }
+    Rca:    Provided set: { P, Tjunct, Tamb, Rjc }      or
+                          { P, Tjunct, Tamb, Rjc, Rcs, Rsa }
+    Rcs:    Provided set: { P, Tjunct, Tamb, Rjc, Rca, Rsa }
+    Rsa:    Provided set: { P, Tjunct, Tamb, Rjc, Rca, Rcs }
+    """
+    # Check for enough terms to calculate
+    terms = 0
+    if P!=None: terms += 1
+    if Tjunct!=None: terms += 1
+    if Tamb!=None: terms += 1
+    if Rjc!=None: terms += 1
+    if Rca!=None: terms += 1
+    if( terms < 4 ):
+        raise ValueError("ERROR: System is under-constrained.")
+    elif( terms > 4 ):
+        if(Rca==None and Rsa==None):
+            raise ValueError("ERROR: System is under/over-constrained.")
+        if(Rca!=None and Rsa!=None):
+            raise ValueError("ERROR: System is over-constrained.")
+    
+    
+
+# END OF FILE
