@@ -22,6 +22,9 @@
 # Import Necessary Libraries
 import numpy as np
 
+# Import Local Dependencies
+from .__init__ import Aabc, A012
+
 # Define Single Line to Ground Fault Function
 def phs1g(Vsrc,Xseq,Rf=0,load=None):
     """
@@ -63,7 +66,7 @@ def phs1g(Vsrc,Xseq,Rf=0,load=None):
     return(Ifault)
     
 # Define Double Line to Ground Fault Current Calculator
-def phs2g(Vsrc,Xseq,Rf=0,load=None):
+def phs2g(Vsrc,Xseq,Rf=0,load=None,sequence=True):
     """
     PHS2G Function
     
@@ -85,7 +88,7 @@ def phs2g(Vsrc,Xseq,Rf=0,load=None):
     
     Returns:
     --------
-    Ifault: The Tupled Fault Currents as (If0, If1, If2)
+    Ifault: The Array of Fault Currents as (If0, If1, If2)
     """
     # Decompose Reactance Tuple
     X0, X1, X2 = Xseq
@@ -98,14 +101,17 @@ def phs2g(Vsrc,Xseq,Rf=0,load=None):
         if(not isinstance(X1, complex)): X1 *= 1j
         if(not isinstance(X2, complex)): X2 *= 1j
         # Calculate Fault Currents
-        If1 = Vsrc / (X1 + (1/X2 + 1/(X0 + 3*Rf))**(-1))
-        If2 = -If1 * (X0 + 3*Rf)/(X2 + X0 + 3*Rf)
-        If0 = -If1 * X2/(X2 + X0 + 3*Rf)
+        If1 = Vsrc / (X1 + (X2*(X0+3*Rf))/(X0+X2+3*Rf))
+        If2 = -(Vsrc - X1*If1)/X2
+        If0 = -(Vsrc - X1*If1)/(X0+3*Rf)
+        faults = np.array([If0, If1, If2])
     # Return Currents
-    return(If0, If1, If2)
+    if not sequence:
+        faults = A012.dot(faults.T)
+    return(faults)
 
 # Define Phase-to-Phase Fault Current Calculator
-def phs2(Vsrc,Xseq,Rf=0,load=None):
+def phs2(Vsrc,Xseq,Rf=0,load=None,sequence=True):
     """
     PHS2 Function
     
@@ -127,7 +133,7 @@ def phs2(Vsrc,Xseq,Rf=0,load=None):
     
     Returns:
     --------
-    Ifault: The Tupled Fault Currents as (If0, If1, If2)
+    Ifault: The Array of Fault Currents as (If0, If1, If2)
     """
     # Decompose Reactance Tuple
     X0, X1, X2 = Xseq
@@ -143,7 +149,11 @@ def phs2(Vsrc,Xseq,Rf=0,load=None):
         If0 = 0
         If1 = Vsrc / (X1 + X2 + Rf)
         If2 = -If1
-    return(If0, If1, If2)
+        faults = np.array([If0, If1, If2])
+    # Return Currents
+    if not sequence:
+        faults = A012.dot(faults.T)
+    return(faults)
 
 # Define Three-Phase Fault Current Calculator
 def phs3(Vsrc,Xseq,Rf=0,load=None):

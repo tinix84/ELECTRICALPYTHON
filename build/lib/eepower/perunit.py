@@ -34,12 +34,12 @@ import numpy as np
 def pu(S3phs,VLL=None,VLN=None,phase=3,z=True):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
-	if z:
+    if z:
         if VLL!=None:
             return(VLL**2/S3phs)
         else:
             return((np.sqrt(3)*VLN)**2/S3phs)
-	else:
+    else:
         if VLL!=None:
             return(np.sqrt(3)*VLL/S3phs)
         else:
@@ -54,5 +54,5 @@ def pu(S3phs,VLL=None,VLN=None,phase=3,z=True):
 #   Returns per-unit value in new base.
 ###################################################################
 def convert(quantity, puB_old, puB_new):
-	pu_new = quantity*puB_old/puB_new
-	return(pu_new)
+    pu_new = quantity*puB_old/puB_new
+    return(pu_new)

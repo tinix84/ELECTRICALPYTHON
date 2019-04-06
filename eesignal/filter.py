@@ -1425,6 +1425,10 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,ord=1,
     reduce:     Control argument to eliminate (zero-out) the high-frequency
                 datapoints (C1) from the system, used for simulation of
                 data compression, default=False
+    
+    Returns:
+    --------
+    Function returns the computed output array, commonly reffered to as x-hat.
     """
     # Order must be greater than or equal to 1
     if( ord<1 ):
@@ -1677,6 +1681,13 @@ def quadtransfers(p,offset=0,complex=True,round=None):
     h0 = np.polynomial.polynomial.polyfromroots(H2)
     f0 = np.polynomial.polynomial.polyfromroots(F2)
     f0 = f0*(-1)**(p-1)
+    # Negate Filter Arrays
+    h0 = -1*h0
+    f0 = -1*f0
+    # Normalize Filter Arrays
+    h0 = h0 / np.sum(h0)*2
+    f0 = f0 / np.sum(f0)*2
+    # Generate H1 and F1 from H0 and F0
     N = len(h0)
     f1 = np.zeros(N)
     for i in range(0,N):
@@ -1686,11 +1697,6 @@ def quadtransfers(p,offset=0,complex=True,round=None):
     for i in range(0,M):
         h1[i] = (-(-1)**(i-1))*f0[i]
     # Condition the Filter Arrays Before Returning
-    # Negate All Filter Arrays
-    h0 = -1*h0
-    h1 = -1*h1
-    f0 = -1*f0
-    f1 = -1*f1
     if not complex: # Real Part Only Requested
         h0 = h0.real
         h1 = h1.real

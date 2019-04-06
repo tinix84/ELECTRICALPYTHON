@@ -42,6 +42,7 @@
 #   - Voltage Divider:              voltdiv
 #   - Current Divider:              curdiv
 #   - Instantaneous Power Calc.:    instpower
+#   - Delta-Wye Network Converter:  dynetz
 #
 #   Additional functions available in sub-modules:
 #   - capacitor.py
@@ -49,7 +50,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "2.0.4"
+ver = "2.1.8"
 
 # Import Submodules
 from .capacitor import *
@@ -152,7 +153,7 @@ def reactance(z,f):
     return(out)
 
 # Define display function
-def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
+def cprint(val,unit="",label="",printval=True,ret=False,round=3):
     """
     CPRINT Function
     
@@ -168,7 +169,8 @@ def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
     
     Required Arguments:
     -------------------
-    val:        The Complex Value to be Printed
+    val:        The Complex Value to be Printed, may be singular value,
+                tuple of values, or list/array.
     
     Optional Arguments:
     -------------------
@@ -180,7 +182,7 @@ def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
                 default=True
     ret:        Control argument allowing the evaluated value to be returned.
                 default=False
-    decimals:   Control argument specifying how many decimals of the complex
+    round:      Control argument specifying how many decimals of the complex
                 value to be printed. May be negative to round to spaces
                 to the left of the decimal place (follows standard round()
                 functionality). default=3
@@ -201,13 +203,29 @@ def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
     numarr = np.array([]) # Empty array
     # Find length of the input array
     try:
-        row, col = val.shape
+        len(val) # Test Case, For more than one Input
+        val = np.asarray(val) # Ensure that input is array
+        shp = val.shape
+        if(len(shp) > 1):
+            row, col = shp
+        else:
+            col = shp[0]
+            row = 1
+            val = val.reshape((col,row))
+            col = row
+            row = shp[0]
         sz = val.size
         mult = True
+        # Handle Label for Each Element
         if label=="":
             label = np.array([])
             for _ in range(sz):
                 label = np.append(label,[""])
+        elif len(label)==1 or str(type(label))==tstr:
+            tmp = label
+            for _ in range(sz):
+                label = np.append(label,[tmp])
+        # Handle Unit for Each Element
         if unit=="":
             unit = np.array([])
             for _ in range(sz):
@@ -235,8 +253,8 @@ def cprint(val,unit="",label="",printval=True,ret=False,decimals=3):
             _unit = unit
         mag, ang_r = c.polar(_val) #Convert to polar form
         ang = np.degrees(ang_r) #Convert to degrees
-        mag = round( mag, decimals ) #Round
-        ang = round( ang, decimals ) #Round
+        mag = np.around( mag, round ) #Round
+        ang = np.around( ang, round ) #Round
         strg = _label+" "+str(mag)+" ∠ "+str(ang)+"° "+_unit
         printarr = np.append(printarr, strg)
         numarr = np.append(numarr, [mag, ang])
@@ -1108,6 +1126,55 @@ def instpower(P,Q,f,t):
     Pinst = P + P*np.cos(2*w*t) - Q*np.sin(2*w*t)
     return(Pinst)
 
+# Define Delta-Wye Impedance Network Calculator
+def dynetz(delta=None,wye=None,round=None):
+    """
+    DYNETZ Function
+    
+    Purpose:
+    --------
+    This function is designed to act as the conversion utility
+    to transform delta-connected impedance values to wye-
+    connected and vice-versa.
+    
+    Required Arguments:
+    -------------------
+    *Requires Either delta or wye*
+    
+    Optional Arguments:
+    -------------------
+    delta:  Tuple of the delta-connected impedance values as:
+            { Z12, Z23, Z31 }, default=None
+    wye:    Tuple of the wye-connected impedance valuse as:
+            { Z1, Z2, Z3 }, default=None
+    
+    Returns:
+    delta-set: Delta-Connected impedance values { Z12, Z23, Z31 }
+    wye-set:   Wye-Connected impedance values { Z1, Z2, Z3 }
+    """
+    # Determine which set of impedances was provided
+    if(delta!=None and wye==None):
+        Z12, Z23, Z31 = delta # Gather particular impedances
+        Zsum = Z12 + Z23 + Z31 # Find Sum
+        # Calculate Wye Impedances
+        Z1 = Z12*Z31 / Zsum
+        Z2 = Z12*Z23 / Zsum
+        Z3 = Z23*Z31 / Zsum
+        Zset = ( Z1, Z2, Z3 )
+        if round!=None: Zset = np.around(Zset,round)
+        return(Zset) # Return Wye Impedances
+    elif(delta==None and wye!=None):
+        Z1, Z2, Z3 = wye # Gather particular impedances
+        Zmultsum = Z1*Z2 + Z2*Z3 + Z3*Z1
+        Z23 = Zmultsum / Z1
+        Z31 = Zmultsum / Z2
+        Z12 = Zmultsum / Z3
+        Zset = ( Z12, Z23, Z31 )
+        if round!=None: Zset = np.around(Zset,round)
+        return(Zset) # Return Delta Impedances
+    else:
+        raise ValueError("ERROR: Either delta or wye impedances must be specified.")
+
 # Define Heat-Sink "Resistance" Calculator
 def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
              Rcs=None,Rsa=None,Rca=None):
@@ -1160,20 +1227,9 @@ def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
     Rcs:    Provided set: { P, Tjunct, Tamb, Rjc, Rca, Rsa }
     Rsa:    Provided set: { P, Tjunct, Tamb, Rjc, Rca, Rcs }
     """
-    # Check for enough terms to calculate
-    terms = 0
-    if P!=None: terms += 1
-    if Tjunct!=None: terms += 1
-    if Tamb!=None: terms += 1
-    if Rjc!=None: terms += 1
-    if Rca!=None: terms += 1
-    if( terms < 4 ):
-        raise ValueError("ERROR: System is under-constrained.")
-    elif( terms > 4 ):
-        if(Rca==None and Rsa==None):
-            raise ValueError("ERROR: System is under/over-constrained.")
-        if(Rca!=None and Rsa!=None):
-            raise ValueError("ERROR: System is over-constrained.")
+    # Function needs some serious development
+    return(0)
+            
     
     
 
