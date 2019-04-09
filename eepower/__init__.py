@@ -15,8 +15,12 @@
 #   Paul Ortmann - Idaho Power
 #
 #   Included Constants:
-#   - 'A' Operator for Symmetrical Components: a
-#   - Not a Number value (NaN): NAN
+#   - Micro (mu) Multiple:                      u
+#   - Mili Multiple:                            m
+#   - Kilo Multiple:                            k
+#   - Mega Multiple:                            M
+#   - 'A' Operator for Symmetrical Components:  a
+#   - Not a Number value (NaN):                 NAN
 #
 #   Symmetrical Components Matricies:
 #   - ABC to 012 Conversion:        Aabc
@@ -50,7 +54,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "2.1.8"
+ver = "2.1.9"
 
 # Import Submodules
 from .capacitor import *

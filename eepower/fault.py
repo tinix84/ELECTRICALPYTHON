@@ -199,7 +199,7 @@ def phs3(Vsrc,Xseq,Rf=0,load=None,sequence=True):
         if(not isinstance(X1, complex)): X1 *= 1j
         if(not isinstance(X2, complex)): X2 *= 1j
         # Calculate Fault Currents
-        Ifault = Vsrc/X1
+        Ifault = Vsrc/(X1 + Rf)
         Ifault = np.array([ 0, Ifault, 0 ])
     # Prepare to Return Value
     if not sequence:

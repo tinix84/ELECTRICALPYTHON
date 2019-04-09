@@ -24,6 +24,8 @@
 #   - Step Function:                       step
 #   - Multi-Argument Convolution:          convolve
 #   - Convolution Bar Graph Visualizer:    convbar
+#   - Gaussian Function:                   gaussian
+#   - Gaussian Distribution Calculator:    genericdist
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - Tupple to Matrix Converter:       tuple_to_matrix
@@ -33,6 +35,10 @@
 #   - Function Concatinator:            c_func_concat
 #
 #   Constants
+#   - Micro (mu) Multiple:               u
+#   - Mili Multiple:                     m
+#   - Kilo Multiple:                     k
+#   - Mega Multiple:                     M
 #   - NaN (Not A Number):                NAN
 #   - Type: Numpy Matrix:                matrix
 #   - Type: Tuple:                       tuple
@@ -47,7 +53,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.12.10"
+ver = "2.13.1"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -77,7 +83,7 @@ tnfloat = "<class 'numpy.float64'>"
 
 # Define Convolution Bar-Graph Function:
 def convbar(h, x, outline=True):
-    """
+""
     CONVBAR Function:
     
     INPUTS:
@@ -94,7 +100,7 @@ def convbar(h, x, outline=True):
     Impulse Response: The bar-graph plotted version of h.
     Input Function:   The bar-graph plotted version of x.
     Convolved Output: The bar-graph plotted version of the convolution of h and x.
-    """
+""
     
     # The impulse response
     M = len(h)
@@ -135,7 +141,7 @@ def convbar(h, x, outline=True):
 
 # Define convolution function
 def convolve(tuple):
-    """ Multi-Argument Convolution Function
+"" Multi-Argument Convolution Function
     
     Given a tuple of terms, convolves all terms in tuple to
     return one tuple as a numpy array.
@@ -149,7 +155,7 @@ def convolve(tuple):
     -------
     c:            The convolved set of the individual terms.
                 i.e. np.array([ x1, x2, x3, ..., xn ])
-    """
+""
     c = sig.convolve(tuple[0],tuple[1])
     if (len(tuple) > 2):
         # Iterate starting with second element and continuing
@@ -195,7 +201,7 @@ def nparr_to_matrix(x,yx):
 
 # RMS Calculating Function
 def rms(f, T):
-    """ Calculates the RMS value of the provided function.
+"" Calculates the RMS value of the provided function.
 
     Arguments
     ----------
@@ -206,7 +212,7 @@ def rms(f, T):
     -------
     RMS : the RMS value of the function (f) over the interval ( 0, T )
 
-    """
+""
     fn = lambda x: f(x)**2
     integral = integrate(fn,0,T)
     RMS = np.sqrt(1/T*integral)
@@ -214,7 +220,7 @@ def rms(f, T):
 
 # FFT Coefficient Calculator Function
 def fft_coef(f, N, T=1, return_complex=False):
-    """Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
+""Calculates the first 2*N+1 Fourier series coeff. of a periodic function.
 
     Given a periodic, function f(t) with period T, this function returns the
     coefficients a0, {a1,a2,...},{b1,b2,...} such that:
@@ -249,7 +255,7 @@ def fft_coef(f, N, T=1, return_complex=False):
 
     c : numpy 1-dimensional complex-valued array of size N+1
 
-    """
+""
     # From Shanon theoreom we must use a sampling freq. larger than the maximum
     # frequency you want to catch in the signal.
     f_sample = 2 * N
@@ -268,7 +274,7 @@ def fft_coef(f, N, T=1, return_complex=False):
 
 # FFT Plotting Function
 def fft_plot(f, N, T=1, mn=False, mx=False, fftplot=True, absolute=False, title=False, plotall=True):
-    """ Plots the FFT of the provided function as a stem plot.
+"" Plots the FFT of the provided function as a stem plot.
 
     Arguments
     ----------
@@ -292,7 +298,7 @@ def fft_plot(f, N, T=1, mn=False, mx=False, fftplot=True, absolute=False, title=
     if plotall=True, the function will:
     Plot each summed frequency
 
-    """
+""
 
     # Calculate FFT and find coefficients
     a0, a, b = fft_coef(f, N, T)
@@ -353,5 +359,73 @@ def fft_plot(f, N, T=1, mn=False, mx=False, fftplot=True, absolute=False, title=
         plt.title("Fourier Series Summation"+tStr)
         plt.show()
 
+# Define Gaussian Function
+def gaussian(x,mu=0,sigma=1):
+    """
+    GAUSSIAN Function:
+    
+    Purpose:
+    --------
+    This function is designed to generate the gaussian
+    distribution curve with configuration mu and sigma.
+    
+    Required Arguments:
+    -------------------
+    x:       The input array x.
+    
+    Optional Arguments:
+    -------------------
+    mu:      Optional control argument, default=0
+    sigma:   Optional control argument, default=1
+    
+    Returns:
+    --------
+    Computed Gaussian Value of the input x.
+    """
+    return( 1/(sigma * np.sqrt(2 * np.pi)) *
+            np.exp(-(x - mu)**2 / (2 * sigma**2)) )
+
+# Define Distribution Function
+def genericdist(x,mu=0,sigma=1):
+    """
+    GENERICDIST Function:
+    
+    Purpose:
+    --------
+    This function is designed to calculate the generic
+    distribution of a gaussian function with controls
+    for mu and sigma.
+    
+    Required Arguments:
+    -------------------
+    x:       The input (array) x
+    
+    Optional Arguments:
+    -------------------
+    mu:      Optional control argument, default=0
+    sigma:   Optional control argument, default=1
+    
+    Returns:
+    --------
+    Computed distribution of the gausian function at the
+    points specified by (array) x
+    """
+    F = np.array([])
+    try:
+        lx = len(x) # Find length of Input
+    except:
+        lx = 1 # Length 1
+        x = [x] # Pack into list
+    for i in range(lx):
+        x_tmp = x[i]
+        # Evaluate X (altered by mu and sigma)
+        X = (x_tmp-mu) / sigma
+        # Define Integrand
+        def integrand(sq):
+            return( np.exp(-sq**2/2) )
+        integral = integrate(integrand,np.NINF,X) # Integrate
+        result = 1/np.sqrt(2*np.pi) * integral[0] # Evaluate Result
+        F = np.append(F, result) # Append to output list
+    return(F)
 
 # End of __INIT__.PY

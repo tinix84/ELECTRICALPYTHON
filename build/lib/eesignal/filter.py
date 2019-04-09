@@ -1425,6 +1425,10 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,ord=1,
     reduce:     Control argument to eliminate (zero-out) the high-frequency
                 datapoints (C1) from the system, used for simulation of
                 data compression, default=False
+    
+    Returns:
+    --------
+    Function returns the computed output array, commonly reffered to as x-hat.
     """
     # Order must be greater than or equal to 1
     if( ord<1 ):
