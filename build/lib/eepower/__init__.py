@@ -15,8 +15,12 @@
 #   Paul Ortmann - Idaho Power
 #
 #   Included Constants:
-#   - 'A' Operator for Symmetrical Components: a
-#   - Not a Number value (NaN): NAN
+#   - Micro (mu) Multiple:                      u
+#   - Mili Multiple:                            m
+#   - Kilo Multiple:                            k
+#   - Mega Multiple:                            M
+#   - 'A' Operator for Symmetrical Components:  a
+#   - Not a Number value (NaN):                 NAN
 #
 #   Symmetrical Components Matricies:
 #   - ABC to 012 Conversion:        Aabc
@@ -50,7 +54,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "2.1.8"
+ver = "2.1.9"
 
 # Import Submodules
 from .capacitor import *
@@ -116,7 +120,7 @@ def phasor( mag, ang ):
     return( c.rect( mag, np.radians( ang ) ) )
 
 # Define Reactance Calculator
-def reactance(z,f):
+def reactance(z,f=60,sensetivity=1e-12):
     """
     REACTANCE Function:
     
@@ -130,26 +134,41 @@ def reactance(z,f):
     
     Required Arguments:
     -------------------
-    z:      The Impedance Provided
-    f:      The Frequency Base for Provided Impedance
+    z:      The Impedance Provided, may be complex (R+jI)
+    
+    Optional Arguments:
+    -------------------
+    f:              The Frequency Base for Provided Impedance, default=60
+    sensetivity:    The sensetivity used to check if a resistance was
+                    provided, default=1e-12
     
     Returns:
     --------
     out:    Capacitance or Inductance of Impedance
     """
+    # Evaluate Omega
     w = 2*np.pi*f
+    # Input is Complex
     if isinstance(z, complex):
+        # Test for Resistance
+        if(abs(z.real) > sensetivity):
+            R = z.real
+        else:
+            R = 0
         if (z.imag > 0):
             out = z/(w*1j)
         else:
             out = 1/(w*1j*z)
         out = abs(out)
+        # Combine with resistance if present
+        if(R!=0): out = (R, out)
     else:
         if (z > 0):
             out = z/(w)
         else:
             out = 1/(w*z)
         out = abs(out)
+    # Return Output
     return(out)
 
 # Define display function
@@ -271,7 +290,7 @@ def cprint(val,unit="",label="",printval=True,ret=False,round=3):
         return(numarr)
 
 # Define Impedance Conversion function
-def phasorz(f,C=None,L=None,complex=True):
+def phasorz(C=None,L=None,f=60,complex=True):
     """
     PHASORZ Function:
     
@@ -284,7 +303,7 @@ def phasorz(f,C=None,L=None,complex=True):
     
     Required Arguments:
     -------------------
-    f:      The system frequency to be calculated upon
+    Either C or L must be specified.
     
     Optional Arguments:
     -------------------
@@ -292,6 +311,7 @@ def phasorz(f,C=None,L=None,complex=True):
              default=None
     L:       The inductance value (specified in Henreys),
              default=None
+    f:       The system frequency to be calculated upon, default=60
     complex: Control argument to specify whether the returned
              value should be returned as a complex value.
              default=True
@@ -1096,7 +1116,7 @@ def curdiv(Ri,Rset,Vin=None,Iin=None,Vout=False):
         return(Ii)
 
 # Define Instantaneous Power Calculator
-def instpower(P,Q,f,t):
+def instpower(P,Q,t,f=60):
     """
     INSTPOWER Function
     
@@ -1109,12 +1129,11 @@ def instpower(P,Q,f,t):
     -------------------
     P:  Magnitude of Real Power
     Q:  Magnitude of Reactive Power
-    f:  System frequency (in Hz)
     t:  Time at which to evaluate
     
     Optional Arguments:
     -------------------
-    None
+    f:  System frequency (in Hz), default=60
     
     Returns:
     --------

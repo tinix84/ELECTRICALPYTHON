@@ -2,6 +2,7 @@ README.md
 setup.py
 eepower/__init__.py
 eepower/capacitor.py
+eepower/electronics.py
 eepower/fault.py
 eepower/perunit.py
 eepower/systemsolution.py
