@@ -47,6 +47,7 @@
 #   - Current Divider:              curdiv
 #   - Instantaneous Power Calc.:    instpower
 #   - Delta-Wye Network Converter:  dynetz
+#   - Single Line Power Flow:       powerflow
 #
 #   Additional functions available in sub-modules:
 #   - capacitor.py
@@ -54,7 +55,7 @@
 #   - systemsolution.py
 ###################################################################
 name = "eepower"
-ver = "2.1.9"
+ver = "2.2.1"
 
 # Import Submodules
 from .capacitor import *
@@ -62,6 +63,7 @@ from .perunit import *
 from .systemsolution import *
 # Import Submodules as External Functions
 from . import fault
+from . import electronics
 
 # Import libraries as needed:
 import numpy as np
@@ -1194,6 +1196,44 @@ def dynetz(delta=None,wye=None,round=None):
     else:
         raise ValueError("ERROR: Either delta or wye impedances must be specified.")
 
+# Define Single Line Power Flow Calculator
+def powerflow( Vsend, Vrec, Zline ):
+    """
+    POWERFLOW Function:
+    
+    Purpose:
+    --------
+    This function is designed to calculate the ammount of real
+    power transferred from the sending end to the recieving end
+    of an electrical line given the sending voltage (complex),
+    the receiving voltage (complex) and the line impedance.
+    
+    Required Arguments:
+    -------------------
+    Vsend:      The sending-end voltage, should be complex
+    Vrec:       The receiving-end voltage, should be complex
+    Zline:      The line impedance, should be complex
+    
+    Optional Arguments:
+    -------------------
+    None.
+    
+    Returns:
+    --------
+    pflow:      The power transferred from sending-end to
+                receiving-end, positive values denote power
+                flow from send to receive, negative values
+                denote vice-versa.
+    """
+    # Evaluate the Input Terms
+    Vs = abs( Vsend )
+    ds = c.phase( Vsend )
+    Vr = abs( Vrec )
+    dr = c.phase( Vrec )
+    # Calculate Power Flow
+    pflow = (Vs * Vr)/(Zline) * np.sin( ds-dr )
+    return( pflow )
+        
 # Define Heat-Sink "Resistance" Calculator
 def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
              Rcs=None,Rsa=None,Rca=None):

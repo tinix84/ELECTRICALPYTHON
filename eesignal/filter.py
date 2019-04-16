@@ -1429,6 +1429,8 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,ord=1,
     Returns:
     --------
     Function returns the computed output array, commonly reffered to as x-hat.
+    Function may also return the down-sampled stage c0 and c1 for the
+    highest order when the *reduce* argument is set to True. [y, c0, c1]
     """
     # Order must be greater than or equal to 1
     if( ord<1 ):
@@ -1581,7 +1583,10 @@ def quadmirror(farray,filterset=None,showall=False,pltinout=False,ord=1,
         if(ord==1):
             return(y[0])
         else:
-            return(y[ord-1])
+            if reduce:
+                return(y[ord-1],c0[ord-1],c1[ord-1])
+            else:
+                return(y[ord-1])
 
 
 # Define Quad-Mirror Transfer Function Builder
