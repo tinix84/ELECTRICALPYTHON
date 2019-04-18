@@ -54,7 +54,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.13.5"
+ver = "2.13.7"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -433,7 +433,7 @@ def gausdist(x,mu=0,sigma=1):
     return(F)
 
 # Define Probability Density Function
-def probdensity(func,x,x0=0):
+def probdensity(func,x,x0=0,scale=True):
     """
     PROBDENSITY Function:
     
@@ -452,6 +452,8 @@ def probdensity(func,x,x0=0):
     -------------------
     x0:      The lower-bound of the integral, starting point
              for the PDF to be calculated over, default=0
+    scale:   The scaling to be applied to the output,
+             default=True
     
     Returns:
     --------
@@ -470,6 +472,12 @@ def probdensity(func,x,x0=0):
     # Return only the 0-th value if there's only 1 value available
     if(len(sumx)==1):
         sumx = sumx[0]
+    else:
+        if(scale==True):
+            mx = sumx.max()
+            sumx /= mx
+        elif(scale!=False):
+            sumx /= scale
     return(sumx)
 
 # End of __INIT__.PY
