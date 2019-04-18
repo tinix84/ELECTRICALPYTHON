@@ -55,7 +55,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.13.7"
+ver = "2.13.9"
 
 # Import Submodules as Internal Functions
 from .bode import *

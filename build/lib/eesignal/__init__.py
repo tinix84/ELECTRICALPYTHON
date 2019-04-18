@@ -27,6 +27,7 @@
 #   - Gaussian Function:                   gaussian
 #   - Gaussian Distribution Calculator:    gausdist
 #   - Probability Density Calculator:      probdensity
+#   - Real FFT Evaluator:                  rfft
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - Tupple to Matrix Converter:       tuple_to_matrix
@@ -54,7 +55,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.13.7"
+ver = "2.13.9"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -479,5 +480,54 @@ def probdensity(func,x,x0=0,scale=True):
         elif(scale!=False):
             sumx /= scale
     return(sumx)
+
+# Define Real FFT Evaluation Function
+def rfft(arr,dt=0.01,absolute=True,resample=True):
+    """
+    RFFT Function
+    
+    Purpose:
+    --------
+    This function is designed to evaluat the real FFT
+    of a input signal in the form of an array or list.
+    
+    Required Arguments:
+    -------------------
+    arr:        The input array representing the signal
+    
+    Optional Arguments:
+    -------------------
+    dt:         The time-step used for the array,
+                default=0.01
+    absolute:   Control argument to force absolute
+                values, default=True
+    resample:   Control argument specifying whether
+                the FFT output should be resampled,
+                or if it should have a specific
+                resampling rate, default=True
+    
+    Returns:
+    --------
+    FFT Array
+    """
+    # Calculate with Absolute Values
+    if absolute:
+        fourier = abs(np.fft.rfft(arr))
+    else:
+        foruier = np.fft.rfft(arr)
+    if resample==True:
+        # Evaluate the Downsampling Ratio
+        dn = int(dt*len(arr))
+        # Downsample to remove unnecessary points
+        fixedfft = filter.dnsample(fourier,dn)
+        return(fixedfft)
+    elif resample==False:
+        return(fourier)
+    else:
+        # Condition Resample Value
+        resample = int(resample)
+        # Downsample to remove unnecessary points
+        fixedfft = filter.dnsample(fourier,resample)
+        return(fixedfft)
 
 # End of __INIT__.PY

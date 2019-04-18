@@ -31,6 +31,7 @@
 #   - Up-Sampler                        upsample
 #   - Nth-Order Quadrature-Mirror       quadmirror
 #   - Quad-Mirror Transfer Builder      quadtransfers
+#   - Autocorrelation Function:         autocorr
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - TF System Conditioning:           sys_condition
@@ -1714,5 +1715,51 @@ def quadtransfers(p,offset=0,complex=True,round=None):
         f1 = np.around(f1,decimals=round)
     # Return the Final Filter Arrays as Tuple
     return(h0,f0,h1,f1)
+
+
+# Define Autocorrelation Function
+def autocorr(arr,dt=0.01,tau=True,freqs=False):
+    """
+    AUTOCORR Function
+    
+    Purpose:
+    --------
+    This function is designed to perform the autocorrelation
+    of an array input and return that correlated array.
+    
+    Required Arguments:
+    -------------------
+    arr:        The input array to be autocorrelated
+    
+    Optional Arguments:
+    -------------------
+    dt:         The time-step used for the array,
+                default=0.01
+    tau:        Control argument to force function to return
+                the corresponding tau value along with the
+                autocorrelated, default=True
+    freqs:      Control argument to force function to return
+                FFT frequency domain array, default=False
+    
+    Returns:
+    --------
+    out:        List of arrays in the form:
+                [ autocorr, tau (option), freqs (option) ]
+    """
+    MM = len(arr)//2 - 1 # Evaluate 1/2 array length
+    Rxx = np.zeros(MM)
+    for m in range(0,MM):
+        for n in range(0,MM):
+            Rxx[m] = Rxx[m] + arr[n+m]*arr[n]
+    out = [Rxx]
+    if tau:
+        # User desires tau to be returned
+        out.append(np.linspace(dt,dt*MM,MM)) # Evaluate tau
+    if freqs:
+        # User desires FFT frequencies to be returned
+        MM = len(arr)//4
+        del_FR = 1/(MM*dt)
+        out.append(np.linspace(0,(MM-1)*del_FR//2,MM))
+    return(out)
 
 # End of FILTER.PY

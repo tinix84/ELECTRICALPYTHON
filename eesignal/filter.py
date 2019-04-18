@@ -1718,7 +1718,7 @@ def quadtransfers(p,offset=0,complex=True,round=None):
 
 
 # Define Autocorrelation Function
-def autocorr(arr,tau=True,freqs=False):
+def autocorr(arr,dt=0.01,tau=True,freqs=False):
     """
     AUTOCORR Function
     
@@ -1733,6 +1733,8 @@ def autocorr(arr,tau=True,freqs=False):
     
     Optional Arguments:
     -------------------
+    dt:         The time-step used for the array,
+                default=0.01
     tau:        Control argument to force function to return
                 the corresponding tau value along with the
                 autocorrelated, default=True
