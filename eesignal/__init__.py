@@ -28,6 +28,7 @@
 #   - Gaussian Distribution Calculator:    gausdist
 #   - Probability Density Calculator:      probdensity
 #   - Real FFT Evaluator:                  rfft
+#   - Normalized Power Spectrum:           wrms
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - Tupple to Matrix Converter:       tuple_to_matrix
@@ -55,7 +56,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.13.9"
+ver = "2.13.10"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -530,4 +531,69 @@ def rfft(arr,dt=0.01,absolute=True,resample=True):
         fixedfft = filter.dnsample(fourier,resample)
         return(fixedfft)
 
+# Define Normalized Power Spectrum Function
+def wrms(func,dw=0.1,NN=100,quad=False,plot=True,
+         title="Power Density Spectrum",round=3):
+    """
+    WRMS Function:
+    
+    Purpose:
+    --------
+    This function is designed to calculate the RMS
+    bandwidth (Wrms) using a numerical process.
+    
+    Required Arguments:
+    -------------------
+    func:      The callable function to use for evaluation
+    
+    Optional Arguments:
+    -------------------
+    dw:        The delta-omega to be used, default=0.1
+    NN:        The total number of points, default=100
+    quad:      Control value to enable use of integrals
+               default=False
+    plot:      Control to enable plotting, default=True
+    title:     Title displayed with plot,
+               default="Power Density Spectrum"
+    round:     Control to round the Wrms on plot,
+               default=3
+    
+    Returns:
+    --------
+    W:         Calculated RMS Bandwidth (rad/sec)
+    """
+    # Define omega
+    omega = np.linspace(0,(NN-1)*del_w,NN)
+    # Initialize Fraction Terms
+    Stot = Sw2 = 0
+    # Power Density Spectrum
+    Sxx = np.array([])
+    for n in range(NN):
+        # Calculate Power Density Spectrum
+        Sxx = np.append(Sxx,func(omega[n]))
+        Stot = Stot + Sxx[n]
+        Sw2 = Sw2 + (omega[n]**2)*Sxx[n]
+    if(quad):
+        def intf(w):
+            return(w**2*func(w))
+        num = integrate(intf,0,np.inf)[0]
+        den = integrate(func,0,np.inf)[0]
+        # Calculate W
+        W = np.sqrt(num/den)
+    else:
+        # Calculate W
+        W = np.sqrt(Sw2/Stot)
+    Wr = np.around(W,round)
+    # Plot Upon Request
+    if(plot):
+        plt.plot(omega,Sxx)
+        plt.title(title)
+        # Evaluate Text Location
+        x = 0.65*max(omega)
+        y = 0.80*max(Sxx)
+        plt.text(x,y,"Wrms: "+str(Wr))
+        plt.show()
+    # Return Calculated RMS Bandwidth
+    return(W)
+        
 # End of __INIT__.PY
