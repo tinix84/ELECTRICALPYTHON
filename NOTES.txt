@@ -11,6 +11,8 @@ FUNCTIONS TO ADD:
 - Symmetrical Component to ABC domain and vice versa functions
 - sine to cosine function equivalent
 - Sampled values to fundamental sine/cosine waveform
+- kWh to BTU (and vice-versa) function
+- W to HP (and vice-versa) function
 
 
 FUNCTIONS TO FIX:
