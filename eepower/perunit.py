@@ -41,9 +41,9 @@ def pu(S3phs,VLL=None,VLN=None,phase=3,z=True):
             return((np.sqrt(3)*VLN)**2/S3phs)
     else:
         if VLL!=None:
-            return(np.sqrt(3)*VLL/S3phs)
+            return(S3phs/(np.sqrt(3)*VLL))
         else:
-            return(VLN/S3phs)
+            return(S3phs/VLN)
 
 ###################################################################
 #   Define per unit converter function
