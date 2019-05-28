@@ -14,6 +14,7 @@
 #   Included Functions
 #   - Per Unit Base Creator:        pu
 #   - Per Unit Base Converter:      convert
+#   DOCUMENTATION IS NOT UP TO DATE!!!!!!!!!!!!!
 ####################################################################
 
 # Import libraries as needed:
@@ -31,19 +32,22 @@ import numpy as np
 #   Returns as value for 3-phase by default, can also provide
 #   1-phase values.
 ###################################################################
-def pu(S3phs,VLL=None,VLN=None,phase=3,z=True):
+def zpu(S3phs,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
-    if z:
-        if VLL!=None:
-            return(VLL**2/S3phs)
-        else:
-            return((np.sqrt(3)*VLN)**2/S3phs)
+    if VLL!=None:
+        return(VLL**2/S3phs)
     else:
-        if VLL!=None:
-            return(np.sqrt(3)*VLL/S3phs)
-        else:
-            return(VLN/S3phs)
+        return((np.sqrt(3)*VLN)**2/S3phs)
+
+
+def ipu(S3phs,VLL=None,VLN=None,phase=3):
+    if(VLL==None and VLN==None):
+        raise ValueError("ERROR: One voltage must be provided.")
+    if VLL!=None:
+        return(S3phs/(np.sqrt(3)*VLL))
+    else:
+        return(S3phs/VLN)
 
 ###################################################################
 #   Define per unit converter function

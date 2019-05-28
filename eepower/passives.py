@@ -1,5 +1,5 @@
 ###################################################################
-#   CAPACITOR.PY
+#   PASSIVES.PY
 #
 #   A library of functions, constants and more
 #   that are related to Capacitors in Electrical Engineering.
@@ -16,10 +16,41 @@
 #   - Cap. Voltage after Time:      VafterT
 #   - Cap. Voltage Discharge:       discharge
 #   - Rectifier Cap. Calculation:   rectifier
+#   DOCUMENTATION NOT UP TO DATE!!!!!
 ####################################################################
 
 # Import libraries as needed:
 import numpy as np
+
+def vcapdischarge(t,Vs,R,C):
+    Vc = Vs*(np.exp(-t/(R*C)))
+    return(Vc)
+
+
+def vcapcharge(t,Vs,R,C):
+    Vc = Vs*(1-np.exp(-t/(R*C)))
+    return(Vc)
+    
+def captransfer(t,Vs,R,Cs,Cd):
+    tau = (R*Cs*Cd) / (Cs+Cd)
+    rvolt = Vs*np.exp(-t/tau)
+    vfinal = Vs*Cs/(Cs+Cd)
+    return(rvolt,vfinal)
+    
+# Define Inductor Energy Formula
+def inductorenergy(L,I):
+    return(1/2 * L * I**2)
+
+def inductorcharge(t,Vs,R,L):
+    Vl = Vs*np.exp(-R*t/L)
+    Il = Vs/R*(1-np.exp(-R*t/L))
+    return(Vl,Il)
+
+
+def inductordischarge(t,Io,R,L):
+    Il = Io*np.exp(-R*t/L)
+    Vl = Io*R*(1-np.exp(-R*t/L))
+    return(Vl,Il)
 
 ###################################################################
 #   Define Capacitor Energy Calculation
@@ -27,7 +58,7 @@ import numpy as np
 #   Returns energy (in Joules) of a capacitor given capacitor size
 #   (in Farads) and voltage (in Volts).
 ###################################################################
-def energy(cap,v):
+def capenergy(cap,v):
 	energy = 1/2 * cap * v**2
 	return(energy)
 

@@ -195,9 +195,7 @@ def phs3(Vsrc,Xseq,Rf=0,load=None,sequence=True):
         print("nothing yet")
     else:
         # Ensure that X-components are imaginary
-        if(not isinstance(X0, complex)): X0 *= 1j
         if(not isinstance(X1, complex)): X1 *= 1j
-        if(not isinstance(X2, complex)): X2 *= 1j
         # Calculate Fault Currents
         Ifault = Vsrc/(X1 + Rf)
         Ifault = np.array([ 0, Ifault, 0 ])

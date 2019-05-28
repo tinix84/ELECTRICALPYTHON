@@ -58,7 +58,7 @@ name = "eepower"
 ver = "2.2.1"
 
 # Import Submodules
-from .capacitor import *
+from .passives import *
 from .perunit import *
 from .systemsolution import *
 # Import Submodules as External Functions
