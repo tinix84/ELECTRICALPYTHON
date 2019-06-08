@@ -17,6 +17,11 @@
 #   - Line to Line                      phs2
 #   - Three-Phase Fault                 phs3
 #   - Faulted Bus Voltage               busvolt
+#   - CT Saturation Function            ct_saturation
+#   - CT C-Class Calculator             ct_cclass
+#   - CT Sat. V at rated Burden         ct_satratburden
+#   - CT Voltage Peak Formula           ct_vpeak
+#   - CT Time to Saturation             ct_timetosat    
 ####################################################################
 
 # Import Necessary Libraries
@@ -251,6 +256,247 @@ def busvolt(k,n,Vpf,Z0,Z1,Z2,If,sequence=True):
     if not sequence:
         Vf = A012.dot( Vf ) # Convert to ABC-Domain
     return(Vf)
+
+
+# Define CT Saturation Function
+def ct_saturation(XR,Imag,Vrated,Irated,CTR,Rb,Xb,remnance=0,freq=60,ALF=20):
+    """
+    ct_saturation Function
     
+    A function to determine the saturation value and a boolean indicator
+    showing whether or not CT is -in fact- saturated.
+    
+    Parameters
+    ----------
+    XR:         float
+                The X-over-R ratio of the system.
+    Imag:       float
+                The (maximum) current magnitude to use for calculation,
+                typically the fault current.
+    Vrated:     float
+                The rated voltage (accompanying the C-Class value) of
+                the CT.
+    Irated:     float
+                The rated secondary current for the CT.
+    CTR:        float
+                The CT Ratio (primary/secondary, N) to be used.
+    Rb:         float
+                The total burden resistance in ohms.
+    Xb:         float
+                The total burden reactance in ohms.
+    remnance:   float, optional
+                The system flux remnance, default=0.
+    freq:       float, optional
+                The system frequency in Hz, default=60.
+    ALF:        float, optional
+                The Saturation Constant which must be satisfied,
+                default=20.
+    
+    Returns
+    -------
+    result:     float
+                The calculated Saturation value.
+    saturation: bool
+                Boolean indicator to mark presence of saturation.
+    """
+    # Define omega
+    w = 2*np.pi*freq
+    # Find Lb
+    Lb = Xb/w
+    # Re-evaluate Vrated
+    Vrated = Vrated*(1-remnance)
+    # Calculate each "term" (multiple)
+    t1 = (1+XR)
+    t2 = (Imag/(Irated*CTR))
+    t3 = abs(Rb+1j*w*Lb)*100/Vrated
+    # Evaluate
+    result = t1*t2*t3
+    # Test for saturation
+    saturation = result >= ALF
+    # Return Results
+    return(result,saturation)
+
+
+# Define C-Class Calculator
+def ct_cclass(XR,Imag,Irated,CTR,Rb,Xb,remnance=0,freq=60,ALF=20):
+    """
+    ct_cclass Function
+    
+    A function to determine the C-Class rated voltage for a CT.
+    
+    Parameters
+    ----------
+    XR:         float
+                The X-over-R ratio of the system.
+    Imag:       float
+                The (maximum) current magnitude to use for calculation,
+                typically the fault current.
+    Irated:     float
+                The rated secondary current for the CT.
+    CTR:        float
+                The CT Ratio (primary/secondary, N) to be used.
+    Rb:         float
+                The total burden resistance in ohms.
+    Xb:         float
+                The total burden reactance in ohms.
+    remnance:   float, optional
+                The system flux remnance, default=0.
+    freq:       float, optional
+                The system frequency in Hz, default=60.
+    ALF:        float, optional
+                The Saturation Constant which must be satisfied,
+                default=20.
+    
+    Returns
+    -------
+    c_class:    float
+                The calculated C-Class rated voltage.
+    """
+    # Define omega
+    w = 2*np.pi*freq
+    # Find Lb
+    Lb = Xb/w
+    # Calculate each "term" (multiple)
+    t1 = (1+XR)
+    t2 = (Imag/(Irated*CTR))
+    t3 = abs(Rb+1j*w*Lb)*100/ALF
+    # Evaluate
+    Vr_w_rem = t1*t2*t3
+    c_class = Vr_w_rem/(1-remnance)
+    # Return Result
+    return(c_class)
+
+
+# Define Saturation Voltage at Rated Burden
+def ct_satratburden(Inom,VArat=None,ANSIv=None,ALF=20,):
+    """
+    ct_satratburden Function
+    
+    A function to determine the Saturation at rated burden.
+    
+    Parameters
+    ----------
+    Inom:       float
+                Nominal Current
+    VArat:      float, optional, exclusive
+                The apparent power (VA) rating of the CT.
+    ANSIv:      float, optional, exclusive
+                The ANSI voltage requirement to meet.
+    ALF:        float, optional
+                Accuracy Limit Factor, default=20.
+    
+    Returns
+    -------
+    Vsat:       float
+                The saturated voltage.
+    """
+    # Validate Inputs
+    if VArat == None and ANSIv == None:
+        raise ValueError("VArat or ANSIv must be specified.")
+    elif VArat==None:
+        # Calculate VArat from ANSIv
+        Zrat = ANSIv/(20*Inom)
+        VArat = Inom**2 * Zrat
+    # Determine Vsaturation
+    Vsat = ALF * VArat/Inom
+    return(Vsat)
+
+
+# Define CT Vpeak Formula
+def ct_vpeak(Zb,Ip,N):
+    """
+    ct_vpeak Function
+    
+    Simple formula to calculate the Peak Voltage of a CT.
+    
+    Parameters
+    ----------
+    Zb:         float
+                The burden impedance magnitude (in ohms).
+    Ip:         float
+                The peak current for the CT.
+    N:          float
+                The CTR turns ratio of the CT.
+    
+    Returns
+    -------
+    Vpeak:      float
+                The peak voltage.
+    """
+    return(np.sqrt(3.5*Zb*Ip/N))
+
+
+# Define Saturation Time Calculator
+def ct_timetosat(Vknee,XR,Rb,CTR,Imax,ts=None,npts=100,freq=60,plot=False):
+    """
+    ct_timetosat Function
+    
+    Function to determine the "time to saturate" for an underrated C-Class
+    CT using three standard curves described by Juergen Holbach.
+    
+    Parameters
+    ----------
+    Vknee:      float
+                The knee-voltage for the CT.
+    XR:         float
+                The X-over-R ratio of the system.
+    Rb:         float
+                The total burden resistance in ohms.
+    CTR:        float
+                The CT Ratio (primary/secondary, N) to be used.
+    Imax:       float
+                The (maximum) current magnitude to use for calculation,
+                typically the fault current.
+    ts:         numpy.ndarray or float, optional
+                The time-array or particular (floatint point) time at which
+                to calculate the values. default=np.linspace(0,0.1,freq*npts)
+    npts:       float, optional
+                The number of points (per cycle) to calculate if ts is not
+                specified, default=100.
+    freq:       float, optional
+                The system frequency in Hz, default=60.
+    plot:       bool, optional
+                Control argument to enable plotting of calculated curves,
+                default=False.
+    """
+    # Calculate omega
+    w = 2*np.pi*freq
+    # Calculate Tp
+    Tp = XR/w
+    # If ts isn't specified, generate it
+    if ts==None:
+        ts = np.linspace(0,0.1,freq*npts)
+    # Calculate inner term
+    term = -XR*(np.exp(-ts/Tp)-1)
+    # Calculate Vsaturation terms
+    Vsat1 = Imax*Rb*(term+1)
+    Vsat2 = Imax*Rb*(term-np.sin(w*ts))
+    Vsat3 = Imax*Rb*(1-np.cos(w*ts))
+    # If plotting requested
+    if plot and isinstance(ts,np.ndarray):
+        plt.plot(ts,Vsat1,label="Vsat1")
+        plt.plot(ts,Vsat2,label="Vsat2")
+        plt.plot(ts,Vsat3,label="Vsat3")
+        plt.axhline(Vknee,label="V-knee",linestyle='--')
+        plt.title("Saturation Curves")
+        plt.xlabel("Time (ts)")
+        plt.legend()
+        plt.show()
+    elif plot:
+        print("Unable to plot a single point, *ts* must be a numpy-array.")
+    # Determine the crossover points for each saturation curve
+    Vsat1c = Vsat2c = Vsat3c = 0
+    if isinstance(ts,np.ndarray):
+        for i in range(len(ts)):
+            if Vsat1.item(i)>Vknee and Vsat1c==0:
+                Vsat1c = ts.item(i-1)
+            if Vsat2.item(i)>Vknee and Vsat2c==0:
+                Vsat2c = ts.item(i-1)
+            if Vsat3.item(i)>Vknee and Vsat3c==0:
+                Vsat3c = ts.item(i-1)
+        results = (Vsat1c,Vsat2c,Vsat3c)
+    else:
+        results = (Vsat1,Vsat2,Vsat3)
+    return(results)
     
 # END OF FILE

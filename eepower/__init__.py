@@ -4,11 +4,6 @@
 #   A library of functions, constants and more
 #   that are related to Power in Electrical Engineering.
 #
-#   February 13, 2019
-#   September 3, 2018
-#   August 30, 2018
-#   February 20, 2019
-#
 #   Written by Joe Stanley
 #
 #   Special Thanks To:
@@ -50,7 +45,9 @@
 #   - Single Line Power Flow:       powerflow
 #
 #   Additional functions available in sub-modules:
-#   - capacitor.py
+#   - passives.py (renamed from capacitor.py)
+#   - fault.py
+#   - electronics.py
 #   - perunit.py
 #   - systemsolution.py
 ###################################################################
