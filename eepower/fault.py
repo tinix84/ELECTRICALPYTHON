@@ -423,7 +423,7 @@ def ct_vpeak(Zb,Ip,N):
     Vpeak:      float
                 The peak voltage.
     """
-    return(np.sqrt(3.5*Zb*Ip/N))
+    return(np.sqrt(3.5*Zb*Ip*N))
 
 
 # Define Saturation Time Calculator
@@ -488,12 +488,12 @@ def ct_timetosat(Vknee,XR,Rb,CTR,Imax,ts=None,npts=100,freq=60,plot=False):
     Vsat1c = Vsat2c = Vsat3c = 0
     if isinstance(ts,np.ndarray):
         for i in range(len(ts)):
-            if Vsat1.item(i)>Vknee and Vsat1c==0:
-                Vsat1c = ts.item(i-1)
-            if Vsat2.item(i)>Vknee and Vsat2c==0:
-                Vsat2c = ts.item(i-1)
-            if Vsat3.item(i)>Vknee and Vsat3c==0:
-                Vsat3c = ts.item(i-1)
+            if Vsat1[i]>Vknee and Vsat1c==0:
+                Vsat1c = ts[i-1]
+            if Vsat2[i]>Vknee and Vsat2c==0:
+                Vsat2c = ts[i-1]
+            if Vsat3[i]>Vknee and Vsat3c==0:
+                Vsat3c = ts[i-1]
         results = (Vsat1c,Vsat2c,Vsat3c)
     else:
         results = (Vsat1,Vsat2,Vsat3)
