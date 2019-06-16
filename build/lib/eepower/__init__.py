@@ -4,11 +4,6 @@
 #   A library of functions, constants and more
 #   that are related to Power in Electrical Engineering.
 #
-#   February 13, 2019
-#   September 3, 2018
-#   August 30, 2018
-#   February 20, 2019
-#
 #   Written by Joe Stanley
 #
 #   Special Thanks To:
@@ -50,7 +45,9 @@
 #   - Single Line Power Flow:       powerflow
 #
 #   Additional functions available in sub-modules:
-#   - capacitor.py
+#   - passives.py (renamed from capacitor.py)
+#   - fault.py
+#   - electronics.py
 #   - perunit.py
 #   - systemsolution.py
 ###################################################################
@@ -335,7 +332,7 @@ def phasorz(C=None,L=None,f=60,complex=True):
     return(Z)
 
 # Define Parallel Impedance Adder
-def parallelz(Z):
+def parallelz(*args):
     """
     PARALLELZ Function:
     
@@ -356,9 +353,24 @@ def parallelz(Z):
     Zp:     The calculated parallel impedance of the input tuple.
     """
     # Gather length (number of elements in tuple)
-    L = len(Z)
-    if L==1: Zp = Z[0] # Only One Impedance Provided
+    L = len(args)
+    if L==1:
+        Z = args[0] # Only One Tuple Provided
+        try:
+            L = len(Z)
+            if(L==1):
+                Zp = Z[0] # Only one impedance, burried in tuple
+            else:
+                # Inversely add the first two elements in tuple
+                Zp = (1/Z[0]+1/Z[1])**(-1)
+                # If there are more than two elements, add them all inversely
+                if(L > 2):
+                    for i in range(2,L):
+                        Zp = (1/Zp+1/Z[i])**(-1)
+        except:
+            Zp = Z # Only one impedance
     else:
+        Z = args # Set of Args acts as Tuple
         # Inversely add the first two elements in tuple
         Zp = (1/Z[0]+1/Z[1])**(-1)
         # If there are more than two elements, add them all inversely

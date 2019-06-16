@@ -27,8 +27,8 @@ from cmath import exp
 from .filter import sys_condition
 
 # Define System Bode Plotting Function
-def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
-         disp3db=False,lowcut=None,magnitude=True,angle=True):
+def bode(system,mn=0.001,mx=1000,npts=100,title="",xlim=False,ylim=False,sv=False,
+         disp3db=False,lowcut=None,magnitude=True,angle=True,freqaxis="rad"):
     """ System Bode Plotting Function
     
     A simple function to generate the Bode Plot for magnitude
@@ -44,13 +44,11 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
                 
     Optional Arguments
     ------------------
-    mn:            The minimum frequency (as an exponent to 10, e.g. 10^mn)
-                   to be calculated for. default=-2.
-    mx:            The maximum frequency (as an exponent to 10, e.g. 10^mx)
-                   to be calculated for. default=3.
+    mn:            The minimum frequency to be calculated for. default=0.01.
+    mx:            The maximum frequency to be calculated for. default=1000.
     npts:          The number of points over which to calculate the system.
                    default=100.
-    gtitle:        Additional string to be added to plot titles;
+    title:         Additional string to be added to plot titles;
                    default="".
     xlim:          Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
                    Default is False.
@@ -62,6 +60,8 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
     lowcut:        An additional marking line that can be plotted, default=None
     magnitude:     Control argument to enable plotting of magnitude, default=True
     angle:         Control argument to enable plotting of angle, default=True
+    freqaxis:      Control argument to specify the freqency axis in degrees or
+                   radians, default is radians (rad)
     
     Returns
     -------
@@ -71,6 +71,16 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
     # Condition system input to ensure proper execution
     system = sys_condition(system,False)
     
+    # Condition min and max freq terms
+    degrees = False
+    if freqaxis.lower().find("deg") != -1: # degrees requested
+        degrees = True
+        # Scale Degrees to Radians for calculation
+        mn = 2*np.pi*mn
+        mx = 2*np.pi*mx
+    mn = np.log10(mn) # find the exponent value
+    mx = np.log10(mx) # find the exponent value
+    
     # Generate the frequency range to calculate over
     wover = np.logspace(mn,mx,npts)
     
@@ -79,13 +89,17 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
     
     # Plot Magnitude
     if(magnitude):
-        magTitle = "Magnitude "+gtitle
+        magTitle = "Magnitude "+title
         plt.title(magTitle)
-        plt.plot(w, mag)
+        if degrees: # Plot in degrees
+            plt.plot(w/(2*np.pi), mag)
+            plt.xlabel("Frequency (Hz)")
+        else: # Plot in radians
+            plt.plot(w, mag)
+            plt.xlabel("Frequency (rad/sec)")
         plt.xscale("log")
         plt.grid(which="both")
         plt.ylabel("Magnitude (dB)")
-        plt.xlabel("Frequency (rad/sec)")
         if disp3db:
             plt.axhline(-3)
         if lowcut!=None:
@@ -100,13 +114,17 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
 
     # Plot Angle
     if(angle):
-        angTitle = "Angle "+gtitle
+        angTitle = "Angle "+title
         plt.title(angTitle)
-        plt.plot(w, ang)
+        if degrees: # Plot in degrees
+            plt.plot(w/(2*np.pi), ang)
+            plt.xlabel("Frequency (Hz)")
+        else: # Plot in radians
+            plt.plot(w, ang)
+            plt.xlabel("Frequency (rad/sec)")
         plt.xscale("log")
         plt.grid(which="both")
         plt.ylabel("Angle (degrees)")
-        plt.xlabel("Frequency (rad/sec)")
         if xlim!=False:
             plt.xlim(xlim)
         if ylim!=False:
@@ -115,7 +133,7 @@ def bode(system,mn=-2,mx=3,npts=100,gtitle="",xlim=False,ylim=False,sv=False,
             plt.savefig(angTitle+".png")
         plt.show()
 
-def sbode(f,NN=1000,gtitle="",xlim=False,ylim=False,mn=0,mx=1000,
+def sbode(f,NN=1000,title="",xlim=False,ylim=False,mn=0,mx=1000,
           disp3db=False,lowcut=None,magnitude=True,angle=True):
     """
     SBODE Function
@@ -127,7 +145,7 @@ def sbode(f,NN=1000,gtitle="",xlim=False,ylim=False,mn=0,mx=1000,
     Optional Arguments:
     -------------------
     NN:            The Interval over which to be generated, default=1000
-    gtitle:        Additional string to be added to plot titles;
+    title:         Additional string to be added to plot titles;
                    default="".
     xlim:          Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
                    Default is False.
@@ -156,7 +174,7 @@ def sbode(f,NN=1000,gtitle="",xlim=False,ylim=False,mn=0,mx=1000,
         plt.semilogx(W,20*np.log10(abs(H)),'k')
         plt.ylabel('|H| dB')
         plt.xlabel('Frequency (rad/sec)')
-        plt.title(gtitle+" Magnitude")
+        plt.title(title+" Magnitude")
         plt.grid(which='both')
         if disp3db:
             plt.axhline(-3)
@@ -174,7 +192,7 @@ def sbode(f,NN=1000,gtitle="",xlim=False,ylim=False,mn=0,mx=1000,
             aaa[n] = aaa[n] - 2*pi
 
     if(angle):
-        plt.title(gtitle+" Phase")
+        plt.title(title+" Phase")
         plt.semilogx(W,(180/pi)*aaa,'k')
         plt.ylabel('H phase (degrees)')
         plt.xlabel('Frequency (rad/sec)')
@@ -186,7 +204,7 @@ def sbode(f,NN=1000,gtitle="",xlim=False,ylim=False,mn=0,mx=1000,
         plt.show()
 
 
-def zbode(f,dt=0.01,NN=1000,gtitle="",mn=0,mx=2*pi,xlim=False,ylim=False,
+def zbode(f,dt=0.01,NN=1000,title="",mn=0,mx=2*pi,xlim=False,ylim=False,
           approx=False,disp3db=False,lowcut=None,magnitude=True,angle=True):
     """
     ZBODE Function
@@ -207,7 +225,7 @@ def zbode(f,dt=0.01,NN=1000,gtitle="",mn=0,mx=2*pi,xlim=False,ylim=False,
     approx:        Control argument to specify whether input funciton
                    should be treated as Z-Domain function or approximated
                    Z-Domain function. default=False
-    gtitle:        Additional string to be added to plot titles;
+    title:         Additional string to be added to plot titles;
                    default="".
     xlim:          Limit in x-axis for graph plot. Accepts tuple of: (xmin, xmax).
                    Default is False.
@@ -239,7 +257,7 @@ def zbode(f,dt=0.01,NN=1000,gtitle="",mn=0,mx=2*pi,xlim=False,ylim=False,
         plt.semilogx((180/pi)*phi,20*np.log10(abs(H)),'k')
         plt.ylabel('|H| dB')
         plt.xlabel('Frequency (degrees)')
-        plt.title(gtitle+" Magnitude")
+        plt.title(title+" Magnitude")
         plt.grid(which='both')
         if disp3db:
             plt.axhline(-3)
@@ -261,7 +279,7 @@ def zbode(f,dt=0.01,NN=1000,gtitle="",mn=0,mx=2*pi,xlim=False,ylim=False,
         plt.ylabel('H (degrees)')
         plt.grid(which='both')
         plt.xlabel('Frequency (degrees)')
-        plt.title(gtitle+" Phase")
+        plt.title(title+" Phase")
         if xlim!=False:
             plt.xlim(xlim)
         if ylim!=False:
