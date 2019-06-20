@@ -46,6 +46,13 @@ def inductorcharge(t,Vs,R,L):
     Il = Vs/R*(1-np.exp(-R*t/L))
     return(Vl,Il)
 
+# Define Capacitive Back-to-Back Switching Formula
+def capbacktoback(VLL,C1,C2,Lm):
+    # Evaluate Max Current
+    imax = np.sqrt(2/3)*VLL*np.sqrt((C1*C2)/((C1+C2)*Lm))
+    # Evaluate Inrush Current Frequency
+    ifreq = 1/(2*np.pi*np.sqrt(Lm*(C1*C2)/(C1+C2)))
+    return(imax,ifreq)
 
 def inductordischarge(t,Io,R,L):
     Il = Io*np.exp(-R*t/L)
