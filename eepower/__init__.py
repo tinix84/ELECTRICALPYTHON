@@ -88,7 +88,6 @@ A012 = np.array([[ 1, 1, 1    ],        # Convert 012 to ABC
 
 # Define type constants
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
-tuple = "<class 'tuple'>"
 ndarr = "<class 'numpy.ndarray'>"
 tint = "<class 'int'>"
 tfloat = "<class 'float'>"
@@ -1113,6 +1112,9 @@ def curdiv(Ri,Rset,Vin=None,Iin=None,Vout=False):
     Opt2 - (Ii,Vi):     The afore mentioned current, and voltage across the
                         resistor (impedance) of interest
     """
+    # Validate Tuple
+    if not isinstance(Rset,tuple):
+        Rset = (Rset,) # Set as Tuple
     # Calculate The total impedance
     Rtot = parallelz( Rset + (Ri,) ) # Combine tuples, then calculate total resistance
     # Determine Whether Input was given as Voltage or Current
@@ -1302,6 +1304,109 @@ def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
     return(0)
             
     
+# Define Impedance From Power and X/R
+def zsource(S,V,XoverR,Sbase=None,Vbase=None):
+    """
+    zsource Function
     
+    Used to calculate the source impedance given the apparent power
+    magnitude and the X/R ratio.
+    
+    Parameters
+    ----------
+    S:          float
+                The (rated) apparent power magnitude of the source.
+                This may also be refferred to as the "Short-Circuit MVA"
+    V:          float
+                The (rated) voltage of the source terminals.
+    XoverR:     float
+                The X/R ratio rated for the source.
+    Sbase:      float, optional
+                The per-unit base for the apparent power. If set to
+                None, will automatically force Sbase to equal S.
+                If set to True will treat S as the per-unit value.
+    Vbase:      float, optional
+                The per-unit base for the terminal voltage. If set to
+                None, will automaticlaly force Vbase to equal V. If
+                set to True, will treat V as the per-unit value.
+    
+    Returns
+    -------
+    Zsource_pu: complex
+                The per-unit evaluation of the source impedance.
+    """
+    # Force Sbase and Vbase if needed
+    if Vbase == None:
+        Vbase = V
+    if Sbase == None:
+        Sbase = S
+    # Prevent scaling if per-unit already applied
+    if Vbase == True:
+        Vbase = 1
+    if Sbase == True:
+        Sbase = 1
+    # Set to per-unit
+    Spu = S/Sbase
+    Vpu = V/Vbase
+    # Evaluate Zsource Magnitude
+    Zsource_pu = Vpu**2/Spu
+    # Evaluate the angle
+    nu = np.degrees(np.arctan(XoverR))
+    Zsource_pu = eep.phasor(Zsource_pu, nu)
+    return(Zsource_pu)
+
+# Define Impedance Decomposer
+def zdecompose(Zmag,XoverR):
+    """
+    zdecompose Function
+    
+    A function to decompose the impedance magnitude into its
+    corresponding resistance and reactance using the X/R ratio.
+    
+    It is possible to "neglect" R, or make it a very small number;
+    this is done by setting the X/R ratio to a very large number
+    (X being much larger than R).
+    
+    Parameters
+    ----------
+    Zmag:       float
+                The magnitude of the impedance.
+    XoverR:     float
+                The X/R ratio.
+    
+    Returns
+    -------
+    R:          float
+                The resistance (in ohms)
+    X:          float
+                The reactance (in ohms)
+    """
+    # Evaluate Resistance
+    R = Zmag/np.sqrt(XoverR**2+1)
+    # Evaluate Reactance
+    X = R * XoverR
+    # Return
+    return(R,X)
+
+# Define HP to Watts Calculation
+def watts(hp):
+    """
+    watts Formula
+    
+    Calculates the power (in watts) given the
+    horsepower.
+    
+    Parameters
+    ----------
+    hp:         float
+                The horspower to compute.
+    
+    Returns
+    watts:      float
+                The power in watts.
+    """
+    return(hp * 745.699872)
+    
+
 
 # END OF FILE

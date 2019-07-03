@@ -88,7 +88,6 @@ A012 = np.array([[ 1, 1, 1    ],        # Convert 012 to ABC
 
 # Define type constants
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
-tuple = "<class 'tuple'>"
 ndarr = "<class 'numpy.ndarray'>"
 tint = "<class 'int'>"
 tfloat = "<class 'float'>"
@@ -1113,6 +1112,9 @@ def curdiv(Ri,Rset,Vin=None,Iin=None,Vout=False):
     Opt2 - (Ii,Vi):     The afore mentioned current, and voltage across the
                         resistor (impedance) of interest
     """
+    # Validate Tuple
+    if not isinstance(Rset,tuple):
+        Rset = (Rset,) # Set as Tuple
     # Calculate The total impedance
     Rtot = parallelz( Rset + (Ri,) ) # Combine tuples, then calculate total resistance
     # Determine Whether Input was given as Voltage or Current

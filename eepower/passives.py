@@ -58,6 +58,33 @@ def inductordischarge(t,Io,R,L):
     Il = Io*np.exp(-R*t/L)
     Vl = Io*R*(1-np.exp(-R*t/L))
     return(Vl,Il)
+    
+# Define Apparent Power to Farad Conversion
+def farads(VAR,V,freq=60):
+    """
+    farads Formula
+    
+    Function to calculate the required capacitance
+    in Farads to provide the desired power rating
+    (VARs).
+    
+    Parameters
+    ----------
+    VAR:        float
+                The rated power to meet.
+    V:          float
+                The voltage across the capacitor;
+                not described as VLL or VLN, merely
+                the capacitor voltage.
+    freq:       float, optional
+                The System frequency
+    
+    Returns
+    -------
+    C:          float
+                The evaluated capacitance (in Farads).
+    """
+    return(VAR / (2*np.pi*freq*V**2))
 
 ###################################################################
 #   Define Capacitor Energy Calculation
