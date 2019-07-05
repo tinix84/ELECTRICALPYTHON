@@ -1407,6 +1407,54 @@ def watts(hp):
     """
     return(hp * 745.699872)
     
-
+# Define Power Reactance Calculator
+def powerimpedance(S,V,parallel=False):
+    """
+    powerreactance Function
+    
+    Function to determine the ohmic resistance/reactance
+    (impedance) represented by the apparent power (S).
+    
+    Formula:    Z = V^2 / S           (series components)
+                Z = V^2 / (3*S)       (parallel components)
+    
+    Parameters
+    ----------
+    S:          complex
+                The apparent power of the passive element,
+                may be purely resistive or purely reactive.
+    V:          float
+                The operating voltage of the passive element.
+    parallel:   bool, optional
+                Control point to specify whether the ohmic
+                impedance should be returned as series components
+                (False opt.) or parallel components (True opt.).
+    
+    Returns
+    -------
+    R:          float
+                The ohmic resistance required to consume the
+                specified apparent power (S) at the rated
+                voltage (V).
+    X:          float
+                The ohmic reactance required to consume the
+                specified apparent power (S) at the rated
+                voltage (V).
+    """
+    # Condition Inputs
+    V = abs(V)
+    # Test for Parallel Component Option and Evaluate
+    if isinstance(S,complex):
+        # Complex Power (both R and X)
+        if parallel:
+            R = V**2 / (3*S.real)
+            X = V**2 / (3*S.imag)
+        else:
+            R = V**2 / (S.real)
+            X = V**2 / (S.imag)
+        return( R, X )
+    # Not Complex (just R)
+    R = V**2 / S
+    return( R )
 
 # END OF FILE
