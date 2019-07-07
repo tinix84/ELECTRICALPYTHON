@@ -1410,7 +1410,7 @@ def watts(hp):
 # Define Power Reactance Calculator
 def powerimpedance(S,V,parallel=False):
     """
-    powerreactance Function
+    powerimpedance Function
     
     Function to determine the ohmic resistance/reactance
     (impedance) represented by the apparent power (S).

@@ -47,7 +47,29 @@ def inductorcharge(t,Vs,R,L):
     return(Vl,Il)
 
 # Define Capacitive Back-to-Back Switching Formula
-def capbacktoback(VLL,C1,C2,Lm):
+def capbacktoback(C1,C2,Lm,VLN=None,VLL=None):
+    """
+    capbacktoback Function
+    
+    Function to calculate the maximum current and the 
+    frequency of the inrush current of two capacitors
+    connected in parallel when one (energized) capacitor
+    is switched into another (non-engergized) capacitor.
+    
+    Note: This formula is only valid for three-phase systems.
+    
+    Parameters
+    ----------
+    C1:         float
+                The capacitance of the
+    VLN:        float, exclusive
+                The line-to-neutral voltage experienced by
+                any one of the (three) capacitors in the
+                three-phase capacitor bank.
+    VLL:        float, exclusive
+                The line-to-line voltage experienced by the
+                three-phase capacitor bank.
+    """
     # Evaluate Max Current
     imax = np.sqrt(2/3)*VLL*np.sqrt((C1*C2)/((C1+C2)*Lm))
     # Evaluate Inrush Current Frequency
