@@ -106,7 +106,7 @@ def inductorenergy(L,I):
     Returns
     -------
     E:          float
-                The energy stored in the inductor.
+                The energy stored in the inductor (in Joules).
     """
     return(1/2 * L * I**2)
 
@@ -177,23 +177,30 @@ def farads(VAR,V,freq=60):
     """
     return(VAR / (2*np.pi*freq*V**2))
 
-###################################################################
-#   Define Capacitor Energy Calculation
-#
-#   Returns energy (in Joules) of a capacitor given capacitor size
-#   (in Farads) and voltage (in Volts).
-###################################################################
-def capenergy(cap,v):
-	energy = 1/2 * cap * v**2
+# Define Capacitor Energy Calculation
+def capenergy(C,v):
+    """
+    capenergy Function
+    
+    A simple function to calculate the stored voltage (in Joules)
+    in a capacitor with a charged voltage.
+    
+    Parameters
+    ----------
+    C:          float
+                Capacitance in Farads.
+    v:          float
+                Voltage across capacitor.
+    
+    Returns
+    -------
+    energy:     float
+                Energy stored in capacitor (Joules).
+    """
+	energy = 1/2 * C * v**2
 	return(energy)
 
-###################################################################
-#   Define Capacitor Voltage Discharge Function
-#
-#   Returns the voltage of a discharging capacitor after time (t - 
-#   seconds) given initial voltage (vo - volts), capacitor size
-#   (cap - Farads), and load (P - Watts).
-###################################################################
+# Define Capacitor Voltage Discharge Function
 def loadedvcapdischarge(t,vo,C,P):
     """
     loadedvcapdischarge Function
@@ -212,6 +219,11 @@ def loadedvcapdischarge(t,vo,C,P):
                 Capacitance (in Farads)
     P:          float
                 Load power consumption (in Watts).
+    
+    Returns
+    -------
+    Vt:         float
+                Voltage of capacitor at time t.
     """
 	Vt = np.sqrt(vo**2 - 2*P*t/C)
 	return(Vt)
