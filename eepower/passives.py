@@ -23,11 +23,57 @@
 import numpy as np
 
 def vcapdischarge(t,Vs,R,C):
+    """
+    vcapdischarge Function
+    
+    Function to calculate the voltage of a
+    capacitor that is discharging given the time.
+    
+    Parameters
+    ----------
+    t:          float
+                The time at which to calculate the voltage.
+    Vs:         float
+                The starting voltage for the capacitor.
+    R:          float
+                The ohmic value of the resistor being used
+                to discharge.
+    C:          float
+                Capacitive value (in Farads).
+    
+    Returns
+    -------
+    Vc:         float
+                The calculated voltage of the capacitor.
+    """
     Vc = Vs*(np.exp(-t/(R*C)))
     return(Vc)
 
 
 def vcapcharge(t,Vs,R,C):
+    """
+    vcapcharge Function
+    
+    Function to calculate the voltage of a
+    capacitor that is charging given the time.
+    
+    Parameters
+    ----------
+    t:          float
+                The time at which to calculate the voltage.
+    Vs:         float
+                The charging voltage for the capacitor.
+    R:          float
+                The ohmic value of the resistor being used
+                to discharge.
+    C:          float
+                Capacitive value (in Farads).
+    
+    Returns
+    -------
+    Vc:         float
+                The calculated voltage of the capacitor.
+    """
     Vc = Vs*(1-np.exp(-t/(R*C)))
     return(Vc)
     
@@ -39,6 +85,24 @@ def captransfer(t,Vs,R,Cs,Cd):
     
 # Define Inductor Energy Formula
 def inductorenergy(L,I):
+    """
+    inductorenergy Function
+    
+    Function to calculate the energy stored in an inductor
+    given the inductance (in Henries) and the current.
+    
+    Parameters
+    ----------
+    L:          float
+                Inductance Value (in Henries)
+    I:          float
+                Current traveling through inductor.
+    
+    Returns
+    -------
+    E:          float
+                The energy stored in the inductor.
+    """
     return(1/2 * L * I**2)
 
 def inductorcharge(t,Vs,R,L):
