@@ -1,21 +1,26 @@
 ###################################################################
 #   PASSIVES.PY
 #
-#   A library of functions, constants and more
-#   that are related to Capacitors in Electrical Engineering.
-#
-#   February 13, 2019
+#   A library of functions, constants and more that are related to
+#   Inductors and Capacitors in Electrical Engineering.
 #
 #   Written by Joe Stanley
 #
 #   Special Thanks To:
 #   Paul Ortmann - Idaho Power
+#   Brian Johnson - University of Idaho
 #
 #   Included Functions
+#   - Inductor Charge:              inductorcharge
+#   - Inductor Discharge:           inductordischarge
+#   - Inductor Stored Energy:       inductorenergy      
+#   - Back-to-Back Cap. Surge:      capbacktoback  
 #   - Capacitor Stored Energy:      energy
 #   - Cap. Voltage after Time:      VafterT
-#   - Cap. Voltage Discharge:       discharge
+#   - Cap. Voltage Discharge:       vcapdischarge
+#   - Cap. Voltage Charge:          vcapcharge
 #   - Rectifier Cap. Calculation:   rectifier
+#   - Cap. VAR to FARAD Conversion: farads
 #   DOCUMENTATION NOT UP TO DATE!!!!!
 ####################################################################
 
@@ -193,36 +198,48 @@ def VafterT(t,vo,cap,P):
 	Vt = np.sqrt(vo**2 - 2*P*t/cap)
 	return(Vt)
 	
-###################################################################
-#   Define Capacitor Discharge Function
-#
-#   Returns the time to discharge a capacitor to a specified
-#   voltage given set of inputs:
-#
-#   Vinit: Initial Voltage (in volts)
-#   Vmin: Final Voltage (the minimum allowable voltage) (in volts)
-#   cap: Capacitance (in Farads)
-#   P: Load Power being consumed (in Watts)
-#   dt: Time step-size (in seconds) (defaults to 1e-3 | 1ms)
-#   RMS: if true converts RMS Vin to peak
-#   Eremain: if true: also returns the energy remaining in cap
-#
-#   Returns time to discharge from Vinit to Vmin in seconds.
-#   May also return remaining energy in capacitor if Eremain=True
-###################################################################
-def discharge(Vinit,Vmin,cap,P,dt=1e-3,RMS=True,Eremain=False):
+# Define Capacitor Discharge Function
+def timedischarge(Vinit,Vmin,C,P,dt=1e-3,RMS=True,Eremain=False):
+    """
+    timedischarge Function
+    
+    Returns the time to discharge a capacitor to a specified
+    voltage given set of inputs.
+    
+    Parameters
+    ----------
+    Vinit:      float
+                Initial Voltage (in volts)
+    Vmin:       float
+                Final Voltage (the minimum allowable voltage) (in volts)
+    C:          float
+                Capacitance (in Farads)
+    P:          float
+                Load Power being consumed (in Watts)
+    dt:         float, optional
+                Time step-size (in seconds) (defaults to 1e-3 | 1ms)
+    RMS:        bool, optional
+                if true converts RMS Vin to peak
+    Eremain:    bool, optional
+                if true: also returns the energy remaining in cap
+    
+    Returns
+    -------
+    Returns time to discharge from Vinit to Vmin in seconds.
+    May also return remaining energy in capacitor if Eremain=True
+    """
     t = 0 # start at time t=0
     if RMS:
         vo = Vinit*np.sqrt(2) # convert RMS to peak
     else:
         vo = Vinit
-    vc = VafterT(t,vo,cap,P) # set initial cap voltage
+    vc = VafterT(t,vo,C,P) # set initial cap voltage
     while(vc >= Vmin):
         t = t+dt # increment the time
         vcp = vc # save previous voltage
-        vc = VafterT(t,vo,cap,P) # calc. new voltage
+        vc = VafterT(t,vo,C,P) # calc. new voltage
     if(Eremain):
-        E = energy(cap,vcp) # calc. energy
+        E = energy(C,vcp) # calc. energy
         return(t-dt,E)
     else:
         return(t-dt)
