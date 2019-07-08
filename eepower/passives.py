@@ -244,13 +244,29 @@ def timedischarge(Vinit,Vmin,C,P,dt=1e-3,RMS=True,Eremain=False):
     else:
         return(t-dt)
 
-###################################################################
-#   Define Rectifier Capacitor Calculator
-#
-#   Returns the capacitance (in Farads) for a needed capacitor in
-#   a rectifier configuration given the system frequency (in Hz),
-#   the load (in amps) and the desired voltage ripple.
-###################################################################
-def rectifier(Iload, fsys, dVout):
-	C = Iload / (fsys * dVout)
+
+# Define Rectifier Capacitor Calculator
+def rectifier(Iload, fswitch, dVout):
+    """
+    rectifier Function
+    
+    Returns the capacitance (in Farads) for a needed capacitor in
+    a rectifier configuration given the system frequency (in Hz),
+    the load (in amps) and the desired voltage ripple.
+    
+    Parameters
+    ----------
+    Iload:      float
+                The load current that must be met.
+    fswitch:    float
+                The switching frequency of the system.
+    dVout:      float
+                Desired delta-V on the output.
+    
+    Returns
+    -------
+    C:          float
+                Required capacitance (in Farads) to meet arguments.
+    """
+	C = Iload / (fswitch * dVout)
 	return(C)
