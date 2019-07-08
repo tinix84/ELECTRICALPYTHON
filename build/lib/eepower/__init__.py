@@ -1304,6 +1304,157 @@ def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
     return(0)
             
     
+# Define Impedance From Power and X/R
+def zsource(S,V,XoverR,Sbase=None,Vbase=None):
+    """
+    zsource Function
     
+    Used to calculate the source impedance given the apparent power
+    magnitude and the X/R ratio.
+    
+    Parameters
+    ----------
+    S:          float
+                The (rated) apparent power magnitude of the source.
+                This may also be refferred to as the "Short-Circuit MVA"
+    V:          float
+                The (rated) voltage of the source terminals.
+    XoverR:     float
+                The X/R ratio rated for the source.
+    Sbase:      float, optional
+                The per-unit base for the apparent power. If set to
+                None, will automatically force Sbase to equal S.
+                If set to True will treat S as the per-unit value.
+    Vbase:      float, optional
+                The per-unit base for the terminal voltage. If set to
+                None, will automaticlaly force Vbase to equal V. If
+                set to True, will treat V as the per-unit value.
+    
+    Returns
+    -------
+    Zsource_pu: complex
+                The per-unit evaluation of the source impedance.
+    """
+    # Force Sbase and Vbase if needed
+    if Vbase == None:
+        Vbase = V
+    if Sbase == None:
+        Sbase = S
+    # Prevent scaling if per-unit already applied
+    if Vbase == True:
+        Vbase = 1
+    if Sbase == True:
+        Sbase = 1
+    # Set to per-unit
+    Spu = S/Sbase
+    Vpu = V/Vbase
+    # Evaluate Zsource Magnitude
+    Zsource_pu = Vpu**2/Spu
+    # Evaluate the angle
+    nu = np.degrees(np.arctan(XoverR))
+    Zsource_pu = eep.phasor(Zsource_pu, nu)
+    return(Zsource_pu)
+
+# Define Impedance Decomposer
+def zdecompose(Zmag,XoverR):
+    """
+    zdecompose Function
+    
+    A function to decompose the impedance magnitude into its
+    corresponding resistance and reactance using the X/R ratio.
+    
+    It is possible to "neglect" R, or make it a very small number;
+    this is done by setting the X/R ratio to a very large number
+    (X being much larger than R).
+    
+    Parameters
+    ----------
+    Zmag:       float
+                The magnitude of the impedance.
+    XoverR:     float
+                The X/R ratio.
+    
+    Returns
+    -------
+    R:          float
+                The resistance (in ohms)
+    X:          float
+                The reactance (in ohms)
+    """
+    # Evaluate Resistance
+    R = Zmag/np.sqrt(XoverR**2+1)
+    # Evaluate Reactance
+    X = R * XoverR
+    # Return
+    return(R,X)
+
+# Define HP to Watts Calculation
+def watts(hp):
+    """
+    watts Formula
+    
+    Calculates the power (in watts) given the
+    horsepower.
+    
+    Parameters
+    ----------
+    hp:         float
+                The horspower to compute.
+    
+    Returns
+    watts:      float
+                The power in watts.
+    """
+    return(hp * 745.699872)
+    
+# Define Power Reactance Calculator
+def powerimpedance(S,V,parallel=False):
+    """
+    powerimpedance Function
+    
+    Function to determine the ohmic resistance/reactance
+    (impedance) represented by the apparent power (S).
+    
+    Formula:    Z = V^2 / S           (series components)
+                Z = V^2 / (3*S)       (parallel components)
+    
+    Parameters
+    ----------
+    S:          complex
+                The apparent power of the passive element,
+                may be purely resistive or purely reactive.
+    V:          float
+                The operating voltage of the passive element.
+    parallel:   bool, optional
+                Control point to specify whether the ohmic
+                impedance should be returned as series components
+                (False opt.) or parallel components (True opt.).
+    
+    Returns
+    -------
+    R:          float
+                The ohmic resistance required to consume the
+                specified apparent power (S) at the rated
+                voltage (V).
+    X:          float
+                The ohmic reactance required to consume the
+                specified apparent power (S) at the rated
+                voltage (V).
+    """
+    # Condition Inputs
+    V = abs(V)
+    # Test for Parallel Component Option and Evaluate
+    if isinstance(S,complex):
+        # Complex Power (both R and X)
+        if parallel:
+            R = V**2 / (3*S.real)
+            X = V**2 / (3*S.imag)
+        else:
+            R = V**2 / (S.real)
+            X = V**2 / (S.imag)
+        return( R, X )
+    # Not Complex (just R)
+    R = V**2 / S
+    return( R )
 
 # END OF FILE
