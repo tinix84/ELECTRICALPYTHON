@@ -194,8 +194,26 @@ def capenergy(cap,v):
 #   seconds) given initial voltage (vo - volts), capacitor size
 #   (cap - Farads), and load (P - Watts).
 ###################################################################
-def VafterT(t,vo,cap,P):
-	Vt = np.sqrt(vo**2 - 2*P*t/cap)
+def loadedvcapdischarge(t,vo,C,P):
+    """
+    loadedvcapdischarge Function
+    
+    Returns the voltage of a discharging capacitor after time (t - 
+    seconds) given initial voltage (vo - volts), capacitor size
+    (cap - Farads), and load (P - Watts).
+    
+    Parameters
+    ----------
+    t:          float
+                Time at which to calculate voltage.
+    vo:         float
+                Initial capacitor voltage.
+    C:          float
+                Capacitance (in Farads)
+    P:          float
+                Load power consumption (in Watts).
+    """
+	Vt = np.sqrt(vo**2 - 2*P*t/C)
 	return(Vt)
 	
 # Define Capacitor Discharge Function
@@ -233,11 +251,11 @@ def timedischarge(Vinit,Vmin,C,P,dt=1e-3,RMS=True,Eremain=False):
         vo = Vinit*np.sqrt(2) # convert RMS to peak
     else:
         vo = Vinit
-    vc = VafterT(t,vo,C,P) # set initial cap voltage
+    vc = loadedvcapdischarge(t,vo,C,P) # set initial cap voltage
     while(vc >= Vmin):
         t = t+dt # increment the time
         vcp = vc # save previous voltage
-        vc = VafterT(t,vo,C,P) # calc. new voltage
+        vc = loadedvcapdischarge(t,vo,C,P) # calc. new voltage
     if(Eremain):
         E = energy(C,vcp) # calc. energy
         return(t-dt,E)
