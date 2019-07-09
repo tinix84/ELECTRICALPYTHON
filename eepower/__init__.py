@@ -89,10 +89,6 @@ A012 = np.array([[ 1, 1, 1    ],        # Convert 012 to ABC
 # Define type constants
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
 ndarr = "<class 'numpy.ndarray'>"
-tint = "<class 'int'>"
-tfloat = "<class 'float'>"
-tfun = "<class 'function'>"
-tstr = "<class 'str'>"
 
 # Define Phasor Generator
 def phasor( mag, ang ):

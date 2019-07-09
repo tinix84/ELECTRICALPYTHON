@@ -27,6 +27,7 @@
 # Import libraries as needed:
 import numpy as np
 
+# Define Capacitor Voltage Discharge Function
 def vcapdischarge(t,Vs,R,C):
     """
     vcapdischarge Function
@@ -54,7 +55,7 @@ def vcapdischarge(t,Vs,R,C):
     Vc = Vs*(np.exp(-t/(R*C)))
     return(Vc)
 
-
+# Define Capacitor Voltage Charge Function
 def vcapcharge(t,Vs,R,C):
     """
     vcapcharge Function
@@ -82,7 +83,37 @@ def vcapcharge(t,Vs,R,C):
     Vc = Vs*(1-np.exp(-t/(R*C)))
     return(Vc)
     
+# Define Capacitive Energy Transfer Function
 def captransfer(t,Vs,R,Cs,Cd):
+    """
+    captransfer Function
+    
+    Calculate the voltage across a joining
+    resistor (R) that connects Cs and Cd, the
+    energy-source and -destination capacitors,
+    respectively. Calculate the final voltage
+    across both capacitors.
+    
+    Parameters
+    ----------
+    t:          float
+                Time at which to calculate resistor voltage.
+    Vs:         float
+                Initial voltage across source-capacitor (Cs).
+    R:          float
+                Value of resistor that connects capacitors.
+    Cs:         float
+                Source capacitance value in Farads.
+    Cd:         float
+                Destination capacitance value in Farads.
+    
+    Returns
+    -------
+    rvolt:      float
+                Voltage across the resistor at time t.
+    vfinal:     float
+                Final voltage that both capacitors settle to.
+    """
     tau = (R*Cs*Cd) / (Cs+Cd)
     rvolt = Vs*np.exp(-t/tau)
     vfinal = Vs*Cs/(Cs+Cd)
@@ -110,7 +141,32 @@ def inductorenergy(L,I):
     """
     return(1/2 * L * I**2)
 
+# Define Inductor Charge Function
 def inductorcharge(t,Vs,R,L):
+    """
+    inductorcharge Function
+    
+    Calculates the Voltage and Current of an inductor
+    that is charging/storing energy.
+    
+    Parameters
+    ----------
+    t:          float
+                Time at which to calculate voltage and current.
+    Vs:         float
+                Charging voltage across inductor and resistor.
+    R:          float
+                Resistance related to inductor.
+    L:          float
+                Inductance value in Henries.
+    
+    Returns
+    -------
+    V1:         float
+                Voltage across inductor at time t.
+    I1:         float
+                Current through inductor at time t.
+    """
     Vl = Vs*np.exp(-R*t/L)
     Il = Vs/R*(1-np.exp(-R*t/L))
     return(Vl,Il)
@@ -145,7 +201,32 @@ def capbacktoback(C1,C2,Lm,VLN=None,VLL=None):
     ifreq = 1/(2*np.pi*np.sqrt(Lm*(C1*C2)/(C1+C2)))
     return(imax,ifreq)
 
+# Define Inductor Discharge Function
 def inductordischarge(t,Io,R,L):
+    """
+    inductordischarge Function
+    
+    Calculates the Voltage and Current of an inductor
+    that is discharging its stored energy.
+    
+    Parameters
+    ----------
+    t:          float
+                Time at which to calculate voltage and current.
+    Io:         float
+                Initial current traveling through inductor.
+    R:          float
+                Resistance being discharged to.
+    L:          float
+                Inductance value in Henries.
+    
+    Returns
+    -------
+    V1:         float
+                Voltage across inductor at time t.
+    I1:         float
+                Current through inductor at time t.
+    """
     Il = Io*np.exp(-R*t/L)
     Vl = Io*R*(1-np.exp(-R*t/L))
     return(Vl,Il)
@@ -300,3 +381,6 @@ def rectifier(Iload, fswitch, dVout):
     """
 	C = Iload / (fswitch * dVout)
 	return(C)
+
+    
+# END OF FILE

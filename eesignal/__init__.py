@@ -82,11 +82,6 @@ k = 1e+3 # Kili Multiple
 M = 1e+6 # Mega Multiple
 NAN = float('nan')
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
-tuple = "<class 'tuple'>"
-ndarr = "<class 'numpy.ndarray'>"
-tint = "<class 'int'>"
-tfloat = "<class 'float'>"
-tfun = "<class 'function'>"
 tnfloat = "<class 'numpy.float64'>"
 
 # Define Convolution Bar-Graph Function:
@@ -154,14 +149,14 @@ def convolve(tuple):
     Given a tuple of terms, convolves all terms in tuple to
     return one tuple as a numpy array.
     
-    Arguments
+    Parameters
     ---------
-    tuple:        Tuple of terms to be convolved.
+    tuple:      Tuple of terms to be convolved.
                 i.e. ( [1, 2], [3, 4], ..., [n-1, n] )
     
     Returns
     -------
-    c:            The convolved set of the individual terms.
+    c:          The convolved set of the individual terms.
                 i.e. np.array([ x1, x2, x3, ..., xn ])
     """
     c = sig.convolve(tuple[0],tuple[1])
