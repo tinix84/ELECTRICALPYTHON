@@ -76,7 +76,8 @@ from scipy.integrate import quad as integrate
 from scipy import signal as sig
 
 # Define constants
-p = 1e-9 # Pico Multiple
+p = 1e-12 # Pico Multiple
+n = 1e-9 # Nano Multiple
 u = 1e-6 # Micro (mu) Multiple
 m = 1e-3 # Mili Multiple
 k = 1e+3 # Kili Multiple
