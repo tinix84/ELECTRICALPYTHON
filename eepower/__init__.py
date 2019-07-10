@@ -95,22 +95,23 @@ ndarr = "<class 'numpy.ndarray'>"
 # Define Phasor Generator
 def phasor( mag, ang ):
     """
-    PHASOR Function:
+    phasor Function:
     
-    Purpose:
-    --------
     Generates the standard Pythonic complex representation
     of a phasor voltage or current when given the magnitude
     and angle of the specific voltage or current.
     
-    Required Arguments:
-    -------------------
-    mag:        The Magnitude of the Voltage/Current
-    ang:        The Angle (in degrees) of the Voltage/Current
+    Parameters
+    ----------
+    mag:        float
+                The Magnitude of the Voltage/Current
+    ang:        float
+                The Angle (in degrees) of the Voltage/Current
     
-    Returns:
-    --------
-    phasor:     Standard Pythonic Complex Representation of
+    Returns
+    -------
+    phasor:     complex
+                Standard Pythonic Complex Representation of
                 the specified voltage or current.
     """
     return( c.rect( mag, np.radians( ang ) ) )
@@ -118,29 +119,28 @@ def phasor( mag, ang ):
 # Define Reactance Calculator
 def reactance(z,f=60,sensetivity=1e-12):
     """
-    REACTANCE Function:
+    reactance Function:
     
-    Purpose:
-    --------
     Calculates the Capacitance or Inductance in Farads or Henreys
     (respectively) provided the impedance of an element.
     Will return capacitance (in Farads) if ohmic impedance is
     negative, or inductance (in Henrys) if ohmic impedance is
     positive. If imaginary: calculate with j factor (imaginary number).
     
-    Required Arguments:
-    -------------------
-    z:      The Impedance Provided, may be complex (R+jI)
-    
-    Optional Arguments:
-    -------------------
-    f:              The Frequency Base for Provided Impedance, default=60
-    sensetivity:    The sensetivity used to check if a resistance was
+    Parameters
+    ----------
+    z:              complex
+                    The Impedance Provided, may be complex (R+jI)
+    f:              float, optional
+                    The Frequency Base for Provided Impedance, default=60
+    sensetivity:    float, optional
+                    The sensetivity used to check if a resistance was
                     provided, default=1e-12
     
-    Returns:
-    --------
-    out:    Capacitance or Inductance of Impedance
+    Returns
+    -------
+    out:            float
+                    Capacitance or Inductance of Impedance
     """
     # Evaluate Omega
     w = 2*np.pi*f
@@ -170,48 +170,44 @@ def reactance(z,f=60,sensetivity=1e-12):
 # Define display function
 def cprint(val,unit="",label="",printval=True,ret=False,round=3):
     """
-    CPRINT Function
+    cprint Function
     
-    Purpose:
-    --------
     This function is designed to accept a complex value (val) and print
     the value in the standard electrical engineering notation:
     
-        magnitude ∠ angle °
+    **magnitude ∠ angle °**
     
     This function will print the magnitude in degrees, and can print
     a unit and label in addition to the value itself.
     
-    Required Arguments:
-    -------------------
-    val:        The Complex Value to be Printed, may be singular value,
+    Parameters
+    ----------
+    val:        complex
+                The Complex Value to be Printed, may be singular value,
                 tuple of values, or list/array.
-    
-    Optional Arguments:
-    -------------------
-    unit:       The string to be printed corresponding to the unit mark.
+    unit:       string, optional
+                The string to be printed corresponding to the unit mark.
                 default=""
-    label:      The pre-pended string used as a descriptive labeling string.
+    label:      string, optional
+                The pre-pended string used as a descriptive labeling string.
                 default=""
-    printval:   Control argument enabling/disabling printing of the string.
+    printval:   bool, optional
+                Control argument enabling/disabling printing of the string.
                 default=True
-    ret:        Control argument allowing the evaluated value to be returned.
+    ret:        bool, optional
+                Control argument allowing the evaluated value to be returned.
                 default=False
-    round:      Control argument specifying how many decimals of the complex
+    round:      int, optional
+                Control argument specifying how many decimals of the complex
                 value to be printed. May be negative to round to spaces
                 to the left of the decimal place (follows standard round()
                 functionality). default=3
     
-    Returns:
-    --------
-    numarr:     The array of values corresponding to the magnitude and angle,
-                values are returned in the form:
-                
-                    [[ mag, ang ],
-                     [ mag, ang ],
-                          ...    ,
-                     [ mag, ang ]]
-                
+    Returns
+    -------
+    numarr:     numpy.ndarray
+                The array of values corresponding to the magnitude and angle,
+                values are returned in the form: [[ mag, ang ],...,[ mag, ang ]]
                 where the angles are evaluated in degrees.
     """
     printarr = np.array([]) # Empty array
@@ -288,33 +284,32 @@ def cprint(val,unit="",label="",printval=True,ret=False,round=3):
 # Define Impedance Conversion function
 def phasorz(C=None,L=None,f=60,complex=True):
     """
-    PHASORZ Function:
+    phasorz Function:
     
-    Purpose:
-    --------
     This function's purpose is to generate the phasor-based
     impedance of the specified input given as either the
     capacitance (in Farads) or the inductance (in Henreys).
     The function will return the phasor value (in Ohms).
     
-    Required Arguments:
-    -------------------
-    Either C or L must be specified.
+    Parameters
+    ----------
+    C:          float, optional
+                The capacitance value (specified in Farads),
+                default=None
+    L:          float, optional
+                The inductance value (specified in Henreys),
+                default=None
+    f:          float, optional
+                The system frequency to be calculated upon, default=60
+    complex:    bool, optional
+                Control argument to specify whether the returned
+                value should be returned as a complex value.
+                default=True
     
-    Optional Arguments:
-    -------------------
-    C:       The capacitance value (specified in Farads),
-             default=None
-    L:       The inductance value (specified in Henreys),
-             default=None
-    f:       The system frequency to be calculated upon, default=60
-    complex: Control argument to specify whether the returned
-             value should be returned as a complex value.
-             default=True
-    
-    Returns:
-    --------
-    Z:      The ohmic impedance of either C or L (respectively).
+    Returns
+    -------
+    Z:      complex
+            The ohmic impedance of either C or L (respectively).
     """
     w = 2*np.pi*f
     #C Given in ohms, return as Z
@@ -331,23 +326,23 @@ def phasorz(C=None,L=None,f=60,complex=True):
 # Define Parallel Impedance Adder
 def parallelz(*args):
     """
-    PARALLELZ Function:
+    parallelz Function:
     
-    Purpose:
-    --------
     This function is designed to generate the total parallel
     impedance of a set (tuple) of impedances specified as real
     or complex values.
     
-    Required Arguments:
-    -------------------
-    Z:      The tupled input set of impedances, may be a tuple
+    Parameters
+    ----------
+    Z:      tuple of complex
+            The tupled input set of impedances, may be a tuple
             of any size greater than 2. May be real, complex, or
             a combination of the two.
     
-    Returns:
-    --------
-    Zp:     The calculated parallel impedance of the input tuple.
+    Returns
+    -------
+    Zp:     complex
+            The calculated parallel impedance of the input tuple.
     """
     # Gather length (number of elements in tuple)
     L = len(args)
@@ -379,37 +374,35 @@ def parallelz(*args):
 # Define Phase/Line Converter
 def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
     """
-    PHASELINE Function
+    phaseline Function
     
-    Purpose:
-    --------
     This function is designed to return the phase- or line-equivalent
     of the voltage/current provided. It is designed to be used when
     converting delta- to wye-connections and vice-versa.
     Given a voltage of one type, this function will return the
     voltage of the opposite type. The same is true for current.
     
-    Required Arguments:
-    -------------------
-    NONE - All optional, one optional argument MUST be specified.
+    Parameters
+    ----------
+    VLL:        float, optional
+                The Line-to-Line Voltage; default=None
+    VLN:        float, optional
+                The Line-to-Neutral Voltage; default=None
+    Iline:      float, optional
+                The Line-Current; default=None
+    Iphase:     float, optional
+                The Phase-Current; default=None
+    complex:    bool, optional
+                Control to return value in complex form; default=False
     
-    Optional Arguments:
-    -------------------
-    VLL:        The Line-to-Line Voltage; default=None
-    VLN:        The Line-to-Neutral Voltage; default=None
-    Iline:      The Line-Current; default=None
-    Iphase:     The Phase-Current; default=None
-    complex:    Control to return value in complex form; default=False
-    
-    Returns:
-    --------
-    out:        The opposite type of the input; i.e.:
-                    GIVEN       RETURNED
-                    VLL         VLN
-                    VLN         VLL
-                    Iline       Iphase
-                    Iphase      Iline
-                Output may be returned as complex if desired.
+    ======  =======
+    Inputs  Outputs
+    ======  =======
+    VLL     VLN
+    VLN     VLL
+    Iline   Iphase
+    Iphase  Iline
+    ======  =======
     """
     output = 0
     #Given VLL, convert to VLN
@@ -442,10 +435,8 @@ def phaseline(VLL=None,VLN=None,Iline=None,Iphase=None,complex=False):
 # Define Power Set Function
 def powerset(P=None,Q=None,S=None,PF=None):
     """
-    POWERSET Function
+    powerset Function
     
-    Purpose:
-    --------
     This function is designed to calculate all values
     in the set { P, Q, S, PF } when two (2) of the
     values are provided. The equations in this
@@ -453,25 +444,29 @@ def powerset(P=None,Q=None,S=None,PF=None):
     real and reactive power, apparent power, and power
     factor.
     
-    Required Arguments:
-    -------------------
-    NONE; a minimum of two of the optional arguments
-          must be entered for proper execution.
-    
-    Optional Arguments:
-    -------------------
-    P:      Real Power, unitless; default=None
-    Q:      Reactive Power, unitless; default=None
-    S:      Apparent Power, unitless; default=None
-    PF:     Power Factor, unitless, provided as a
+    Parameters
+    ----------
+    P:      float, optional
+            Real Power, unitless; default=None
+    Q:      float, optional
+            Reactive Power, unitless; default=None
+    S:      float, optional
+            Apparent Power, unitless; default=None
+    PF:     float, optional
+            Power Factor, unitless, provided as a
             decimal value, lagging is positive,
             leading is negative; default=None
     
-    Returns:
-    --------
-    ( P, Q, S, PF ):    Completely calculated set,
-                        all terms are as described
-                        above.
+    Returns
+    -------
+    P:      float
+            Calculated Real Power Magnitude
+    Q:      float
+            Calculated Reactive Power Magnitude
+    S:      float
+            Calculated Apparent Power Magnitude
+    PF:     float
+            Calculated Power Factor
     """
     #Given P and Q
     if (P!=None) and (Q!=None):
@@ -502,37 +497,33 @@ def powerset(P=None,Q=None,S=None,PF=None):
 def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
                   text="Power Triangle",printval=False):
     """
-    POWERTRIANGLE Function
+    powertriangle Function
     
-    Purpose:
-    --------
     This function is designed to draw a power triangle given
     values for the complex power system.
     
-    Required Arguments:
-    -------------------
-    NONE; a minimum of two of the optional arguments
-          must be entered for proper execution.
-    
-    Optional Arguments:
-    -------------------
-    P:          Real Power, unitless; default=None
-    Q:          Reactive Power, unitless; default=None
-    S:          Apparent Power, unitless; default=None
-    PF:         Power Factor, unitless, provided as a
+    Parameters
+    ----------
+    P:          float
+                Real Power, unitless; default=None
+    Q:          float
+                Reactive Power, unitless; default=None
+    S:          float
+                Apparent Power, unitless; default=None
+    PF:         float
+                Power Factor, unitless, provided as a
                 decimal value, lagging is positive,
                 leading is negative; default=None
-    color:      The color of the power triangle lines;
+    color:      string, optional
+                The color of the power triangle lines;
                 default="red"
-    text:       The title of the power triangle plot,
+    text:       string, optional
+                The title of the power triangle plot,
                 default="Power Triangle"
-    printval:   Control argument to allow the numeric
+    printval:   bool, optional
+                Control argument to allow the numeric
                 values to be printed on the plot,
                 default="False"
-    
-    Returns:
-    --------
-    NONE;   plots generated.
     """
     # Calculate all values if not all are provided
     if( P==None or Q==None or S==None or PF==None):
@@ -583,25 +574,11 @@ def powertriangle(P=None,Q=None,S=None,PF=None,color="red",
     plt.show()
 
 # Define Transformer Short-Circuit/Open-Circuit Function
-#
-#   Calculates Req and Xeq, or Rc and Xm, or both sets given three
-#   values from a specific set of inputs { Poc, Voc, Ioc,  Psc,
-#   Vsc, Isc }.
-#
-#   Requires one or both of two sets: { Poc, Voc, Ioc }, or
-#   { Psc, Vsc, Isc }.
-#   Will return: { Rc, Xm } given first set, { Req, Xeq } given
-#   second set.
-#   All values given must be given as absolute value, not complex.
-#   All values returned are given with respect to high-side/primary
-###################################################################
 def transformertest(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
                Isc=False):
     """
-    TRANSFORMERTEST Function
+    transformertest Function
     
-    Purpose:
-    --------
     This function will determine the non-ideal circuit components of
     a transformer (Req and Xeq, or Rc and Xm) given the test-case
     parameters for the open-circuit test and/or the closed-circuit
@@ -610,28 +587,27 @@ def transformertest(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
     All values given must be given as absolute value, not complex.
     All values returned are given with respect to primary.
     
-    Required Arguments:
-    -------------------
-    NONE,   A minimum of one complete set of optional arguments must
-            be provided for function to complete successfully.
-            Optional Arg. Sets are: { Poc, Voc, Ioc }, or
-            { Psc, Vsc, Isc }.
+    Parameters
+    ----------
+    Poc:    float, optional
+            The open-circuit measured power (real power), default=None
+    Voc:    float, optional
+            The open-circuit measured voltage (measured on X),
+            default=None
+    Ioc:    float, optional
+            The open-circuit measured current (measured on primary),
+            default=None
+    Psc:    float, optional
+            The short-circuit measured power (real power), default=None
+    Vsc:    float, optional
+            The short-circuit measured voltage (measured on X),
+            default=None
+    Isc:    float, optional
+            The short-circuit measured current (measured on X),
+            default=None
     
-    Optional Arguments:
-    -------------------
-    Poc:    The open-circuit measured power (real power), default=None
-    Voc:    The open-circuit measured voltage (measured on X),
-            default=None
-    Ioc:    The open-circuit measured current (measured on primary),
-            default=None
-    Psc:    The short-circuit measured power (real power), default=None
-    Vsc:    The short-circuit measured voltage (measured on X),
-            default=None
-    Isc:    The short-circuit measured current (measured on X),
-            default=None
-    
-    Returns:
-    --------
+    Returns
+    -------
     {Req,Xeq,Rc,Xm}:    Given all optional args
     {Rc, Xm}:           Given open-circuit parameters
     {Req, Xeq}:         Given short-circuit parameters
@@ -664,35 +640,37 @@ def transformertest(Poc=False,Voc=False,Ioc=False,Psc=False,Vsc=False,
                 "Not enough arguments were provided.")
 
 # Define Phasor Plot Generator
-def phasorplot(phasor,title="Phasor Diagram",legend=False,bg="#d5de9c",radius=1.2):
+def phasorplot(phasor,title="Phasor Diagram",legend=False,bg="#d5de9c",radius=1.2,
+               colors = ["#FF0000","#800000","#FFFF00","#808000","#00ff00","#008000",
+                         "#00ffff","#008080","#0000ff","#000080","#ff00ff","#800080"]):
     """
-    PHASORPLOT Function
+    phasorplot Function
     
-    Purpose:
-    --------
     This function is designed to plot a phasor-diagram with angles in degrees
     for up to 12 phasor sets. Phasors must be passed as a complex number set,
     (e.g. [ m+ja, m+ja, m+ja, ... , m+ja ] ).
     
-    Required Arguments:
-    -------------------
-    phasor:     The set of phasors to be plotted.
-    
-    Optional Arguments:
-    -------------------
-    title:      The Plot Title, default="Phasor Diagram"
-    legend:     Control argument to enable displaying the legend, must be passed
+    Parameters
+    ----------
+    phasor:     list of complex
+                The set of phasors to be plotted.
+    title:      string, optional
+                The Plot Title, default="Phasor Diagram"
+    legend:     bool, optional
+                Control argument to enable displaying the legend, must be passed
                 as an array or list of strings, default=False
-    bg:         Background-Color control, default="#d5de9c"
-    radius:     The diagram radius, default=1.2
+    bg:         string, optional
+                Background-Color control, default="#d5de9c"
+    radius:     float, optional
+                The diagram radius, default=1.2
+    colors:     list of str, optional
+                List of hexidecimal color strings denoting the line colors to use.
     """
+    # Check for more phasors than colors
     numphs = len(phasor)
-    
-    colors = ["#FF0000","#800000","#FFFF00","#808000","#00ff00","#008000",
-            "#00ffff","#008080","#0000ff","#000080","#ff00ff","#800080"]
-    
-    if numphs > 12:
-        raise ValueError("ERROR: No more than 12 phasors allowed.")
+    numclr = len(colors)
+    if numphs > numclr:
+        raise ValueError("ERROR: Too many phasors provided. Specify more line colors.")
     
     # Force square figure and square axes looks better for polar, IMO
     width, height = matplotlib.rcParams['figure.figsize']
@@ -777,37 +755,27 @@ def pfdist(I1=False,IRMS=False,Ih=False):
     
     return(PFdist)
 
-###################################################################
-#   Define Non-Linear Power Factor Calculator
-#
-#   Returns the the unknown variable of the set { PFtrue, PFdist,
-#   PFdisp }.
-#
-#   Requires any two of the three inputs
-###################################################################
+# Define Non-Linear Power Factor Calculator
 def nlinpf(PFtrue=False,PFdist=False,PFdisp=False):
     """
-    NLINPF Function
+    nlinpf Function
     
-    Purpose:
-    --------
     This function is designed to evaluate one of three unknowns
     given the other two. These particular unknowns are the arguments
     and as such, they are described in the representative sections
     below.
     
-    Required Arguments:
-    -------------------
-    None.
+    Parameters
+    ----------
+    PFtrue:     float, exclusive
+                The "True" power-factor, default=None
+    PFdist:     float, exclusive
+                The "Distorted" power-factor, default=None
+    PFdisp:     float, exclusive
+                The "Displacement" power-factor, default=None
     
-    Optional Arguments:
-    -------------------
-    PFtrue:     The "True" power-factor, default=None
-    PFdist:     The "Distorted" power-factor, default=None
-    PFdisp:     The "Displacement" power-factor, default=None
-    
-    Returns:
-    --------
+    Returns
+    -------
     {unknown}:  This function will return the unknown variable from
                 the previously described set of variables.
     """
@@ -963,30 +931,31 @@ def harmoniclimit(Isc,IL,N=0,Ih=0,printout=True,ret=False):
 # Define Short-Circuit RL Current Calculator
 def iscrl(V,Z,t=None,f=None,mxcurrent=True,alpha=None):
     """
-    ISCRL Function
+    iscrl Function
     
-    Purpose:
-    --------
     The Isc-RL function (Short Circuit Current for RL Circuit)
     is designed to calculate the short-circuit current for an
     RL circuit.
     
-    Required Arguments:
-    -------------------
-    V:          The absolute magnitude of the voltage.
-    Z:          The complex value of the impedance. (R + jX)
-    
-    Optional Arguments:
-    -------------------
-    t:          The time at which the value should be calculated,
+    Parameters
+    ----------
+    V:          float
+                The absolute magnitude of the voltage.
+    Z:          float
+                The complex value of the impedance. (R + jX)
+    t:          float, optional
+                The time at which the value should be calculated,
                 should be specified in seconds, default=None
-    f:          The system frequency, specified in Hz, default=None
-    mxcurrent:  Control variable to enable calculating the value at
+    f:          float, optional
+                The system frequency, specified in Hz, default=None
+    mxcurrent:  bool, optional
+                Control variable to enable calculating the value at
                 maximum current, default=True
-    alpha:      Angle specification, default=None
+    alpha:      float, optional
+                Angle specification, default=None
     
-    Returns:
-    --------
+    Returns
+    -------
     Opt 1 - (Irms, IAC, K):     The RMS current with maximum DC
                                 offset, the AC current magnitude,
                                 and the asymmetry factor.
@@ -1047,30 +1016,30 @@ def iscrl(V,Z,t=None,f=None,mxcurrent=True,alpha=None):
 # Define Voltage Divider Calculator
 def voltdiv(Vin,R1,R2,Rload=None):
     """
-    VOLTDIV Function
+    voltdiv Function
     
-    Purpose:
-    --------
     This function is designed to calculate the output
     voltage of a voltage divider given the input voltage,
     the resistances (or impedances) and the load resistance
     (or impedance) if present.
     
-    Required Arguments:
-    -------------------
-    Vin:    The Input Voltage, may be real or complex
-    R1:     The top resistor of the divider (real or complex)
-    R2:     The bottom resistor of the divider, the one which
+    Parameters
+    ----------
+    Vin:    float
+            The Input Voltage, may be real or complex
+    R1:     float
+            The top resistor of the divider (real or complex)
+    R2:     float
+            The bottom resistor of the divider, the one which
             the output voltage is measured across, may be
             either real or complex
+    Rload:  float, optional
+            The Load Resistor (or impedance), default=None
     
-    Optional Arguments:
-    -------------------
-    Rload:  The Load Resistor (or impedance), default=None
-    
-    Returns:
-    --------
-    Vout:   The Output voltage as measured across R2 and/or Rload
+    Returns
+    -------
+    Vout:   float
+            The Output voltage as measured across R2 and/or Rload
     """
     # Determine whether Rload is given
     if(Rload==None): # No Load Given
@@ -1083,29 +1052,29 @@ def voltdiv(Vin,R1,R2,Rload=None):
 # Define Current Divider Calculator
 def curdiv(Ri,Rset,Vin=None,Iin=None,Vout=False):
     """
-    CURDIV Function
+    curdiv Function
     
-    Purpose:
-    --------
     This function is disigned to accept the input current, or input
     voltage to a resistor (or impedance) network of parallel resistors
     (impedances) and calculate the current through a particular element.
     
-    Required Arguments:
-    -------------------
-    Ri:     The Particular Resistor of Interest, should not be included in
+    Parameters
+    ----------
+    Ri:     float
+            The Particular Resistor of Interest, should not be included in
             the tuple passed to Rset.
-    Rset:   Tuple of remaining resistances (impedances) in network.
-    
-    Optional Arguments:
-    -------------------
-    Vin:    The input voltage for the system, default=None
-    Iin:    The input current for the system, default=None
-    Vout:   Control Argument to enable return of the voltage across the
+    Rset:   float
+            Tuple of remaining resistances (impedances) in network.
+    Vin:    float, optional
+            The input voltage for the system, default=None
+    Iin:    float, optional
+            The input current for the system, default=None
+    Vout:   bool, optional
+            Control Argument to enable return of the voltage across the
             resistor (impecance) of interest (Ri)
     
-    Returns:
-    --------
+    Returns
+    -------
     Opt1 - Ii:          The Current through the resistor (impedance) of interest
     Opt2 - (Ii,Vi):     The afore mentioned current, and voltage across the
                         resistor (impedance) of interest
@@ -1132,26 +1101,26 @@ def curdiv(Ri,Rset,Vin=None,Iin=None,Vout=False):
 # Define Instantaneous Power Calculator
 def instpower(P,Q,t,f=60):
     """
-    INSTPOWER Function
+    instpower Function
     
-    Purpose:
-    --------
     This function is designed to calculate the instantaneous power at a
     specified time t given the magnitudes of P and Q.
     
-    Required Arguments:
-    -------------------
-    P:  Magnitude of Real Power
-    Q:  Magnitude of Reactive Power
-    t:  Time at which to evaluate
+    Parameters
+    ----------
+    P:  float
+        Magnitude of Real Power
+    Q:  float
+        Magnitude of Reactive Power
+    t:  float
+        Time at which to evaluate
+    f:  float, optional
+        System frequency (in Hz), default=60
     
-    Optional Arguments:
-    -------------------
-    f:  System frequency (in Hz), default=60
-    
-    Returns:
-    --------
-    Pinst:  Instantaneous Power at time t
+    Returns
+    -------
+    Pinst:  float
+            Instantaneous Power at time t
     """
     # Evaluate omega
     w = 2*np.pi*f
@@ -1162,28 +1131,27 @@ def instpower(P,Q,t,f=60):
 # Define Delta-Wye Impedance Network Calculator
 def dynetz(delta=None,wye=None,round=None):
     """
-    DYNETZ Function
+    dynetz Function
     
-    Purpose:
-    --------
     This function is designed to act as the conversion utility
     to transform delta-connected impedance values to wye-
     connected and vice-versa.
     
-    Required Arguments:
-    -------------------
-    *Requires Either delta or wye*
-    
-    Optional Arguments:
-    -------------------
-    delta:  Tuple of the delta-connected impedance values as:
+    Parameters
+    ----------
+    delta:  tuple of float, exclusive
+            Tuple of the delta-connected impedance values as:
             { Z12, Z23, Z31 }, default=None
-    wye:    Tuple of the wye-connected impedance valuse as:
+    wye:    tuple of float, exclusive
+            Tuple of the wye-connected impedance valuse as:
             { Z1, Z2, Z3 }, default=None
     
-    Returns:
-    delta-set: Delta-Connected impedance values { Z12, Z23, Z31 }
-    wye-set:   Wye-Connected impedance values { Z1, Z2, Z3 }
+    Returns
+    -------
+    delta-set:  tuple of float
+                Delta-Connected impedance values { Z12, Z23, Z31 }
+    wye-set:    tuple of float
+                Wye-Connected impedance values { Z1, Z2, Z3 }
     """
     # Determine which set of impedances was provided
     if(delta!=None and wye==None):
@@ -1211,28 +1179,26 @@ def dynetz(delta=None,wye=None,round=None):
 # Define Single Line Power Flow Calculator
 def powerflow( Vsend, Vrec, Zline ):
     """
-    POWERFLOW Function:
+    powerflow Function:
     
-    Purpose:
-    --------
     This function is designed to calculate the ammount of real
     power transferred from the sending end to the recieving end
     of an electrical line given the sending voltage (complex),
     the receiving voltage (complex) and the line impedance.
     
-    Required Arguments:
-    -------------------
-    Vsend:      The sending-end voltage, should be complex
-    Vrec:       The receiving-end voltage, should be complex
-    Zline:      The line impedance, should be complex
+    Parameters
+    ----------
+    Vsend:      complex
+                The sending-end voltage, should be complex
+    Vrec:       complex
+                The receiving-end voltage, should be complex
+    Zline:      complex
+                The line impedance, should be complex
     
-    Optional Arguments:
-    -------------------
-    None.
-    
-    Returns:
-    --------
-    pflow:      The power transferred from sending-end to
+    Returns
+    -------
+    pflow:      complex
+                The power transferred from sending-end to
                 receiving-end, positive values denote power
                 flow from send to receive, negative values
                 denote vice-versa.
