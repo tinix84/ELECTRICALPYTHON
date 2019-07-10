@@ -3,7 +3,6 @@ ELECTRICALPYTHON NOTES
 
 FUNCTIONS TO ADD:
 - Heat Sinking Solver
-- Inductor/Capacitor Current, Voltage, and Energy
 - DC/DC Converters
 - DC/AC Converters
 - Harmonic System Composer (to generate a function or array with the terms)
@@ -12,7 +11,6 @@ FUNCTIONS TO ADD:
 - sine to cosine function equivalent
 - Sampled values to fundamental sine/cosine waveform
 - kWh to BTU (and vice-versa) function
-- W to HP (and vice-versa) function
 
 
 FUNCTIONS TO FIX:

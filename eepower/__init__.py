@@ -70,6 +70,7 @@ import cmath as c
 
 # Define constants
 a = c.rect(1,np.radians(120)) # A Operator for Sym. Components
+p = 1e-9 # Pico Multiple
 u = 1e-6 # Micro (mu) Multiple
 m = 1e-3 # Mili Multiple
 k = 1e+3 # Kili Multiple
@@ -1398,10 +1399,31 @@ def watts(hp):
                 The horspower to compute.
     
     Returns
+    -------
     watts:      float
                 The power in watts.
     """
     return(hp * 745.699872)
+
+# Define Watts to HP Calculation
+def horsepower(watts):
+    """
+    horsepower Function
+    
+    Calculates the power (in horsepower) given
+    the power in watts.
+    
+    Parameters
+    ----------
+    watts:      float
+                The wattage to compute.
+    
+    Returns
+    -------
+    hp:         float
+                The power in horsepower.
+    """
+    return(watts / 745.699872)
     
 # Define Power Reactance Calculator
 def powerimpedance(S,V,parallel=False):
