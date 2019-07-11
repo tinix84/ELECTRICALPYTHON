@@ -89,22 +89,18 @@ tnfloat = "<class 'numpy.float64'>"
 # Define Convolution Bar-Graph Function:
 def convbar(h, x, outline=True):
     """
-    CONVBAR Function:
+    convbar Function:
     
-    INPUTS:
-    -------
-    h: Impulse Response - Given as Array (Prefferably Numpy Array)
-    x: Input Function - Given as Array (Prefferably Numpy Array)
+    Generates plots of each of two input arrays as bar-graphs, then
+    generates a convolved bar-graph of the two inputs to demonstrate
+    and illustrate convolution, typically for an educational purpose.
     
-    RETURNS:
-    --------
-    None.
-    
-    PLOTS:
-    ------
-    Impulse Response: The bar-graph plotted version of h.
-    Input Function:   The bar-graph plotted version of x.
-    Convolved Output: The bar-graph plotted version of the convolution of h and x.
+    Parameters
+    ----------
+    h:      numpy.ndarray
+            Impulse Response - Given as Array (Prefferably Numpy Array)
+    x:      numpy.ndarray
+            Input Function - Given as Array (Prefferably Numpy Array)
     """
     
     # The impulse response
@@ -146,20 +142,21 @@ def convbar(h, x, outline=True):
 
 # Define convolution function
 def convolve(tuple):
-    """ Multi-Argument Convolution Function
+    """
+    convolve Function
     
     Given a tuple of terms, convolves all terms in tuple to
     return one tuple as a numpy array.
     
     Parameters
     ---------
-    tuple:      Tuple of terms to be convolved.
-                i.e. ( [1, 2], [3, 4], ..., [n-1, n] )
+    tuple:      tuple of numpy.ndarray
+                Tuple of terms to be convolved.
     
     Returns
     -------
     c:          The convolved set of the individual terms.
-                i.e. np.array([ x1, x2, x3, ..., xn ])
+                i.e. numpy.ndarray([ x1, x2, x3, ..., xn ])
     """
     c = sig.convolve(tuple[0],tuple[1])
     if (len(tuple) > 2):
@@ -186,6 +183,13 @@ class c_func_concat:
 
 # Define Step function
 def step(t):
+    """
+    step Function
+    
+    Simple implimentation of numpy.heaviside function
+    to provide standard step-function as specified to
+    be zero at x<0, and one at x>=0.
+    """
     return( np.heaviside( t, 1) )
 
 # Tuple to Matrix Converter
@@ -206,16 +210,23 @@ def nparr_to_matrix(x,yx):
 
 # RMS Calculating Function
 def rms(f, T):
-    """ Calculates the RMS value of the provided function.
+    """
+    rms Function
+    
+    Integral-based RMS calculator, evaluates the RMS value
+    of a repetative signal (f) given the signal's specific
+    period (T)
 
-    Arguments
+    Parameters
     ----------
-    f : the periodic function, a callable like f(t)
-    T : the period of the function f, so that f(0)==f(T)
+    f:      float
+            The periodic function, a callable like f(t)
+    T:      float
+            The period of the function f, so that f(0)==f(T)
 
     Returns
     -------
-    RMS : the RMS value of the function (f) over the interval ( 0, T )
+    RMS:    The RMS value of the function (f) over the interval ( 0, T )
 
     """
     fn = lambda x: f(x)**2
@@ -367,25 +378,23 @@ def fft_plot(f, N, T=1, mn=False, mx=False, fftplot=True, absolute=False, title=
 # Define Gaussian Function
 def gaussian(x,mu=0,sigma=1):
     """
-    GAUSSIAN Function:
+    gaussian Function:
     
-    Purpose:
-    --------
     This function is designed to generate the gaussian
     distribution curve with configuration mu and sigma.
     
-    Required Arguments:
-    -------------------
-    x:       The input (array) x.
-    
-    Optional Arguments:
-    -------------------
-    mu:      Optional control argument, default=0
-    sigma:   Optional control argument, default=1
+    Parameters
+    ----------
+    x:      float
+            The input (array) x.
+    mu:     float, optional
+            Optional control argument, default=0
+    sigma:  float, optional
+            Optional control argument, default=1
     
     Returns:
     --------
-    Computed gaussian (array) of the input x
+    Computed gaussian (numpy.ndarray) of the input x
     """
     return( 1/(sigma * np.sqrt(2 * np.pi)) *
             np.exp(-(x - mu)**2 / (2 * sigma**2)) )
@@ -393,22 +402,20 @@ def gaussian(x,mu=0,sigma=1):
 # Define Gaussian Distribution Function
 def gausdist(x,mu=0,sigma=1):
     """
-    GAUSSDIST Function:
+    gausdist Function:
     
-    Purpose:
-    --------
     This function is designed to calculate the generic
     distribution of a gaussian function with controls
     for mu and sigma.
     
-    Required Arguments:
-    -------------------
-    x:       The input (array) x
-    
-    Optional Arguments:
-    -------------------
-    mu:      Optional control argument, default=0
-    sigma:   Optional control argument, default=1
+    Parameters
+    ----------
+    x:      numpy.ndarray
+            The input (array) x
+    mu:     float, optional
+            Optional control argument, default=0
+    sigma:  float, optional
+            Optional control argument, default=1
     
     Returns:
     --------

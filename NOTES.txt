@@ -11,7 +11,11 @@ FUNCTIONS TO ADD:
 - sine to cosine function equivalent
 - Sampled values to fundamental sine/cosine waveform
 - kWh to BTU (and vice-versa) function
+- Thermocouple Evaluation Function
+
 
 
 FUNCTIONS TO FIX:
 - FFT Solver
+
+
