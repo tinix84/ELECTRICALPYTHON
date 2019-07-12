@@ -1442,6 +1442,101 @@ def powerimpedance(S,V,parallel=False):
     R = V**2 / S
     return( R )
 
+# Define Cold-Junction-Voltage Calculator
+def coldjunction(Tcj,coupletype="K",To=None,Vo=None,P1=None,P2=None,
+                 P3=None,P4=None,Q1=None,Q2=None,round=None):
+    """
+    coldjunction Function
+    
+    Function to calculate the expected cold-junction-voltage given
+    the temperature at the cold-junction.
+    
+    Parameters
+    ----------
+    Tcj:        float
+                The temperature (in degrees C) that the junction is
+                currently subjected to.
+    coupletype: string, optional
+                Thermocouple Type, may be one of (B,E,J,K,N,R,S,T), default="K"
+    To:         float, optional
+                Temperature Constant used in Polynomial.
+    Vo:         float, optional
+                Voltage Constant used in Polynomial.
+    P1:         float, optional
+                Polynomial constant.
+    P2:         float, optional
+                Polynomial constant.
+    P3:         float, optional
+                Polynomial constant.
+    P4:         float, optional
+                Polynomial constant.
+    Q1:         float, optional
+                Polynomial constant.
+    Q2:         float, optional
+                Polynomial constant.
+    Q3:         float, optional
+                Polynomial constant.
+    round:      int, optional
+                Control input to specify how many decimal places the result
+                should be rounded to, default=1.
+    
+    Returns
+    -------
+    Vcj:        float
+                The calculated cold-junction-voltage in volts.
+    """
+    # Condition Inputs
+    coupletype = coupletype.upper()
+    # Validate Temperature Range
+    if coupletype == "B":
+        if not (0 < Tcj and Tcj < 70):
+            raise ValueError("Temperature out of range.")
+    else:
+        if not (-20 < Tcj and Tcj < 70):
+            raise ValueError("Temperature out of range.")
+    # Define Constant Lookup System
+    lookup = ["B","E","J","K","N","R","S","T"]
+    if not (coupletype in lookup):
+        raise ValueError("Invalid Thermocouple Type")
+    index = lookup.index(coupletype)
+    # Define Constant Dictionary
+    constants = {   "To" : [4.2000000E+01,2.5000000E+01,2.5000000E+01,2.5000000E+01,7.0000000E+00,2.5000000E+01,2.5000000E+01,2.5000000E+01],
+                    "Vo" : [3.3933898E-04,1.4950582E+00,1.2773432E+00,1.0003453E+00,1.8210024E-01,1.4067016E-01,1.4269163E-01,9.9198279E-01],
+                    "P1" : [2.1196684E-04,6.0958443E-02,5.1744084E-02,4.0514854E-02,2.6228256E-02,5.9330356E-03,5.9829057E-03,4.0716564E-02],
+                    "P2" : [3.3801250E-06,-2.7351789E-04,-5.4138663E-05,-3.8789638E-05,-1.5485539E-04,2.7736904E-05,4.5292259E-06,7.1170297E-04],
+                    "P3" : [-1.4793289E-07,-1.9130146E-05,-2.2895769E-06,-2.8608478E-06,2.1366031E-06,-1.0819644E-06,-1.3380281E-06,6.8782631E-07],
+                    "P4" : [-3.3571424E-09,-1.3948840E-08,-7.7947143E-10,-9.5367041E-10,9.2047105E-10,-2.3098349E-09,-2.3742577E-09,4.3295061E-11],
+                    "Q1" : [-1.0920410E-02,-5.2382378E-03,-1.5173342E-03,-1.3948675E-03,-6.4070932E-03,2.6146871E-03,-1.0650446E-03,1.6458102E-02],
+                    "Q2" : [-4.9782932E-04,-3.0970168E-04,-4.2314514E-05,-6.7976627E-05,8.2161781E-05,-1.8621487E-04,-2.2042420E-04,0.0000000E+00]
+                }
+    # Load Data Into Terms
+    if To == None:
+        To = constants["To"][index]
+    if Vo == None:
+        Vo = constants["Vo"][index]
+    if P1 == None:
+        P1 = constants["P1"][index]
+    if P2 == None:
+        P2 = constants["P2"][index]
+    if P3 == None:
+        P3 = constants["P3"][index]
+    if P4 == None:
+        P4 = constants["P4"][index]
+    if Q1 == None:
+        Q1 = constants["Q1"][index]
+    if Q2 == None:
+        Q2 = constants["Q2"][index]
+    # Define Formula Terms
+    tx = (Tcj-To)
+    num = tx*(P1+tx*(P2+tx*(P3+P4*tx)))
+    den = 1+tx*(Q1+Q2*tx)
+    Vcj = Vo + num/den
+    # Round Value if Allowed
+    if round != None:
+        Vcj = np.around(Vcj, round)
+    # Return in milivolts
+    return(Vcj*m)
+    
 # Define Thermocouple Temperature Calculation
 def thermocouple(V,coupletype="K",fahrenheit=False,cjt=None,To=None,Vo=None,P1=None,
                  P2=None,P3=None,P4=None,Q1=None,Q2=None,Q3=None,round=1):
@@ -1481,10 +1576,27 @@ def thermocouple(V,coupletype="K",fahrenheit=False,cjt=None,To=None,Vo=None,P1=N
                 Polynomial constant.
     Q3:         float, optional
                 Polynomial constant.
+    round:      int, optional
+                Control input to specify how many decimal places the result
+                should be rounded to, default=1.
+    
+    Returns
+    -------
+    T:          float
+                The temperature (by default in degrees C, but optionally in
+                degrees F) as computed by the function.
     """
     # Condition Inputs
     coupletype = coupletype.upper()
     V = V/m # Scale volts to milivolts
+    # Determine Cold-Junction-Voltage
+    if cjt != None:
+        Vcj = coldjunction(cjt,coupletype,To,Vo,P1,P2,P3,P4,Q1,Q2,round)
+        V += Vcj/m
+    # Define Constant Lookup System
+    lookup = ["B","E","J","K","N","R","S","T"]
+    if not (coupletype in lookup):
+        raise ValueError("Invalid Thermocouple Type")
     # Define Voltage Ranges
     voltages = {"J" : [-8.095, 0,      21.840, 45.494, 57.953, 69.553],
                 "K" : [-6.404, -3.554, 4.096,  16.397, 33.275, 69.553],

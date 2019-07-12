@@ -28,6 +28,12 @@
 #   - Gaussian Distribution Calculator:    gausdist
 #   - Probability Density Calculator:      probdensity
 #   - Real FFT Evaluator:                  rfft
+#   - Normalized Power Spectrum:           wrms
+#   - Hartley's Data Capacity Equation:    hartleydata
+#   - Shannon's Data Capacity Equation:    shannondata
+#   - String to Bit-String Converter:      string_to_bits
+#   - CRC Message Generator:               crcsender
+#   - CRC Remainder Calculator:            crcremainder
 #
 #   Private Functions ( Those not Intended for Use Outside of Library )
 #   - Tupple to Matrix Converter:       tuple_to_matrix
@@ -55,7 +61,7 @@
 #   - Filter Operations/Tools           FILTER.PY       Imported as: filter
 #################################################################################
 name = "eesignal"
-ver = "2.13.9"
+ver = "2.13.10"
 
 # Import Submodules as Internal Functions
 from .bode import *
@@ -70,38 +76,31 @@ from scipy.integrate import quad as integrate
 from scipy import signal as sig
 
 # Define constants
+p = 1e-12 # Pico Multiple
+n = 1e-9 # Nano Multiple
 u = 1e-6 # Micro (mu) Multiple
 m = 1e-3 # Mili Multiple
 k = 1e+3 # Kili Multiple
 M = 1e+6 # Mega Multiple
 NAN = float('nan')
 matrix = "<class 'numpy.matrixlib.defmatrix.matrix'>"
-tuple = "<class 'tuple'>"
-ndarr = "<class 'numpy.ndarray'>"
-tint = "<class 'int'>"
-tfloat = "<class 'float'>"
-tfun = "<class 'function'>"
 tnfloat = "<class 'numpy.float64'>"
 
 # Define Convolution Bar-Graph Function:
 def convbar(h, x, outline=True):
     """
-    CONVBAR Function:
+    convbar Function:
     
-    INPUTS:
-    -------
-    h: Impulse Response - Given as Array (Prefferably Numpy Array)
-    x: Input Function - Given as Array (Prefferably Numpy Array)
+    Generates plots of each of two input arrays as bar-graphs, then
+    generates a convolved bar-graph of the two inputs to demonstrate
+    and illustrate convolution, typically for an educational purpose.
     
-    RETURNS:
-    --------
-    None.
-    
-    PLOTS:
-    ------
-    Impulse Response: The bar-graph plotted version of h.
-    Input Function:   The bar-graph plotted version of x.
-    Convolved Output: The bar-graph plotted version of the convolution of h and x.
+    Parameters
+    ----------
+    h:      numpy.ndarray
+            Impulse Response - Given as Array (Prefferably Numpy Array)
+    x:      numpy.ndarray
+            Input Function - Given as Array (Prefferably Numpy Array)
     """
     
     # The impulse response
@@ -143,20 +142,21 @@ def convbar(h, x, outline=True):
 
 # Define convolution function
 def convolve(tuple):
-    """ Multi-Argument Convolution Function
+    """
+    convolve Function
     
     Given a tuple of terms, convolves all terms in tuple to
     return one tuple as a numpy array.
     
-    Arguments
+    Parameters
     ---------
-    tuple:        Tuple of terms to be convolved.
-                i.e. ( [1, 2], [3, 4], ..., [n-1, n] )
+    tuple:      tuple of numpy.ndarray
+                Tuple of terms to be convolved.
     
     Returns
     -------
-    c:            The convolved set of the individual terms.
-                i.e. np.array([ x1, x2, x3, ..., xn ])
+    c:          The convolved set of the individual terms.
+                i.e. numpy.ndarray([ x1, x2, x3, ..., xn ])
     """
     c = sig.convolve(tuple[0],tuple[1])
     if (len(tuple) > 2):
@@ -183,6 +183,13 @@ class c_func_concat:
 
 # Define Step function
 def step(t):
+    """
+    step Function
+    
+    Simple implimentation of numpy.heaviside function
+    to provide standard step-function as specified to
+    be zero at x<0, and one at x>=0.
+    """
     return( np.heaviside( t, 1) )
 
 # Tuple to Matrix Converter
@@ -203,16 +210,23 @@ def nparr_to_matrix(x,yx):
 
 # RMS Calculating Function
 def rms(f, T):
-    """ Calculates the RMS value of the provided function.
+    """
+    rms Function
+    
+    Integral-based RMS calculator, evaluates the RMS value
+    of a repetative signal (f) given the signal's specific
+    period (T)
 
-    Arguments
+    Parameters
     ----------
-    f : the periodic function, a callable like f(t)
-    T : the period of the function f, so that f(0)==f(T)
+    f:      float
+            The periodic function, a callable like f(t)
+    T:      float
+            The period of the function f, so that f(0)==f(T)
 
     Returns
     -------
-    RMS : the RMS value of the function (f) over the interval ( 0, T )
+    RMS:    The RMS value of the function (f) over the interval ( 0, T )
 
     """
     fn = lambda x: f(x)**2
@@ -364,25 +378,23 @@ def fft_plot(f, N, T=1, mn=False, mx=False, fftplot=True, absolute=False, title=
 # Define Gaussian Function
 def gaussian(x,mu=0,sigma=1):
     """
-    GAUSSIAN Function:
+    gaussian Function:
     
-    Purpose:
-    --------
     This function is designed to generate the gaussian
     distribution curve with configuration mu and sigma.
     
-    Required Arguments:
-    -------------------
-    x:       The input (array) x.
-    
-    Optional Arguments:
-    -------------------
-    mu:      Optional control argument, default=0
-    sigma:   Optional control argument, default=1
+    Parameters
+    ----------
+    x:      float
+            The input (array) x.
+    mu:     float, optional
+            Optional control argument, default=0
+    sigma:  float, optional
+            Optional control argument, default=1
     
     Returns:
     --------
-    Computed gaussian (array) of the input x
+    Computed gaussian (numpy.ndarray) of the input x
     """
     return( 1/(sigma * np.sqrt(2 * np.pi)) *
             np.exp(-(x - mu)**2 / (2 * sigma**2)) )
@@ -390,22 +402,20 @@ def gaussian(x,mu=0,sigma=1):
 # Define Gaussian Distribution Function
 def gausdist(x,mu=0,sigma=1):
     """
-    GAUSSDIST Function:
+    gausdist Function:
     
-    Purpose:
-    --------
     This function is designed to calculate the generic
     distribution of a gaussian function with controls
     for mu and sigma.
     
-    Required Arguments:
-    -------------------
-    x:       The input (array) x
-    
-    Optional Arguments:
-    -------------------
-    mu:      Optional control argument, default=0
-    sigma:   Optional control argument, default=1
+    Parameters
+    ----------
+    x:      numpy.ndarray
+            The input (array) x
+    mu:     float, optional
+            Optional control argument, default=0
+    sigma:  float, optional
+            Optional control argument, default=1
     
     Returns:
     --------
@@ -529,5 +539,326 @@ def rfft(arr,dt=0.01,absolute=True,resample=True):
         # Downsample to remove unnecessary points
         fixedfft = filter.dnsample(fourier,resample)
         return(fixedfft)
+
+# Define Normalized Power Spectrum Function
+def wrms(func,dw=0.1,NN=100,quad=False,plot=True,
+         title="Power Density Spectrum",round=3):
+    """
+    WRMS Function:
+    
+    Purpose:
+    --------
+    This function is designed to calculate the RMS
+    bandwidth (Wrms) using a numerical process.
+    
+    Required Arguments:
+    -------------------
+    func:      The callable function to use for evaluation
+    
+    Optional Arguments:
+    -------------------
+    dw:        The delta-omega to be used, default=0.1
+    NN:        The total number of points, default=100
+    quad:      Control value to enable use of integrals
+               default=False
+    plot:      Control to enable plotting, default=True
+    title:     Title displayed with plot,
+               default="Power Density Spectrum"
+    round:     Control to round the Wrms on plot,
+               default=3
+    
+    Returns:
+    --------
+    W:         Calculated RMS Bandwidth (rad/sec)
+    """
+    # Define omega
+    omega = np.linspace(0,(NN-1)*del_w,NN)
+    # Initialize Fraction Terms
+    Stot = Sw2 = 0
+    # Power Density Spectrum
+    Sxx = np.array([])
+    for n in range(NN):
+        # Calculate Power Density Spectrum
+        Sxx = np.append(Sxx,func(omega[n]))
+        Stot = Stot + Sxx[n]
+        Sw2 = Sw2 + (omega[n]**2)*Sxx[n]
+    if(quad):
+        def intf(w):
+            return(w**2*func(w))
+        num = integrate(intf,0,np.inf)[0]
+        den = integrate(func,0,np.inf)[0]
+        # Calculate W
+        W = np.sqrt(num/den)
+    else:
+        # Calculate W
+        W = np.sqrt(Sw2/Stot)
+    Wr = np.around(W,round)
+    # Plot Upon Request
+    if(plot):
+        plt.plot(omega,Sxx)
+        plt.title(title)
+        # Evaluate Text Location
+        x = 0.65*max(omega)
+        y = 0.80*max(Sxx)
+        plt.text(x,y,"Wrms: "+str(Wr))
+        plt.show()
+    # Return Calculated RMS Bandwidth
+    return(W)
+        
+# Define Hartley's Equation for Data Capacity
+def hartleydata(BW,M):
+    """
+    hartleydata Function
+    
+    Function to calculate Hartley's Law,
+    the maximum data rate achievable for
+    a given noiseless channel.
+    
+    Parameters
+    ----------
+    BW:         float
+                Bandwidth of the data channel.
+    M:          float
+                Number of signal levels.
+    
+    Returns:
+    --------
+    C:          float
+                Capacity of channel (in bits per second)
+    """
+    C = 2*BW*np.log2(M)
+    return(C)
+
+# Define Shannon's Equation For Data Capacity
+def shannondata(BW,S,N):
+    """
+    shannondata Function
+    
+    Function to calculate the maximum data
+    rate that may be achieved given a data
+    channel and signal/noise characteristics
+    using Shannon's equation.
+    
+    Parameters
+    ----------
+    BW:         float
+                Bandwidth of the data channel.
+    S:          float
+                Signal strength (in Watts).
+    N:          float
+                Noise strength (in Watts).
+    
+    Returns
+    -------
+    C:          float
+                Capacity of channel (in bits per second)
+    """
+    C = BW*np.log2(1+S/N)
+    return(C)
+
+# Define CRC Generator (Sender Side)
+def crcsender(data, key):
+    """
+    crcsender Function
+    
+    Function to generate a CRC-embedded
+    message ready for transmission.
+    
+    Contributing Author Credit:
+    Shaurya Uppal
+    Available from: geeksforgeeks.org
+    
+    Parameters
+    ----------
+    data:       string of bits
+                The bit-string to be encoded.
+    key:        string of bits
+                Bit-string representing key.
+    
+    Returns
+    -------
+    codeword:   string of bits
+                Bit-string representation of
+                encoded message.
+    """
+    # Define Sub-Functions
+    def xor(a, b): 
+        # initialize result 
+        result = [] 
+
+        # Traverse all bits, if bits are 
+        # same, then XOR is 0, else 1 
+        for i in range(1, len(b)): 
+            if a[i] == b[i]: 
+                result.append('0') 
+            else: 
+                result.append('1') 
+
+        return(''.join(result))
+
+    # Performs Modulo-2 division 
+    def mod2div(divident, divisor):
+        # Number of bits to be XORed at a time. 
+        pick = len(divisor) 
+
+        # Slicing the divident to appropriate 
+        # length for particular step 
+        tmp = divident[0 : pick] 
+
+        while pick < len(divident): 
+
+            if tmp[0] == '1': 
+
+                # replace the divident by the result 
+                # of XOR and pull 1 bit down 
+                tmp = xor(divisor, tmp) + divident[pick] 
+
+            else:   # If leftmost bit is '0' 
+
+                # If the leftmost bit of the dividend (or the 
+                # part used in each step) is 0, the step cannot 
+                # use the regular divisor; we need to use an 
+                # all-0s divisor. 
+                tmp = xor('0'*pick, tmp) + divident[pick] 
+
+            # increment pick to move further 
+            pick += 1
+
+        # For the last n bits, we have to carry it out 
+        # normally as increased value of pick will cause 
+        # Index Out of Bounds. 
+        if tmp[0] == '1': 
+            tmp = xor(divisor, tmp) 
+        else: 
+            tmp = xor('0'*pick, tmp) 
+
+        checkword = tmp 
+        return(checkword)
+    
+    # Condition data
+    data = str(data)
+    # Condition Key
+    key = str(key)
+    l_key = len(key)
+   
+    # Appends n-1 zeroes at end of data 
+    appended_data = data + '0'*(l_key-1) 
+    remainder = mod2div(appended_data, key) 
+   
+    # Append remainder in the original data 
+    codeword = data + remainder 
+    return(codeword)
+
+# Define CRC Generator (Sender Side)
+def crcremainder(data, key):
+    """
+    crcremainder Function
+    
+    Function to calculate the CRC
+    remainder of a CRC message.
+    
+    Contributing Author Credit:
+    Shaurya Uppal
+    Available from: geeksforgeeks.org
+    
+    Parameters
+    ----------
+    data:       string of bits
+                The bit-string to be decoded.
+    key:        string of bits
+                Bit-string representing key.
+    
+    Returns
+    -------
+    remainder: string of bits
+                Bit-string representation of
+                encoded message.
+    """
+    # Define Sub-Functions
+    def xor(a, b): 
+        # initialize result 
+        result = [] 
+
+        # Traverse all bits, if bits are 
+        # same, then XOR is 0, else 1 
+        for i in range(1, len(b)): 
+            if a[i] == b[i]: 
+                result.append('0') 
+            else: 
+                result.append('1') 
+
+        return(''.join(result))
+
+    # Performs Modulo-2 division 
+    def mod2div(divident, divisor):
+        # Number of bits to be XORed at a time. 
+        pick = len(divisor) 
+
+        # Slicing the divident to appropriate 
+        # length for particular step 
+        tmp = divident[0 : pick] 
+
+        while pick < len(divident): 
+
+            if tmp[0] == '1': 
+
+                # replace the divident by the result 
+                # of XOR and pull 1 bit down 
+                tmp = xor(divisor, tmp) + divident[pick] 
+
+            else:   # If leftmost bit is '0' 
+
+                # If the leftmost bit of the dividend (or the 
+                # part used in each step) is 0, the step cannot 
+                # use the regular divisor; we need to use an 
+                # all-0s divisor. 
+                tmp = xor('0'*pick, tmp) + divident[pick] 
+
+            # increment pick to move further 
+            pick += 1
+
+        # For the last n bits, we have to carry it out 
+        # normally as increased value of pick will cause 
+        # Index Out of Bounds. 
+        if tmp[0] == '1': 
+            tmp = xor(divisor, tmp) 
+        else: 
+            tmp = xor('0'*pick, tmp) 
+
+        checkword = tmp 
+        return(checkword)
+    
+    # Condition data
+    data = str(data)
+    # Condition Key
+    key = str(key)
+    l_key = len(key)
+   
+    # Appends n-1 zeroes at end of data 
+    appended_data = data + '0'*(l_key-1) 
+    remainder = mod2div(appended_data, key) 
+   
+    return(remainder)
+
+def string_to_bits(str):
+    """
+    string_to_bits Function
+    
+    Converts a Pythonic string to the string's
+    binary representation.
+    
+    Parameters
+    ----------
+    str:        string
+                The string to be converted.
+    
+    Returns
+    -------
+    data:       string
+                The binary representation of the
+                input string.
+    """
+    data = (''.join(format(ord(x), 'b') for x in str))
+    return(data)
 
 # End of __INIT__.PY

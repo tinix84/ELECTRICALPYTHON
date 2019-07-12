@@ -278,8 +278,8 @@ def capenergy(C,v):
     energy:     float
                 Energy stored in capacitor (Joules).
     """
-	energy = 1/2 * C * v**2
-	return(energy)
+    energy = 1/2 * C * v**2
+    return(energy)
 
 # Define Capacitor Voltage Discharge Function
 def loadedvcapdischarge(t,vo,C,P):
@@ -306,9 +306,9 @@ def loadedvcapdischarge(t,vo,C,P):
     Vt:         float
                 Voltage of capacitor at time t.
     """
-	Vt = np.sqrt(vo**2 - 2*P*t/C)
-	return(Vt)
-	
+    Vt = np.sqrt(vo**2 - 2*P*t/C)
+    return(Vt)
+    
 # Define Capacitor Discharge Function
 def timedischarge(Vinit,Vmin,C,P,dt=1e-3,RMS=True,Eremain=False):
     """
@@ -379,8 +379,8 @@ def rectifier(Iload, fswitch, dVout):
     C:          float
                 Required capacitance (in Farads) to meet arguments.
     """
-	C = Iload / (fswitch * dVout)
-	return(C)
+    C = Iload / (fswitch * dVout)
+    return(C)
 
     
 # END OF FILE
