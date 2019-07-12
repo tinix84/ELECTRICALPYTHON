@@ -1726,4 +1726,32 @@ def thermocouple(V,coupletype="K",fahrenheit=False,cjt=None,To=None,Vo=None,P1=N
     temp = np.around(temp,round)
     return(temp)
 
+# Define RTD Calculator
+def rtdtemp(RT,rtdtype="PT100",fahrenheit=False,Rref=None,Tref=None,
+            a=None,round=1):
+    # Define list of available builtin RTD Types
+    types = {   "PT100" : [100,0.00385],
+                "PT1000": [1000,0.00385],
+                "CU100" : [100,0.00427],
+                "NI100" : [100,0.00618],
+                "NI120" : [120,0.00672],
+                "NIFE"  : [604,0.00518]
+            }
+    # Load Variables
+    if Rref==None:
+        Rref = types[rtdtype][0]
+    if Tref==None:
+        Tref = 0
+    if a==None:
+        a = types[rtdtype][1]
+    # Define Terms
+    num = RT - Rref + Rref*a*Tref
+    den = Rref*a
+    temp = num/den
+    # Return Temperature
+    if fahrenheit:
+        temp = (temp*9/5)+32
+    temp = np.around(temp,round)
+    return(temp)
+    
 # END OF FILE
