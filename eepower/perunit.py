@@ -32,7 +32,7 @@ import numpy as np
 #   Returns as value for 3-phase by default, can also provide
 #   1-phase values.
 ###################################################################
-def zpu(S3phs,VLL=None,VLN=None,phase=3):
+def zpu(S,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
     if VLL!=None:
@@ -41,7 +41,7 @@ def zpu(S3phs,VLL=None,VLN=None,phase=3):
         return((np.sqrt(3)*VLN)**2/S3phs)
 
 
-def ipu(S3phs,VLL=None,VLN=None,phase=3):
+def ipu(S,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
     if VLL!=None:
