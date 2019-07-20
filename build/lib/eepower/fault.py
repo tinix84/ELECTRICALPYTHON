@@ -21,7 +21,10 @@
 #   - CT C-Class Calculator             ct_cclass
 #   - CT Sat. V at rated Burden         ct_satratburden
 #   - CT Voltage Peak Formula           ct_vpeak
-#   - CT Time to Saturation             ct_timetosat    
+#   - CT Time to Saturation             ct_timetosat
+#   - Transient Recovery Voltage Calc.  pktransrecvolt
+#   - TRV Reduction Resistor            trvresistor
+#   - Natural Frequency Calculator      natfreq
 ####################################################################
 
 # Import Necessary Libraries
@@ -498,5 +501,134 @@ def ct_timetosat(Vknee,XR,Rb,CTR,Imax,ts=None,npts=100,freq=60,plot=False):
     else:
         results = (Vsat1,Vsat2,Vsat3)
     return(results)
+
+# Define Function to Calculate TRV
+def pktransrecvolt(C,L,R=0,VLL=None,VLN=None,freq=60):
+    """
+    pktransrecvolt Function
     
+    Peak Transient Recovery Voltage calculation
+    function, evaluates the peak transient
+    recovery voltage (restriking voltage) and
+    the Rate-of-Rise-Recovery Voltage.
+    
+    Parameters
+    ----------
+    C:          float
+                Capacitance Value in Farads.
+    L:          float
+                Inductance in Henries.
+    R:          float, optional
+                The resistance of the system used for
+                calculation, default=0.
+    VLL:        float, exclusive
+                Line-to-Line voltage, exclusive
+                optional argument.
+    VLN:        float, exclusive
+                Line-to-Neutral voltage, exclusive
+                optional argument.
+    freq:       float, optional
+                System frequency in Hz.
+    
+    Returns
+    -------
+    Vcpk:       float
+                Peak Transient Recovery Voltage in volts.
+    RRRV:       float
+                The RRRV (Rate-of-Rise-Recovery Voltage)
+                calculated given the parameters in volts
+                per second.
+    """
+    # Evaluate alpha, omega-n, and fn
+    alpha = R/(2*L)
+    wn = 1/np.sqrt(L*C) - alpha
+    fn = wn/(2*np.pi)
+    # Evaluate Vm
+    if VLL!=None:
+        Vm = np.sqrt(2/3)*VLL
+    elif VLN!=None:
+        Vm = np.sqrt(2)*VLN
+    else:
+        raise ValueError("One voltage must be specified.")
+    # Evaluate Vcpk (worst case)
+    Vcpk = wn**2/(wn**2-2*np.pi*freq)*Vm*2
+    # Evaluate RRRV
+    RRRV = 2*Vm*fn/0.5
+    return(Vcpk,RRRV)
+
+# Define TRV Reduction Resistor Function
+def trvresistor(C,L,reduction):
+    """
+    trvresistor Function
+    
+    Function to find the resistor value that
+    will reduce the TRV by a specified
+    percentage.
+    
+    Parameters
+    ----------
+    C:          float
+                Capacitance Value in Farads.
+    L:          float
+                Inductance in Henries.
+    reduction:  float
+                The percentage that the TRV
+                should be reduced by.
+    
+    Returns
+    -------
+    Rd:         float
+                Damping resistor value, in ohms.
+    wd:         float
+                Omega-d
+    tpk:        float
+                Time of peak voltage.
+    """
+    # Evaluate omega-n
+    wn = 1/np.sqrt(L*C)
+    # Generate Constant Factor
+    fctr = (1-reduction)*2 - 1
+    # Define Function Set
+    def equations(data):
+        Rd, wd, tpk = data
+        X = np.sqrt(wn**2-(1/(2*Rd*C))**2) - wd
+        Y = np.exp(-tpk/(2*Rd*C))-fctr
+        Z = wd*tpk - np.pi
+        return(X,Y,Z)
+    Rd, wd, tpk = fsolve(equations, (500,260*k,10*u))
+    return(Rd, wd, tpk)
+
+# Define Natural Frequency/Resonant Frequency Calculator
+def natfreq(C,L,Hz=True):
+    """
+    natfreq Function
+    
+    Evaluates the natural frequency (resonant frequency)
+    of a circuit given the circuit's C and L values. Defaults
+    to returning values in Hz, but may also return in rad/sec.
+    
+    Parameters
+    ----------
+    C:          float
+                Capacitance Value in Farads.
+    L:          float
+                Inductance in Henries.
+    Hz:         bool, optional
+                Control argument to set return value in either
+                Hz or rad/sec; default=True.
+    
+    Returns
+    -------
+    freq:       float
+                Natural (Resonant) frequency, will be in Hz if
+                argument *Hz* is set True (default), or rad/sec
+                if argument is set False.
+    """
+    # Evaluate Natural Frequency in rad/sec
+    freq = 1/np.sqrt(L*C)
+    # Convert to Hz as requested
+    if Hz:
+        freq = freq / (2*np.pi)
+    return(freq)
+
 # END OF FILE

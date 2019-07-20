@@ -32,7 +32,7 @@ import numpy as np
 #   Returns as value for 3-phase by default, can also provide
 #   1-phase values.
 ###################################################################
-def zpu(S3phs,VLL=None,VLN=None,phase=3):
+def zpu(S,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
     if VLL!=None:
@@ -41,7 +41,7 @@ def zpu(S3phs,VLL=None,VLN=None,phase=3):
         return((np.sqrt(3)*VLN)**2/S3phs)
 
 
-def ipu(S3phs,VLL=None,VLN=None,phase=3):
+def ipu(S,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
     if VLL!=None:
@@ -60,3 +60,53 @@ def ipu(S3phs,VLL=None,VLN=None,phase=3):
 def convert(quantity, puB_old, puB_new):
     pu_new = quantity*puB_old/puB_new
     return(pu_new)
+    
+
+# Define Recomposition Function
+def zrecompose(z_pu,S3phs,VLL=None,VLN=None):
+    """
+    zrecompose Function
+    
+    Function to reverse per-unit conversion and return the ohmic value
+    of an impedance given its per-unit parameters of R and X (as Z).
+    
+    Parameters
+    ----------
+    z_pu:       complex
+                The per-unit, complex value corresponding to the
+                impedance
+    --- MORE ---
+    """
+    # Evaluate the per-unit impedance
+    zbase = zpu(S3phs,VLL,VLN)
+    # Evaluate the impedance
+    z = z_pu * zbase
+    return(z)
+
+# Define X/R Recomposition Function
+def rxrecompose(x_pu,XR,S3phs,VLL=None,VLN=None):
+    """
+    rxrecompose Function
+    
+    Function to reverse per-unit conversion and return the ohmic value
+    of an impedance given its per-unit parameters of X.
+    
+    Parameters
+    ----------
+    x_pu:       float
+                The per-unit, complex value corresponding to the
+                impedance
+    --- MORE ---
+    """
+    # Ensure Absolute Value
+    x_pu = abs(x_pu)
+    # Find R from X/R
+    r_pu = x_pu/XR
+    # Compose into z
+    z_pu = r_pu + 1j*x_pu
+    # Recompose
+    z = zrecompose(z_pu,S3phs,VLL,VLN)
+    return(z)
+    
+
+# END OF FILE
