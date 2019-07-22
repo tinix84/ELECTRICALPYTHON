@@ -33,6 +33,7 @@
 
 # Import Necessary Libraries
 import numpy as np
+from scipy.optimize import fsolve
 
 # Import Local Dependencies
 from .__init__ import Aabc, A012
@@ -561,7 +562,7 @@ def pktransrecvolt(C,L,R=0,VLL=None,VLN=None,freq=60):
     return(Vcpk,RRRV)
 
 # Define TRV Reduction Resistor Function
-def trvresistor(C,L,reduction):
+def trvresistor(C,L,reduction,Rd0=500,wd0=260*k,tpk0=10*u):
     """
     trvresistor Function
     
@@ -578,6 +579,14 @@ def trvresistor(C,L,reduction):
     reduction:  float
                 The percentage that the TRV
                 should be reduced by.
+    Rd0:        float, optional
+                Damping Resistor Evaluation Starting Point
+                default=500
+    wd0:        float, optional
+                Omega-d evaluation starting point, default=260*k
+    tpk0:       float, optional
+                Time of peak voltage evaluation starting point,
+                default=10*u
     
     Returns
     -------
@@ -599,7 +608,7 @@ def trvresistor(C,L,reduction):
         Y = np.exp(-tpk/(2*Rd*C))-fctr
         Z = wd*tpk - np.pi
         return(X,Y,Z)
-    Rd, wd, tpk = fsolve(equations, (500,260*k,10*u))
+    Rd, wd, tpk = fsolve(equations, (Rd0,wd0,tpk0))
     return(Rd, wd, tpk)
 
 # Define Natural Frequency/Resonant Frequency Calculator

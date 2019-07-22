@@ -235,7 +235,7 @@ def cprint(val,unit="",label="",printval=True,ret=False,round=3):
             label = np.array([])
             for _ in range(sz):
                 label = np.append(label,[""])
-        elif len(label)==1 or str(type(label))==tstr:
+        elif len(label)==1 or isinstance(label, str):
             tmp = label
             for _ in range(sz):
                 label = np.append(label,[tmp])
@@ -1319,7 +1319,7 @@ def zsource(S,V,XoverR,Sbase=None,Vbase=None):
     Zsource_pu = Vpu**2/Spu
     # Evaluate the angle
     nu = np.degrees(np.arctan(XoverR))
-    Zsource_pu = eep.phasor(Zsource_pu, nu)
+    Zsource_pu = phasor(Zsource_pu, nu)
     return(Zsource_pu)
 
 # Define Impedance Decomposer
@@ -1396,7 +1396,7 @@ def horsepower(watts):
     return(watts / 745.699872)
     
 # Define Power Reactance Calculator
-def powerimpedance(S,V,parallel=False):
+def powerimpedance(S,V,PF=None,parallel=False):
     """
     powerimpedance Function
     
@@ -1408,11 +1408,16 @@ def powerimpedance(S,V,parallel=False):
     
     Parameters
     ----------
-    S:          complex
+    S:          complex, float
                 The apparent power of the passive element,
                 may be purely resistive or purely reactive.
     V:          float
                 The operating voltage of the passive element.
+    PF:         float, optional
+                The operating Power-Factor, should be specified
+                if S is given as a float (not complex). Positive
+                PF correlates to lagging, negative to leading.
+                default=None
     parallel:   bool, optional
                 Control point to specify whether the ohmic
                 impedance should be returned as series components
@@ -1440,6 +1445,18 @@ def powerimpedance(S,V,parallel=False):
         else:
             R = V**2 / (S.real)
             X = V**2 / (S.imag)
+        return( R, X )
+    # Power Factor Provided
+    if PF != None:
+        # Evaluate Elements
+        P,Q,S,PF = powerset(S=S,PF=PF)
+        # Compute Elements
+        if parallel:
+            R = V**2 / (3*P)
+            X = V**2 / (3*Q)
+        else:
+            R = V**2 / (P)
+            X = V**2 / (Q)
         return( R, X )
     # Not Complex (just R)
     R = V**2 / S

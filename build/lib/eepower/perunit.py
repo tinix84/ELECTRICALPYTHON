@@ -36,18 +36,18 @@ def zpu(S,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
     if VLL!=None:
-        return(VLL**2/S3phs)
+        return(VLL**2/S)
     else:
-        return((np.sqrt(3)*VLN)**2/S3phs)
+        return((np.sqrt(3)*VLN)**2/S)
 
 
 def ipu(S,VLL=None,VLN=None,phase=3):
     if(VLL==None and VLN==None):
         raise ValueError("ERROR: One voltage must be provided.")
     if VLL!=None:
-        return(S3phs/(np.sqrt(3)*VLL))
+        return(S/(np.sqrt(3)*VLL))
     else:
-        return(S3phs/VLN)
+        return(S/VLN)
 
 ###################################################################
 #   Define per unit converter function

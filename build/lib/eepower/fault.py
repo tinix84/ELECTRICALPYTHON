@@ -25,6 +25,10 @@
 #   - Transient Recovery Voltage Calc.  pktransrecvolt
 #   - TRV Reduction Resistor            trvresistor
 #   - Natural Frequency Calculator      natfreq
+#   - TOC Trip Time                     toctriptime
+#   - TOC Reset Time                    tocreset
+#   - Pickup Setting Assistant          pickup
+#   - Radial TOC Coordination Tool      tdcoordradial
 ####################################################################
 
 # Import Necessary Libraries
@@ -630,5 +634,209 @@ def natfreq(C,L,Hz=True):
     if Hz:
         freq = freq / (2*np.pi)
     return(freq)
+
+# Define Time-Overcurrent Trip Time Function
+def toctriptime(I,Ipickup,TD,curve="U1"):
+    """
+    toctriptime Function
+    
+    Time-OverCurrent Trip Time Calculator, evaluates the time
+    to trip for a specific TOC (51) element given the curve
+    type, current characteristics and time-dial setting.
+    
+    Parameters
+    ----------
+    I:          float
+                Measured Current in Amps
+    Ipickup:    float
+                Fault Current Pickup Setting (in Amps)
+    TD:         float
+                Time Dial Setting
+    curve:      string, optional
+                Name of specified TOC curve, may be entry from set:
+                {U1,U2,U3,U4,U5,C1,C2,C3,C4,C5}, default=U1
+    
+    Returns
+    -------
+    tt:         float
+                Time-to-Trip for characterized element.
+    """
+    # Condition Inputs
+    curve = curve.upper()
+    # Define Dictionary of Constants
+    const = {   "U1" : {"A": 0.0104, "B": 0.2256, "P": 0.02},
+                "U2" : {"A": 5.95, "B": 0.180, "P": 2.00},
+                "U3" : {"A": 3.88, "B": 0.0963, "P": 2.00},
+                "U4" : {"A": 5.67, "B": 0.352, "P": 2.00},
+                "U5" : {"A": 0.00342, "B": 0.00262, "P": 0.02},
+                "C1" : {"A": 0.14, "B":0, "P": 0.02},
+                "C2" : {"A": 13.5, "B":0, "P": 2.00},
+                "C3" : {"A": 80.0, "B":0, "P": 2.00},
+                "C4" : {"A": 120.0, "B":0, "P": 2.00},
+                "C5" : {"A": 0.05, "B":0, "P": 0.04}}
+    # Load Constants
+    A = const[curve]["A"]
+    B = const[curve]["B"]
+    P = const[curve]["P"]
+    # Evaluate M
+    M = I / Ipickup
+    # Evaluate Trip Time
+    tt = TD * (A/(M**P-1)+B)
+    return(tt)
+
+# Define Time Overcurrent Reset Time Function
+def tocreset(I,Ipickup,TD,curve="U1"):
+    """
+    tocreset Function
+    
+    Function to calculate the time to reset for a TOC
+    (Time-OverCurrent, 51) element.
+    
+    Parameters
+    ----------
+    I:          float
+                Measured Current in Amps
+    Ipickup:    float
+                Fault Current Pickup Setting (in Amps)
+    TD:         float
+                Time Dial Setting
+    curve:      string, optional
+                Name of specified TOC curve, may be entry from set:
+                {U1,U2,U3,U4,U5,C1,C2,C3,C4,C5}, default=U1
+    
+    Returns
+    -------
+    tr:         float
+                Time-to-Reset for characterized element.
+    """
+    # Condition Inputs
+    curve = curve.upper()
+    # Define Dictionary of Constants
+    C = {   "U1" : 1.08,"U2" : 5.95,"U3" : 3.88,
+            "U4" : 5.67,"U5" : 0.323,"C1" : 13.5,
+            "C2" : 47.3,"C3" : 80.0,"C4" : 120.0,
+            "C5" : 4.85}
+    # Evaluate M
+    M = I / Ipickup
+    # Evaluate Reset Time
+    tr = TD * (C[curve]/(1-M**2))
+    return(tr)
+
+# Define Pickup Current Calculation
+def pickup(Iloadmax,Ifaultmin,scale=0,printout=False,units="A"):
+    """
+    pickup Function
+    
+    Used to assist in evaluating an optimal phase-over-current pickup
+    setting. Uses maximum load and minimum fault current to provide
+    user assistance.
+    
+    Parameters
+    ----------
+    Iloadmax:   float
+                The maximum load current in amps.
+    Ifaultmin:  float
+                The minimum fault current in amps.
+    scale:      int, optional
+                Control scaling to set number of significant figures.
+                default=0
+    printout:   boolean, optional
+                Control argument to enable printing of intermediate
+                stages, default=False.
+    units:      string, optional
+                String to be appended to any printed output denoting
+                the units of which are being printed, default="A"
+    
+    Returns
+    -------
+    setpoint:   float
+                The evaluated setpoint at which the function suggests
+                the phase-over-current pickup setting be placed.
+    """
+    IL2 = 2*Iloadmax
+    IF2 = Ifaultmin/2
+    exponent = len(str(IL2).split('.')[0])
+    setpoint = np.ceil(IL2*10**(-exponent+1+scale))*10**(exponent-1-scale)
+    if printout:
+        print("Range Min:",IL2,units,"\t\tRange Max:",IF2,units)
+    if IF2 < setpoint:
+        setpoint = IL2
+        if IL2 > IF2:
+            raise ValueError("Invalid Parameters.")
+    if printout:
+        print("Current Pickup:",setpoint,units)
+    return(setpoint)
+
+# Define Time-Dial Coordination Function
+def tdcoordradial(I,CTI,Ipu_up,Ipu_dn,TDdn,curve="U1",scale=1,freq=60):
+    """
+    tdcoordradial Function
+    
+    Function to evaluate the Time-Dial (TD) setting in radial schemes
+    where the Coordinating Time Interval (CTI) and the up/downstream
+    pickup settings are known along with the TD setting for the
+    downstream protection.
+    
+    Parameters
+    ----------
+    I:          float
+                Measured fault current in Amps, typically set using the
+                maximum fault current available.
+    CTI:        float
+                Coordinating Time Interval in cycles.
+    Ipu_up:     float
+                Pickup setting for upstream protection,
+                specified in amps
+    Ipu_dn:     float
+                Pickup setting for downstream protection,
+                specified in amps
+    TDdn:       float
+                Time-Dial setting for downstream protection,
+                specified in seconds
+    curve:      string, optional
+                Name of specified TOC curve, may be entry from set:
+                {U1,U2,U3,U4,U5,C1,C2,C3,C4,C5}, default=U1
+    scale:      int, optional
+                Scaling value used to evaluate a practical TD
+                setting, default=1
+    freq:       float, optional
+                System operating frequency, default=60
+    
+    Returns
+    -------
+    TD:         float
+                Calculated Time-Dial setting according to radial
+                scheme logical analysis.
+    """
+    # Condition Inputs
+    curve = curve.upper()
+    CTI = CTI/freq # Evaluate in seconds from cycles
+    # Define Dictionary of Constants
+    const = {   "U1" : {"A": 0.0104, "B": 0.2256, "P": 0.02},
+                "U2" : {"A": 5.95, "B": 0.180, "P": 2.00},
+                "U3" : {"A": 3.88, "B": 0.0963, "P": 2.00},
+                "U4" : {"A": 5.67, "B": 0.352, "P": 2.00},
+                "U5" : {"A": 0.00342, "B": 0.00262, "P": 0.02},
+                "C1" : {"A": 0.14, "B":0, "P": 0.02},
+                "C2" : {"A": 13.5, "B":0, "P": 2.00},
+                "C3" : {"A": 80.0, "B":0, "P": 2.00},
+                "C4" : {"A": 120.0, "B":0, "P": 2.00},
+                "C5" : {"A": 0.05, "B":0, "P": 0.04}}
+    # Load Constants
+    A = const[curve]["A"]
+    B = const[curve]["B"]
+    P = const[curve]["P"]
+    # Evaluate M
+    M = I / Ipu_dn
+    # Evaluate Trip Time
+    tpu_desired = TDdn * (A/(M**P-1)+B) + CTI
+    # Re-Evaluate M
+    M = I / Ipu_up
+    # Calculate TD setting
+    TD = tpu_desired / (A/(M**2-1)+B)
+    # Scale and Round
+    TD = np.ceil(TD*10**scale)/10**scale
+    return(TD)
+
 
 # END OF FILE
