@@ -1272,7 +1272,7 @@ def heatsink(P=None,Tjunct=None,Tamb=None,Rjc=None,
             
     
 # Define Impedance From Power and X/R
-def zsource(S,V,XoverR,Sbase=None,Vbase=None):
+def zsource(S,V,XoverR,Sbase=None,Vbase=None,perunit=True):
     """
     zsource Function
     
@@ -1285,7 +1285,9 @@ def zsource(S,V,XoverR,Sbase=None,Vbase=None):
                 The (rated) apparent power magnitude of the source.
                 This may also be refferred to as the "Short-Circuit MVA"
     V:          float
-                The (rated) voltage of the source terminals.
+                The (rated) voltage of the source terminals, not
+                specifically identified as either Line-to-Line or Line-to-
+                Neutral.
     XoverR:     float
                 The X/R ratio rated for the source.
     Sbase:      float, optional
@@ -1296,11 +1298,16 @@ def zsource(S,V,XoverR,Sbase=None,Vbase=None):
                 The per-unit base for the terminal voltage. If set to
                 None, will automaticlaly force Vbase to equal V. If
                 set to True, will treat V as the per-unit value.
+    perunit:    boolean, optional
+                Control value to enable the return of output in per-
+                unit base. default=True
     
     Returns
     -------
     Zsource_pu: complex
                 The per-unit evaluation of the source impedance.
+                Will be returned in ohmic (not per-unit) value if
+                *perunit* argument is specified as False.
     """
     # Force Sbase and Vbase if needed
     if Vbase == None:
@@ -1320,6 +1327,9 @@ def zsource(S,V,XoverR,Sbase=None,Vbase=None):
     # Evaluate the angle
     nu = np.degrees(np.arctan(XoverR))
     Zsource_pu = phasor(Zsource_pu, nu)
+    if not perunit:
+        Zsource = Zsource_pu * Vbase**2/Sbase
+        return(Zsource)
     return(Zsource_pu)
 
 # Define Impedance Decomposer

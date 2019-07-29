@@ -562,7 +562,7 @@ def pktransrecvolt(C,L,R=0,VLL=None,VLN=None,freq=60):
     return(Vcpk,RRRV)
 
 # Define TRV Reduction Resistor Function
-def trvresistor(C,L,reduction,Rd0=500,wd0=260*k,tpk0=10*u):
+def trvresistor(C,L,reduction,Rd0=500,wd0=260e3,tpk0=10e-6):
     """
     trvresistor Function
     
