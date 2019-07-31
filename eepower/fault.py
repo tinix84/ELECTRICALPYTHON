@@ -29,6 +29,9 @@
 #   - TOC Reset Time                    tocreset
 #   - Pickup Setting Assistant          pickup
 #   - Radial TOC Coordination Tool      tdcoordradial
+#   - TAP Setting Calculator            protectiontap
+#   - Transformer Current Correction    correctedcurrents
+#   - Operate/Restraint Current Calc.   iopirt
 ####################################################################
 
 # Import Necessary Libraries
@@ -37,6 +40,12 @@ from scipy.optimize import fsolve
 
 # Import Local Dependencies
 from .__init__ import Aabc, A012
+
+# Define Transformer Shift Correction Matricies
+XFMY0 = np.array([[1,0,0],[0,1,0],[0,0,1]])
+XFMD1 = 1/np.sqrt(3) * np.array([[1,-1,0],[0,1,-1],[-1,0,1]])
+XFMD11 = 1/np.sqrt(3) * np.array([[1,0,-1],[-1,1,0],[0,-1,1]])
+XFM12 = 1/3 * np.array([[2,-1,-1],[-1,2,-1],[-1,-1,2]])
 
 # Define Single Line to Ground Fault Function
 def phs1g(Vsrc,Xseq,Rf=0,load=None,sequence=True):
@@ -846,6 +855,161 @@ def tdcoordradial(I,CTI,Ipu_up,Ipu_dn,TDdn,curve="U1",scale=1,freq=60):
     # Scale and Round
     TD = np.ceil(TD*10**scale)/10**scale
     return(TD)
+
+# Define TAP Calculator
+def protectiontap(CTR,S,VLN=None,VLL=None):
+    """
+    protectiontap Function
+    
+    Evaluates the required TAP setting based on the rated power of
+    a transformer (the object being protected) and the voltage
+    (either primary or secondary) in conjunction with the CTR
+    (current transformer ratio) for the side in question (primary/
+    secondary).
+    
+    Parameters
+    ----------
+    CTR:        float
+                The Current Transformer Ratio.
+    S:          float
+                Rated apparent power magnitude (VA/VAR/W).
+    VLN:        float, exclusive
+                Line-to-Neutral voltage in volts.
+    VLL:        float, exclusive
+                Line-to-Line voltage in volts.
+    
+    Returns
+    -------
+    TAP:        float
+                The TAP setting required to meet the specifications.
+    """
+    # Condition Voltage(s)
+    if VLL != None:
+        V = abs(np.sqrt(3)*VLL)
+    elif VLN != None:
+        V = abs(3 * VLN)
+    else:
+        raise ValueError("One or more voltages must be provided.")
+    # Calculate TAP
+    TAP = abs(S) / (V*CTR)
+    return(TAP)
+
+
+
+# Define Current Correction Calculator
+def correctedcurrents(Ipri,TAP,correction="Y",CTR=1):
+    """
+    correctedcurrents Function:
+    
+    Function to evaluate the currents as corrected for microprocessor-
+    based relay protection schemes.
+    
+    Parameters
+    ----------
+    Ipri:       list of complex
+                Three-phase set (IA, IB, IC) of primary currents.
+    TAP:        float
+                Relay's TAP setting.
+    correction: string, optional
+                String defining correction factor, may be one of:
+                (Y, D+, D-, Z); Y denotes Y (Y0) connection, D+
+                denotes Dab (D1) connection, D- denotes Dac (D11)
+                connection, and Z (Z12) denotes zero-sequence
+                removal. default="Y"
+    CTR:        float
+                Current Transformer Ratio, default=1
+    
+    Returns
+    -------
+    Isec_corr:  list of complex
+                The corrected currents to perform operate/restraint
+                calculations with.
+    """
+    # Define Matrix Lookup
+    MAT = {   "Y"  : XFMY0,
+              "D+" : XFMD1,
+              "D-" : XFMD11,
+              "Z"  : XFM12}
+    # Condition Inputs
+    Ipri = np.asarray(Ipri)
+    if isinstance(correction,list):
+        mult = MAT[correction[0]]
+        for i in correction[1:]:
+            mult = mult.dot(MAT[i])
+    elif isinstance(correction,str):
+        mult = MAT[correction]
+    elif isinstance(correction,np.ndarray):
+        mult = correction
+    else:
+        raise ValueError("Correction must be string or list of strings.")
+    # Evaluate Corrected Current
+    Isec_corr = 1/TAP * mult.dot(Ipri/CTR)
+    return(Isec_corr)
+
+
+
+# Define Iop/Irt Calculator
+def iopirt(IpriHV,IpriLV,TAPHV,TAPLV,corrHV="Y",corrLV="Y",CTRHV=1,CTRLV=1):
+    """
+    iopirt Function:
+    
+    Calculates the operating current (Iop) and the restraint
+    current (Irt) as well as the slope.
+    
+    Parameters
+    ----------
+    IpriHV:     list of complex
+                Three-phase set (IA, IB, IC) of primary currents
+                on the high-voltage side of power transformer.
+    IpriLV      list of complex
+                Three-phase set (IA, IB, IC) of primary currents
+                on the low-voltage side of power transformer.
+    TAPHV       float
+                Relay's TAP setting for high-voltage side of
+                power transformer.
+    TAPLV       float
+                Relay's TAP setting for low-voltage side of
+                power transformer.
+    corrHV      string, optional
+                String defining correction factor on high-voltage
+                side of power transformer, may be one of:
+                (Y, D+, D-, Z); Y denotes Y (Y0) connection, D+
+                denotes Dab (D1) connection, D- denotes Dac (D11)
+                connection, and Z (Z12) denotes zero-sequence
+                removal. default="Y"
+    corrLV      string, optional
+                String defining correction factor on low-voltage
+                side of power transformer, may be one of:
+                (Y, D+, D-, Z); Y denotes Y (Y0) connection, D+
+                denotes Dab (D1) connection, D- denotes Dac (D11)
+                connection, and Z (Z12) denotes zero-sequence
+                removal. default="Y"
+    CTRHV       float
+                Current Transformer Ratio for high-voltage side
+                of power transformer, default=1
+    CTRLV       float
+                Current Transformer Ratio for low-voltage side
+                of power transformer, default=1
+    
+    Returns
+    -------
+    Iop:        list of float
+                The operating currents for phases A, B, and C.
+    Irt:        list of float
+                The restraint currents for phases A, B, and C.
+    slope:      list of float
+                The calculated slopes for phases A, B, and C.
+    """
+    # Calculate Corrected Currents
+    IcorHV = correctedcurrents(IpriHV,TAPHV,corrHV,CTRHV)
+    IcorLV = correctedcurrents(IpriLV,TAPLV,corrLV,CTRLV)
+    # Calculate Operate/Restraint Currents
+    Iop = np.absolute( IcorHV + IcorLV )
+    Irt = np.absolute(IcorHV) + np.absolute(IcorLV)
+    # Calculate Slopes
+    slope = Iop/Irt
+    return(Iop,Irt,slope)
+
 
 
 # END OF FILE
