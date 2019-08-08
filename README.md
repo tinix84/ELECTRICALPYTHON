@@ -52,3 +52,5 @@ In this repository, there are:
    import eesignal
    eesignal.ver
    ```
+## WARNING!
+ELECTRICALPYTHON has been replaced by ELECTRICPY

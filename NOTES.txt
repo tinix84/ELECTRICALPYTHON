@@ -1,6 +1,8 @@
 ELECTRICALPYTHON NOTES
 ----------------------
 
+!!! ELECTRICALPYTHON is no longer under development, it has been replaced by ELECTRICPY
+
 FUNCTIONS TO ADD:
 - Heat Sinking Solver
 - DC/DC Converters
