@@ -1,6 +1,10 @@
 # ELECTRICALPYTHON
 *Electrical-Engineering-for-Python*
 
+## Deprication Warning
+**Although it was thought this library might not be widely used or consumed, for sake of consistency, this library will be depricated and deleted at the end of 2020. It has been replaced be the cleaner, more streamlined ElectricPy, available at the link below**
+https://github.com/engineerjoe440/ElectricPy
+
 Python Libraries with functions and constants related to electrical engineering.
 
 The functions and constants that make up these modules represent a library of material compiled with the intent of being used primarily
